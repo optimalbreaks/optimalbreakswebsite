@@ -6,6 +6,8 @@ import {
   CHANNEL_GUIDES,
   CHANNEL_PLAYLISTS,
   CHANNEL_SERIES,
+  YOUTUBE_CHANNEL_AVATAR,
+  YOUTUBE_CHANNEL_HANDLE,
   YOUTUBE_CHANNEL_URL,
 } from '@/content/channels'
 import type { Locale } from '@/lib/i18n-config'
@@ -61,51 +63,76 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
       </section>
 
       <section className="px-4 sm:px-6 py-10 sm:py-14 border-b-[5px] border-[var(--ink)]">
-        <div className="mx-auto max-w-[1100px] grid gap-4 md:grid-cols-2">
+        <div className="mx-auto max-w-[1100px] grid gap-8">
           {CHANNEL_ACCOUNTS.map((account) => {
             const spotify = account.id === 'spotify'
+            const playlist = spotify ? CHANNEL_PLAYLISTS[0] : null
             return (
               <article
                 key={account.id}
-                className={`border-[3px] border-[var(--ink)] p-4 sm:p-5 shadow-[6px_6px_0_var(--ink)] ${spotify ? 'bg-[var(--yellow)]' : 'bg-[var(--paper)]'}`}
+                className={`border-[3px] border-[var(--ink)] shadow-[6px_6px_0_var(--ink)] overflow-hidden ${spotify ? 'bg-[var(--yellow)]' : 'bg-[var(--paper)]'}`}
               >
-                <p className="m-0 text-[11px] font-black tracking-[2px]" style={MONO}>
-                  {account.kicker[lang]}
-                </p>
-                <h2 className="m-0 mt-2 text-3xl sm:text-4xl font-black leading-none" style={DISPLAY}>
-                  {account.title[lang]}
-                </h2>
-                <p className="mt-3 mb-0 text-[15px] leading-relaxed" style={MONO}>
-                  {account.text[lang]}
-                </p>
-                {account.href ? <div className="mt-5">{outbound(account.href, account.button[lang])}</div> : null}
-                {spotify ? (
-                  <ul className="mt-5 mb-0 p-0 list-none grid gap-3">
-                    {CHANNEL_PLAYLISTS.map((list) => (
-                      <li key={list.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
-                        <div className="p-3">
-                          <h3 className="m-0 text-[18px] font-black" style={DISPLAY}>
-                            {list.name}
-                          </h3>
-                          <p className="mt-2 mb-0 text-[13px] leading-relaxed" style={MONO}>
-                            {list.text[lang]}
-                          </p>
-                          <div className="mt-3">{outbound(list.href, es ? 'Abrir la lista' : 'Open the playlist')}</div>
-                        </div>
-                        <iframe
-                          title={list.name}
-                          src={list.embed}
-                          width="100%"
-                          height={352}
-                          style={{ border: 0, display: 'block' }}
-                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                          allowFullScreen
-                          loading="lazy"
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+                <div className="flex flex-wrap items-end justify-between gap-4 p-4 sm:p-5">
+                  <div className="min-w-0 max-w-[640px]">
+                    <p className="m-0 text-[11px] font-black tracking-[2px]" style={MONO}>
+                      {account.kicker[lang]}
+                    </p>
+                    <h2 className="m-0 mt-1 text-3xl sm:text-4xl font-black leading-none" style={DISPLAY}>
+                      {account.title[lang]}
+                    </h2>
+                    <p className="mt-2 mb-0 text-[14px] sm:text-[15px] leading-relaxed" style={MONO}>
+                      {account.text[lang]}
+                    </p>
+                  </div>
+                  {playlist
+                    ? outbound(playlist.href, es ? 'Abrir la lista' : 'Open the playlist')
+                    : account.href
+                      ? outbound(account.href, account.button[lang])
+                      : null}
+                </div>
+                {playlist ? (
+                  <iframe
+                    title={playlist.name}
+                    src={playlist.embed}
+                    width="100%"
+                    height={352}
+                    className="block w-full border-0 border-t-[3px] border-solid border-[var(--ink)] bg-black"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                ) : (
+                  <a
+                    href={account.href || YOUTUBE_CHANNEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-4 border-t-[3px] border-[var(--ink)] bg-[var(--ink)] px-4 py-5 no-underline sm:flex-row sm:gap-6 sm:px-6 sm:py-6"
+                  >
+                    <img
+                      src={`/api/og/image-proxy?src=${encodeURIComponent(YOUTUBE_CHANNEL_AVATAR)}`}
+                      alt=""
+                      width={148}
+                      height={148}
+                      className="h-[112px] w-[112px] shrink-0 rounded-full border-[3px] border-[var(--yellow)] object-cover sm:h-[148px] sm:w-[148px]"
+                    />
+                    <span className="min-w-0 text-center sm:text-left">
+                      <span className="block text-2xl font-black leading-none text-white sm:text-4xl" style={DISPLAY}>
+                        OPTIMAL BREAKS
+                      </span>
+                      <span className="mt-2 block text-[13px] font-black tracking-[1px] text-[var(--yellow)]" style={MONO}>
+                        {YOUTUBE_CHANNEL_HANDLE}
+                      </span>
+                      <span className="mt-3 inline-flex items-center gap-2 text-[12px] font-black tracking-[2px] text-white" style={MONO}>
+                        <span className="flex h-8 w-11 items-center justify-center rounded-[8px] bg-[#f00]" aria-hidden>
+                          <svg viewBox="0 0 24 24" className="h-4 w-4 fill-white">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                        {es ? 'VER EL CANAL' : 'WATCH THE CHANNEL'}
+                      </span>
+                    </span>
+                  </a>
+                )}
               </article>
             )
           })}
@@ -154,7 +181,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                       className="text-[12px] font-black text-[var(--ink)] underline underline-offset-2"
                       style={MONO}
                     >
-                      @optimalbreaks
+                      {YOUTUBE_CHANNEL_HANDLE}
                     </a>
                     {series.href ? (
                       <Link href={`/${lang}${series.href}`} className="text-[12px] font-black text-[var(--red)] no-underline hover:underline" style={MONO}>

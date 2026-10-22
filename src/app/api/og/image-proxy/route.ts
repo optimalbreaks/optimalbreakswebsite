@@ -15,6 +15,8 @@ const ALLOWED_HOSTS = new Set([
   'i.discogs.com',
   'i.ytimg.com',
   'img.youtube.com',
+  'yt3.googleusercontent.com',
+  'yt3.ggpht.com',
 ])
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024
 

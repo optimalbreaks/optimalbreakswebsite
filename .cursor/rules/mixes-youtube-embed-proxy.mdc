@@ -18,7 +18,7 @@ Las tarjetas de YouTube en **`/[lang]/mixes`** **NO** montan el iframe del repro
 La portada se pide a **nuestro dominio**: `/api/og/image-proxy?src=<URL i.ytimg.com codificada>`. El servidor baja `https://i.ytimg.com/vi/<id>/hqdefault.jpg` y la reenvía.
 
 - **No** usar `<img src="https://i.ytimg.com/...">` directo en el cliente: queda **en negro** en proxies corporativos / extensiones (uBlock EasyPrivacy, Brave Shields, SSL inspection de Acttax) que tratan `ytimg.com` como tracker.
-- Hosts permitidos del proxy en `image-proxy/route.ts`: `i.ytimg.com`, `img.youtube.com` (más Beatport/Discogs ya existentes). Si añades otra fuente de miniatura, amplía ese allow-list.
+- Hosts permitidos del proxy en `image-proxy/route.ts`: `i.ytimg.com`, `img.youtube.com`, `yt3.googleusercontent.com`, `yt3.ggpht.com` (avatar del canal en `/channels`; más Beatport/Discogs ya existentes). Si añades otra fuente de miniatura, amplía ese allow-list.
 - Si el proxy falla, la portada cae a un **placeholder a rayas con el título** del mix.
 
 ## Excepción: prop `autoplay`

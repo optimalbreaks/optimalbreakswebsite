@@ -75,7 +75,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'La lógica del mixtape se desplaza a plataformas donde el género sobrevive como nicho activo, no como museo.',
     desc_en: 'Mixtape logic shifts to platforms where the genre survives as an active niche, not as a museum piece.',
     platform: 'ONLINE',
-    href: 'https://www.youtube.com/@optimalbreaks',
+    href: 'https://www.youtube.com/@OptimalBreakswebsite',
   },
   {
     type: 'LIVE SET',

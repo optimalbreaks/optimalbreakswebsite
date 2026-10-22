@@ -7,7 +7,11 @@
 
 import type { Locale } from '@/lib/i18n-config'
 
-export const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@optimalbreaks'
+export const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@OptimalBreakswebsite'
+export const YOUTUBE_CHANNEL_HANDLE = '@OptimalBreakswebsite'
+/** Avatar del canal (vinilo). Se pide por `/api/og/image-proxy`, no en caliente a Google. */
+export const YOUTUBE_CHANNEL_AVATAR =
+  'https://yt3.googleusercontent.com/noaTUfEIfwS82wowVqUY8ROy07qktW9mZdjewXEtbDlDeq0SVehJT3us4UFwpHN2VlePhTbk6lI=s900-c-k-c0x00ffffff-no-rj'
 
 type Copy = Record<Locale, string>
 
@@ -63,8 +67,8 @@ export const CHANNEL_ACCOUNTS: ChannelAccount[] = [
     kicker: { es: 'Vídeo', en: 'Video' },
     title: { es: 'YouTube', en: 'YouTube' },
     text: {
-      es: 'Una cuenta de YouTube, con varios canales. El que ya está en marcha es @optimalbreaks. Ahí van los vídeos de la escena y, sección por sección, cómo se usa la web.',
-      en: 'One YouTube account, with several channels. The one already running is @optimalbreaks. Scene videos go there, and so does a walkthrough of each part of the site.',
+      es: 'El canal @OptimalBreakswebsite. Ahí van los vídeos de la escena y, sección por sección, cómo se usa la web.',
+      en: 'The channel @OptimalBreakswebsite. Scene videos go there, and so does a walkthrough of each part of the site.',
     },
     href: YOUTUBE_CHANNEL_URL,
     button: { es: 'Abrir el canal', en: 'Open the channel' },
@@ -111,7 +115,7 @@ export const CHANNEL_SERIES: ChannelSeries[] = [
       es: 'El cerdito del cómic. Los episodios también se suben al canal.',
       en: 'The little pig from the comic. The episodes go up on the channel too.',
     },
-    youtubeId: null,
+    youtubeId: '0khcoyg3Pi8',
     href: '/comic',
   },
 ]
