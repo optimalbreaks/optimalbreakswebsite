@@ -6,6 +6,8 @@ import {
   CHANNEL_GUIDES,
   CHANNEL_PLAYLISTS,
   CHANNEL_SERIES,
+  loadYouTubeChannelUploads,
+  videosForSeries,
   YOUTUBE_CHANNEL_AVATAR,
   YOUTUBE_CHANNEL_HANDLE,
   YOUTUBE_CHANNEL_URL,
@@ -40,6 +42,14 @@ function outbound(href: string, label: string) {
 export default async function ChannelsPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const es = lang === 'es'
+  const uploads = await loadYouTubeChannelUploads()
+  const claimed = new Set<string>()
+  const seriesBlocks = CHANNEL_SERIES.map((series) => {
+    const videos = videosForSeries(series, uploads)
+    for (const video of videos) claimed.add(video.id)
+    return { series, videos }
+  })
+  const loose = uploads.filter((video) => !claimed.has(video.id))
 
   return (
     <div className="lined min-h-screen">
@@ -95,7 +105,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                     title={playlist.name}
                     src={playlist.embed}
                     width="100%"
-                    height={352}
+                    height={680}
                     className="block w-full border-0 border-t-[3px] border-solid border-[var(--ink)] bg-black"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
@@ -148,14 +158,23 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
             <span className="hl">{es ? 'LA ESCENA' : 'THE SCENE'}</span>
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            {CHANNEL_SERIES.map((series) => (
+            {seriesBlocks.map(({ series, videos }) => (
               <article key={series.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[4px_4px_0_var(--ink)]">
-                {series.youtubeId ? (
-                  <LazyYouTubeEmbed
-                    videoId={series.youtubeId}
-                    title={series.title[lang]}
-                    playSlotId={`channel-${series.id}`}
-                  />
+                {videos.length > 0 ? (
+                  videos.map((video) => (
+                    <div key={video.id} className="border-b-[3px] border-[var(--ink)]">
+                      <LazyYouTubeEmbed
+                        videoId={video.id}
+                        title={video.title}
+                        playSlotId={`channel-${video.id}`}
+                      />
+                      {videos.length > 1 ? (
+                        <p className="m-0 px-3 py-2 text-[12px] leading-snug" style={MONO}>
+                          {video.title}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))
                 ) : (
                   <div
                     className="flex aspect-video items-end border-b-[3px] border-[var(--ink)] p-3"
@@ -189,6 +208,27 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                       </Link>
                     ) : null}
                   </div>
+                </div>
+              </article>
+            ))}
+            {loose.map((video) => (
+              <article key={video.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[4px_4px_0_var(--ink)]">
+                <div className="border-b-[3px] border-[var(--ink)]">
+                  <LazyYouTubeEmbed videoId={video.id} title={video.title} playSlotId={`channel-${video.id}`} />
+                </div>
+                <div className="p-3">
+                  <h3 className="m-0 text-[20px] font-black leading-tight" style={DISPLAY}>
+                    {video.title}
+                  </h3>
+                  <a
+                    href={YOUTUBE_CHANNEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-[12px] font-black text-[var(--ink)] underline underline-offset-2"
+                    style={MONO}
+                  >
+                    {YOUTUBE_CHANNEL_HANDLE}
+                  </a>
                 </div>
               </article>
             ))}

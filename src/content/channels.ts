@@ -1,7 +1,9 @@
 // ============================================
 // OPTIMAL BREAKS — /channels
 // Cuenta de Spotify, listas, cuenta de YouTube y los vídeos del canal.
-// Para publicar un vídeo: pega el id de YouTube en `youtubeId`.
+// Los vídeos salen solos del feed del canal (@OptimalBreakswebsite).
+// `keywords` mete el vídeo en su serie (Godino, Afghan, cerdito).
+// `youtubeId` solo se usa si el feed no responde.
 // La portada y el play los pinta LazyYouTubeEmbed (solo al pulsar).
 // ============================================
 
@@ -9,6 +11,8 @@ import type { Locale } from '@/lib/i18n-config'
 
 export const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@OptimalBreakswebsite'
 export const YOUTUBE_CHANNEL_HANDLE = '@OptimalBreakswebsite'
+/** El mismo canal que @OptimalBreakswebsite. El feed público lista los 15 últimos. */
+export const YOUTUBE_CHANNEL_ID = 'UCYKQPLahCkM_0yZfLGCR0SQ'
 /** Avatar del canal (vinilo). Se pide por `/api/og/image-proxy`, no en caliente a Google. */
 export const YOUTUBE_CHANNEL_AVATAR =
   'https://yt3.googleusercontent.com/noaTUfEIfwS82wowVqUY8ROy07qktW9mZdjewXEtbDlDeq0SVehJT3us4UFwpHN2VlePhTbk6lI=s900-c-k-c0x00ffffff-no-rj'
@@ -38,10 +42,17 @@ export type ChannelSeries = {
   id: string
   title: Copy
   text: Copy
-  /** Id del vídeo (`youtube.com/watch?v=`). Null hasta que esté en el canal. */
+  /** Si el título del vídeo contiene alguna, entra en esta serie. */
+  keywords: string[]
+  /** Respaldo si el feed del canal no responde. */
   youtubeId: string | null
   /** Ficha de la web, si la serie ya vive en otra sección. */
   href?: string
+}
+
+export type ChannelUpload = {
+  id: string
+  title: string
 }
 
 export type ChannelGuide = {
@@ -97,6 +108,7 @@ export const CHANNEL_SERIES: ChannelSeries[] = [
       es: 'Los vídeos de Godino. Se ven aquí cuando están en el canal.',
       en: 'Godino’s videos. They show up here once they are on the channel.',
     },
+    keywords: ['godino'],
     youtubeId: null,
   },
   {
@@ -106,6 +118,7 @@ export const CHANNEL_SERIES: ChannelSeries[] = [
       es: 'Los vídeos de Afghan. Se ven aquí cuando están en el canal.',
       en: 'Afghan’s videos. They show up here once they are on the channel.',
     },
+    keywords: ['afghan'],
     youtubeId: null,
   },
   {
@@ -115,10 +128,55 @@ export const CHANNEL_SERIES: ChannelSeries[] = [
       es: 'El cerdito del cómic. Los episodios también se suben al canal.',
       en: 'The little pig from the comic. The episodes go up on the channel too.',
     },
+    keywords: ['lechon', 'cerdito', 'cerdo'],
     youtubeId: '0khcoyg3Pi8',
     href: '/comic',
   },
 ]
+
+function fold(value: string) {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+}
+
+/** Los 15 últimos del canal. Vacío si YouTube no responde. */
+export async function loadYouTubeChannelUploads(): Promise<ChannelUpload[]> {
+  try {
+    const response = await fetch(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`,
+      { next: { revalidate: 300 } },
+    )
+    if (!response.ok) return []
+    const xml = await response.text()
+    const uploads: ChannelUpload[] = []
+    for (const match of xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
+      const block = match[1] ?? ''
+      const id = block.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1]?.trim()
+      const raw = block.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1]?.trim()
+      if (!id || !raw) continue
+      uploads.push({
+        id,
+        title: raw
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'"),
+      })
+    }
+    return uploads
+  } catch {
+    return []
+  }
+}
+
+/** Vídeos del feed que encajan en la serie. Si el feed falla, el id de respaldo. */
+export function videosForSeries(series: ChannelSeries, uploads: ChannelUpload[]): ChannelUpload[] {
+  const keys = series.keywords.map(fold)
+  const matched = uploads.filter((video) => keys.some((key) => fold(video.title).includes(key)))
+  if (matched.length > 0) return matched
+  if (uploads.length === 0 && series.youtubeId) return [{ id: series.youtubeId, title: series.title.es }]
+  return []
+}
 
 /** Un vídeo por sección, cuando esté grabado. El enlace de la ficha ya funciona. */
 export const CHANNEL_GUIDES: ChannelGuide[] = [
