@@ -53,6 +53,7 @@ export function LazyYouTubeEmbed({
   playSlotId,
   onPlayRecorded,
   nowPlaying,
+  vertical = false,
 }: {
   videoId: string
   title: string
@@ -67,6 +68,8 @@ export function LazyYouTubeEmbed({
   autoplay?: boolean
   /** Id único de esta instancia (fila de vinilo, mix, Mis Tracks…). Solo uno suena. */
   playSlotId?: string
+  /** Short: marco 9:16. Un vídeo apaisado se queda en 16:9. */
+  vertical?: boolean
   /** Llamado una vez cuando el usuario inicia la reproducción (click o autoplay). */
   onPlayRecorded?: () => void
   /** Metadatos de lockscreen. Si faltan, se parsea `title` (`Tema — Artista`). */
@@ -195,7 +198,7 @@ export function LazyYouTubeEmbed({
   }
 
   return (
-    <div className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
+    <div className={`relative w-full bg-black overflow-hidden ${vertical ? 'mx-auto aspect-[9/16] max-w-[420px]' : 'aspect-video'} ${className}`}>
       {mountIframe && embedSrc ? (
         <iframe
           id={iframeId}

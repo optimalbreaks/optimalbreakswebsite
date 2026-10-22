@@ -53,6 +53,8 @@ export type ChannelSeries = {
 export type ChannelUpload = {
   id: string
   title: string
+  /** Vertical. YouTube lo publica como Short (`/shorts/`). */
+  short: boolean
 }
 
 export type ChannelGuide = {
@@ -143,17 +145,17 @@ export async function loadYouTubeChannelUploads(): Promise<ChannelUpload[]> {
   try {
     const response = await fetch(
       `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`,
-      { next: { revalidate: 300 } },
+      process.env.NODE_ENV === 'development' ? { cache: 'no-store' } : { next: { revalidate: 300 } },
     )
     if (!response.ok) return []
     const xml = await response.text()
-    const uploads: ChannelUpload[] = []
+    const parsed: { id: string; title: string }[] = []
     for (const match of xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
       const block = match[1] ?? ''
       const id = block.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1]?.trim()
       const raw = block.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/)?.[1]?.trim()
       if (!id || !raw) continue
-      uploads.push({
+      parsed.push({
         id,
         title: raw
           .replace(/&amp;/g, '&')
@@ -163,7 +165,8 @@ export async function loadYouTubeChannelUploads(): Promise<ChannelUpload[]> {
           .replace(/&#39;/g, "'"),
       })
     }
-    return uploads
+    const shorts = await Promise.all(parsed.map((video) => isYouTubeShort(video.id)))
+    return parsed.map((video, index) => ({ ...video, short: shorts[index] === true }))
   } catch {
     return []
   }
@@ -174,8 +177,23 @@ export function videosForSeries(series: ChannelSeries, uploads: ChannelUpload[])
   const keys = series.keywords.map(fold)
   const matched = uploads.filter((video) => keys.some((key) => fold(video.title).includes(key)))
   if (matched.length > 0) return matched
-  if (uploads.length === 0 && series.youtubeId) return [{ id: series.youtubeId, title: series.title.es }]
+  if (uploads.length === 0 && series.youtubeId) return [{ id: series.youtubeId, title: series.title.es, short: false }]
   return []
+}
+
+/** Un `/shorts/` vertical responde con más alto que ancho. Un vídeo apaisado, no. */
+async function isYouTubeShort(id: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/shorts/${id}`)}&format=json`,
+      process.env.NODE_ENV === 'development' ? { cache: 'no-store' } : { next: { revalidate: 300 } },
+    )
+    if (!response.ok) return false
+    const data = (await response.json()) as { width?: number; height?: number }
+    return typeof data.width === 'number' && typeof data.height === 'number' && data.height > data.width
+  } catch {
+    return false
+  }
 }
 
 /** Un vídeo por sección, cuando esté grabado. El enlace de la ficha ya funciona. */

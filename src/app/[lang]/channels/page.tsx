@@ -167,6 +167,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                         videoId={video.id}
                         title={video.title}
                         playSlotId={`channel-${video.id}`}
+                        vertical={video.short}
                       />
                       {videos.length > 1 ? (
                         <p className="m-0 px-3 py-2 text-[12px] leading-snug" style={MONO}>
@@ -214,7 +215,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
             {loose.map((video) => (
               <article key={video.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[4px_4px_0_var(--ink)]">
                 <div className="border-b-[3px] border-[var(--ink)]">
-                  <LazyYouTubeEmbed videoId={video.id} title={video.title} playSlotId={`channel-${video.id}`} />
+                  <LazyYouTubeEmbed videoId={video.id} title={video.title} playSlotId={`channel-${video.id}`} vertical={video.short} />
                 </div>
                 <div className="p-3">
                   <h3 className="m-0 text-[20px] font-black leading-tight" style={DISPLAY}>
