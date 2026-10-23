@@ -12,8 +12,10 @@ import {
   useFavoriteArtists,
   useFavoriteLabels,
   useFavoriteEvents,
+  useFavoriteIds,
   useSavedMixes,
 } from '@/hooks/useUserData'
+import { formatParkineoPublished } from '@/lib/parkineo'
 import CardThumbnail from '@/components/CardThumbnail'
 import FavoriteButton from '@/components/FavoriteButton'
 import LoadingBreaks from '@/components/LoadingBreaks'
@@ -32,10 +34,13 @@ export default function FavoritesSection({ lang }: { lang: string }) {
   const { favorites: labelIds } = useFavoriteLabels()
   const { favorites: favoriteEventIds } = useFavoriteEvents()
   const { saved: mixIds } = useSavedMixes()
+  const { ids: parkineoIds } = useFavoriteIds('parkineo')
+  const parkineoKey = parkineoIds.join(',')
   const [artists, setArtists] = useState<any[]>([])
   const [labels, setLabels] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
   const [mixes, setMixes] = useState<any[]>([])
+  const [parkineo, setParkineo] = useState<{ id: string; slug: string; title: string; dj_name: string; city: string; image_url: string | null; published_at: string | null }[]>([])
   const [artistView, setArtistView] = useState<ViewMode>('large')
   const [labelView, setLabelView] = useState<ViewMode>('large')
   const [eventView, setEventView] = useState<ViewMode>('large')
@@ -72,6 +77,25 @@ export default function FavoritesSection({ lang }: { lang: string }) {
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artistIds, labelIds, JSON.stringify(favoriteEventIds), mixIds])
+
+  useEffect(() => {
+    if (!parkineoKey) {
+      setParkineo([])
+      return
+    }
+    const supabase = createBrowserSupabase()
+    let cancelled = false
+    void supabase
+      .from('parkineo_sessions')
+      .select('id, slug, title, dj_name, city, image_url, published_at')
+      .in('id', parkineoKey.split(','))
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .then(({ data }) => {
+        if (!cancelled) setParkineo(data || [])
+      })
+    return () => { cancelled = true }
+  }, [parkineoKey])
 
   return (
     <div className="space-y-10">
@@ -370,6 +394,37 @@ export default function FavoritesSection({ lang }: { lang: string }) {
                 </div>
               )
             })}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h2 className="mb-4" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
+          {es ? 'SESIONES DE PARKINEO' : 'PARKINEO SESSIONS'} ({parkineoIds.length})
+        </h2>
+        {parkineoIds.length === 0 ? (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+            {es ? 'Aún no has marcado sesiones en Parkineo.' : 'No Parkineo sessions marked yet.'}
+          </p>
+        ) : (
+          <div className="border-4 border-[var(--ink)]">
+            {parkineo.map((session) => (
+              <div key={session.id} className="relative border-b-[2px] border-[var(--ink)]">
+                <Link href={`/${lang}/parkineo/${session.slug}`} className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-14 transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)]">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden border-[2px] border-[var(--ink)] sm:h-12 sm:w-12">
+                    <CardThumbnail src={session.image_url} alt={session.title} aspectClass="aspect-square" frameClass="" />
+                  </div>
+                  <div className="min-w-0 flex-grow">
+                    <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>{session.title}</div>
+                    <div className="mt-[2px] truncate" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', fontWeight: 700 }}>
+                      {session.dj_name} · {session.city}
+                      {formatParkineoPublished(session.published_at, lang) ? ` · ${formatParkineoPublished(session.published_at, lang)}` : ''}
+                    </div>
+                  </div>
+                </Link>
+                <FavoriteButton type="parkineo" entityId={session.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+              </div>
+            ))}
           </div>
         )}
       </div>

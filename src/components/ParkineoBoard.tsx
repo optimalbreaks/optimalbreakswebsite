@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
+import FavoriteButton from '@/components/FavoriteButton'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import { formatParkineoPublished, parkineoOpenHref } from '@/lib/parkineo'
@@ -347,8 +348,9 @@ function ParkineoCard({ session, lang }: { session: ParkineoListItem; lang: stri
   return (
     <article
       id={`parkineo-${session.id}`}
-      className="flex flex-col border-4 border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)] overflow-hidden transition-transform hover:-translate-y-1"
+      className="relative flex flex-col border-4 border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)] overflow-hidden transition-transform hover:-translate-y-1"
     >
+      <FavoriteButton type="parkineo" entityId={session.id} lang={lang} />
       <ParkineoPlayer session={session} />
       <div className="flex flex-1 flex-col p-4">
         <h3 className="m-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: '18px', lineHeight: 1.15, textTransform: 'uppercase' }}>
@@ -375,8 +377,9 @@ function ParkineoCompact({ sessions, lang }: { sessions: ParkineoListItem[]; lan
           <article
             key={session.id}
             id={`parkineo-${session.id}`}
-            className="flex flex-col border-b-[3px] border-r-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden transition-colors hover:bg-[var(--yellow)]"
+            className="relative flex flex-col border-b-[3px] border-r-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden transition-colors hover:bg-[var(--yellow)]"
           >
+            <FavoriteButton type="parkineo" entityId={session.id} lang={lang} />
             <ParkineoPlayer session={session} />
             <div className="flex flex-1 flex-col p-3 min-h-0">
               <h3 className="m-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: 'clamp(11px, 2vw, 14px)', lineHeight: 1.15, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
@@ -409,12 +412,13 @@ function ParkineoList({ sessions, lang }: { sessions: ParkineoListItem[]; lang: 
           <article
             key={session.id}
             id={`parkineo-${session.id}`}
-            className="flex items-stretch border-b-[2px] border-[var(--ink)] bg-[var(--paper)] transition-colors hover:bg-[var(--yellow)]"
+            className="relative flex items-stretch border-b-[2px] border-[var(--ink)] bg-[var(--paper)] transition-colors hover:bg-[var(--yellow)]"
           >
+            <FavoriteButton type="parkineo" entityId={session.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
             <div className="w-[132px] shrink-0 border-r-[2px] border-[var(--ink)] sm:w-[240px]">
               <ParkineoPlayer session={session} />
             </div>
-            <div className="flex min-w-0 flex-1 flex-col justify-center p-3 sm:p-4">
+            <div className="flex min-w-0 flex-1 flex-col justify-center p-3 pr-12 sm:p-4 sm:pr-14">
               <h3 className="m-0 truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: 'clamp(13px, 2.4vw, 18px)', lineHeight: 1.15, textTransform: 'uppercase' }}>
                 <Link href={`/${lang}/parkineo/${session.slug}`} className="text-inherit no-underline hover:text-[var(--red)]">
                   {session.title}

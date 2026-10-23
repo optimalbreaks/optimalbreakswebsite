@@ -1,6 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Favorite Button
-// Heart toggle for artists, labels, events, mixes
+// Heart toggle for artists, labels, events, mixes and Parkineo sessions
 // Always visible (even for guests → prompts signup)
 // ============================================
 
@@ -127,9 +127,13 @@ export default function FavoriteButton({
                 : 'Sign up to save your favorites!'}
             </p>
             <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
-              {es
-                ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
-                : 'Build your collection of artists, labels, events and mixes.'}
+              {type === 'parkineo'
+                ? (es
+                  ? 'Entra y el corazón guarda esta sesión en tus favoritos.'
+                  : 'Sign in and the heart saves this session in your favorites.')
+                : (es
+                  ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
+                  : 'Build your collection of artists, labels, events and mixes.')}
             </p>
             <Link
               href={`/${resolvedLang}/login`}

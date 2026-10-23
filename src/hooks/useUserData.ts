@@ -353,13 +353,14 @@ export function useEventRatings() {
 // UNIFIED FAVORITE TOGGLE
 // Single hook for FavoriteButton across all entity types
 // =============================================
-export type FavoriteType = 'artist' | 'label' | 'event' | 'mix'
+export type FavoriteType = 'artist' | 'label' | 'event' | 'mix' | 'parkineo'
 
 const FAV_CONFIG: Record<FavoriteType, { table: string; column: string }> = {
   artist: { table: 'favorite_artists', column: 'artist_id' },
   label: { table: 'favorite_labels', column: 'label_id' },
   event: { table: 'favorite_events', column: 'event_id' },
   mix: { table: 'saved_mixes', column: 'mix_id' },
+  parkineo: { table: 'favorite_parkineo', column: 'session_id' },
 }
 
 // Almacén compartido de favoritos por tipo (a nivel de módulo).
@@ -381,6 +382,7 @@ const favStores: Record<FavoriteType, FavStore> = {
   label: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
   event: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
   mix: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
+  parkineo: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
 }
 
 function notifyFav(type: FavoriteType) {
@@ -460,6 +462,30 @@ export function useFavoriteToggle(type: FavoriteType, entityId: string) {
   }, [user, entityId, type, store, cfg.table, cfg.column])
 
   return { isFavorite, loading, toggle, isLoggedIn: !!user }
+}
+
+/** Ids que el usuario tiene marcados de un tipo. Misma carga que el corazón. */
+export function useFavoriteIds(type: FavoriteType) {
+  const { user } = useAuth()
+  const store = favStores[type]
+  const [, forceRender] = useState(0)
+
+  useEffect(() => {
+    const listener = () => forceRender((n) => n + 1)
+    store.listeners.add(listener)
+    return () => { store.listeners.delete(listener) }
+  }, [store])
+
+  useEffect(() => {
+    if (!user) return
+    void ensureFavoritesLoaded(type, user.id)
+  }, [user, type])
+
+  const ready = !!user && store.userId === user.id && store.loaded
+  return {
+    ids: ready ? [...store.ids] : [],
+    loading: !!user && !ready,
+  }
 }
 
 // =============================================

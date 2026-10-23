@@ -323,6 +323,12 @@ export interface Database {
         Update: Partial<Pick<FavoriteEventRow, 'user_id' | 'event_id'>>
         Relationships: DbRelationship[]
       }
+      favorite_parkineo: {
+        Row: FavoriteParkineoRow
+        Insert: Pick<FavoriteParkineoRow, 'user_id' | 'session_id'>
+        Update: Partial<Pick<FavoriteParkineoRow, 'user_id' | 'session_id'>>
+        Relationships: DbRelationship[]
+      }
       event_attendance: {
         Row: EventAttendanceRow
         Insert: Pick<EventAttendanceRow, 'user_id' | 'event_id' | 'status'>
@@ -608,6 +614,13 @@ export interface FavoriteEventRow extends Record<string, unknown> {
   id: string
   user_id: string
   event_id: string
+  created_at: string
+}
+
+export interface FavoriteParkineoRow extends Record<string, unknown> {
+  id: string
+  user_id: string
+  session_id: string
   created_at: string
 }
 

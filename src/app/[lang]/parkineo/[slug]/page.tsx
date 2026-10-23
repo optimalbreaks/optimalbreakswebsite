@@ -6,6 +6,7 @@ import { createCachedSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import { PUBLIC_PARKINEO_CACHE_TAG } from '@/lib/revalidate-public'
 import { PARKINEO_PUBLIC_COLUMNS, formatParkineoPublished, parkineoOpenHref } from '@/lib/parkineo'
+import FavoriteButton from '@/components/FavoriteButton'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
 import type { ParkineoListItem } from '@/components/ParkineoBoard'
 
@@ -67,9 +68,12 @@ export default async function ParkineoSessionPage({
         >
           ← Parkineo
         </Link>
-        <h1 className="mt-4 mb-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 48px)', lineHeight: 0.95, textTransform: 'uppercase' }}>
-          {session.title}
-        </h1>
+        <div className="mt-4 mb-2 flex flex-wrap items-start justify-between gap-3">
+          <h1 className="m-0 min-w-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 48px)', lineHeight: 0.95, textTransform: 'uppercase' }}>
+            {session.title}
+          </h1>
+          <FavoriteButton type="parkineo" entityId={session.id} size="md" lang={lang} />
+        </div>
         <p className="mt-0 mb-6" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '14px', letterSpacing: '0.5px' }}>
           {session.dj_name} · {session.city}
           {published ? ` · ${published}` : ''}
