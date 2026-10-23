@@ -16,7 +16,7 @@ Los dos **copian el texto del post** al portapapeles (tema, artistas, sello, fec
 
 Si el tema tiene preview de Beatport o Bandcamp, o un audio completo alojado (`full_audio_url`), **IG**, **R** y **F** abren `AudioSegmentPicker`: onda del preview, ventana de 15 s arrastrable y arranque sugerido (el tramo con más energía). Ese arranque se recuerda por tema. El MP4 lleva ese fragmento en AAC (`src/lib/share-audio.ts`, `encodeCanvasVideo`). La Story con audio usa `/api/og/story?audio=1` (mismo diseño, sin el aviso de que el sticker no es el tema).
 
-YouTube y SoundCloud no dan archivo: esos vídeos siguen **mudos** y la Story sigue siendo PNG con el aviso.
+YouTube y SoundCloud no dan archivo: esos vídeos siguen **mudos** y la Story sigue siendo PNG con el aviso. Si el MP4 se abre y la pista está en silencio, se vuelve a grabar en tiempo real; si el navegador no sabe abrir el vídeo, se queda el archivo (no poder decodificarlo no cuenta como mudo). El aviso de «sale mudo» no sale antes del menú de compartir: en el móvil el botón pasa a **↗** y el cuadro aparece en ese momento.
 
 Si el tema está en la biblioteca de Instagram o Facebook, quien publica **baja a cero** este audio y pone el oficial: así sale «Artista · Título» y se puede invitar al artista. Si no está en esa biblioteca, se publica con este fragmento. El vídeo sigue latiendo al **BPM real** del tema. Las sesiones, el Top 100, la semana de New Releases y el blog siguen sin audio.
 

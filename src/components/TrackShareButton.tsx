@@ -236,6 +236,24 @@ export default function TrackShareButton(props: Props) {
    * Tras un render largo, el gesto del clic ya caducó y el navegador rechaza
    * `navigator.share`: en ese caso guardamos el archivo y pedimos un 2.º toque.
    */
+  /** Aviso si el vídeo se abrió y no tenía audio. No llamarlo antes de `navigator.share`: el cuadro se come el gesto. */
+  function warnIfMuted(muted: boolean) {
+    if (!muted) return
+    window.alert(
+      es
+        ? 'Este navegador no ha podido meter el audio en el vídeo: sale mudo. Prueba en Chrome o desde el ordenador.'
+        : 'This browser could not add the audio to the video: it is silent. Try Chrome or a computer.',
+    )
+  }
+
+  function canShareFile(file: File): boolean {
+    try {
+      return !!navigator.canShare?.({ files: [file] })
+    } catch {
+      return false
+    }
+  }
+
   function shareNeedsSecondTap(file: File): boolean {
     const nav = navigator as Navigator & { userActivation?: { isActive: boolean } }
     return !!nav.canShare?.({ files: [file] }) && !nav.userActivation?.isActive
@@ -287,6 +305,7 @@ export default function TrackShareButton(props: Props) {
       if (!res.ok) throw new Error(`story ${res.status}`)
       const png = await res.blob()
       let file: File
+      let muted = false
       if (segment) {
         const image = await createImageBitmap(png)
         const { renderStillVideo } = await import('@/lib/reel-renderer')
@@ -296,6 +315,15 @@ export default function TrackShareButton(props: Props) {
         })
         image.close()
         file = new File([video.blob], `optimal-breaks-story.${video.ext}`, { type: video.mime })
+        muted = !!video.audioMissing
+        // Con audio confirmado en silencio y menú de compartir: el aviso va ahora
+        // y el archivo espera un segundo toque. Así el cuadro no se come el gesto.
+        if (muted && canShareFile(file)) {
+          setStoryFile(file)
+          setStoryState('ready')
+          warnIfMuted(true)
+          return
+        }
       } else {
         file = new File([png], 'optimal-breaks-story.png', { type: 'image/png' })
       }
@@ -307,6 +335,7 @@ export default function TrackShareButton(props: Props) {
       await shareOrDownload(file)
       setStoryState('done')
       setTimeout(() => setStoryState('idle'), 1800)
+      warnIfMuted(muted)
     } catch (err) {
       console.error('[story]', err)
       setStoryState('idle')
@@ -365,6 +394,12 @@ export default function TrackShareButton(props: Props) {
       const caption = await captionP
       setReelCaption(caption)
       const file = new File([reel.blob], `optimal-breaks-reel.${reel.ext}`, { type: reel.mime })
+      if (reel.audioMissing && canShareFile(file)) {
+        setReelFile(file)
+        setReelState('ready')
+        warnIfMuted(true)
+        return
+      }
       if (shareNeedsSecondTap(file)) {
         setReelFile(file)
         setReelState('ready')
@@ -374,6 +409,7 @@ export default function TrackShareButton(props: Props) {
       await shareOrDownload(file, caption)
       setReelState('done')
       setTimeout(() => setReelState('idle'), 2200)
+      warnIfMuted(!!reel.audioMissing)
     } catch (err) {
       console.error('[reel]', err)
       setReelState('error')
@@ -430,6 +466,7 @@ export default function TrackShareButton(props: Props) {
       await copyShareLink(caption)
       setFbState('done')
       setTimeout(() => setFbState('idle'), 2200)
+      warnIfMuted(!!video.audioMissing)
     } catch (err) {
       console.error('[facebook video]', err)
       setFbState('error')

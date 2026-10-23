@@ -20,7 +20,7 @@
 // ============================================
 
 import { bakeSetBackground, dominantColor, drawSetFrame, type SetAssets } from './set-reel-design'
-import { segmentChannels, type ShareAudioSegment } from './share-audio'
+import { segmentChannels, videoHasAudibleAudio, type ShareAudioSegment } from './share-audio'
 
 export type ReelData = {
   title: string
@@ -61,7 +61,13 @@ export type ReelOptions = {
   audio?: ShareAudioSegment | null
 }
 
-export type ReelResult = { blob: Blob; mime: string; ext: 'mp4' | 'webm' }
+export type ReelResult = {
+  blob: Blob
+  mime: string
+  ext: 'mp4' | 'webm'
+  /** Se pidió audio pero el vídeo final no suena (el navegador no pudo incrustarlo). */
+  audioMissing?: boolean
+}
 
 // Tamaño del lienzo del render en curso (lo fija `renderReel` según el formato).
 // Un render cada vez: los botones R y F no se lanzan en paralelo.
@@ -1264,7 +1270,16 @@ const AUDIO_CHUNK = 4096
 
 async function pickAudioConfig(sampleRate: number): Promise<AudioEncoderConfig | null> {
   if (typeof AudioEncoder === 'undefined') return null
-  const cfg: AudioEncoderConfig = { codec: 'mp4a.40.2', sampleRate, numberOfChannels: 2, bitrate: AAC_BITRATE }
+  // `aac.format: 'aac'` = tramas crudas (las que espera el MP4). Algún codificador de
+  // sistema (Apple, Android) podría sacar ADTS si no se pide explícito.
+  // (`aac` es parte de la spec de WebCodecs, pero aún no está en los tipos DOM de TS.)
+  const cfg = {
+    codec: 'mp4a.40.2',
+    sampleRate,
+    numberOfChannels: 2,
+    bitrate: AAC_BITRATE,
+    aac: { format: 'aac' },
+  } as AudioEncoderConfig
   try {
     const r = await AudioEncoder.isConfigSupported(cfg)
     return r.supported ? cfg : null
@@ -1287,6 +1302,33 @@ export async function encodeCanvasVideo(
   onProgress?: (ratio: number) => void,
   audio?: ShareAudioSegment | null,
 ): Promise<ReelResult> {
+  try {
+    if (!audio) return await encodeOnce(W, H, durationSec, fps, draw, onProgress, null, false)
+    // Solo se repite la grabación si el MP4 SE ABRE y la pista está en silencio.
+    // Si el navegador no sabe decodificar el vídeo, se queda el archivo rápido:
+    // no poder abrirlo no demuestra que falte el audio.
+    const fast = await encodeOnce(W, H, durationSec, fps, draw, onProgress, audio, false)
+    if ((await videoHasAudibleAudio(fast.blob)) !== 'no') return fast
+    console.warn('[reel] el MP4 se abrió sin audio; reintento grabando en tiempo real')
+    const recorded = await encodeOnce(W, H, durationSec, fps, draw, onProgress, audio, true).catch(() => null)
+    if (!recorded) return { ...fast, audioMissing: true }
+    if ((await videoHasAudibleAudio(recorded.blob)) === 'no') return { ...recorded, audioMissing: true }
+    return recorded
+  } finally {
+    await audio?.ctx?.close().catch(() => undefined)
+  }
+}
+
+async function encodeOnce(
+  W: number,
+  H: number,
+  durationSec: number,
+  fps: number,
+  draw: (c: CanvasRenderingContext2D, t: number) => void,
+  onProgress: ((ratio: number) => void) | undefined,
+  audio: ShareAudioSegment | null,
+  forceRecorder: boolean,
+): Promise<ReelResult> {
   const total = Math.round(durationSec * fps)
   const canvas = document.createElement('canvas')
   canvas.width = W
@@ -1296,8 +1338,8 @@ export async function encodeCanvasVideo(
   // El audio cubre SIEMPRE la duración del vídeo (si dura más de 15 s, también).
   const pcm = audio ? segmentChannels(audio.buffer, audio.start, durationSec) : null
   const sampleRate = audio?.buffer.sampleRate ?? 44100
-  const cfg = await pickEncoderConfig(fps, W, H)
-  const audioCfg = pcm ? await pickAudioConfig(sampleRate) : null
+  const cfg = forceRecorder ? null : await pickEncoderConfig(fps, W, H)
+  const audioCfg = pcm && cfg ? await pickAudioConfig(sampleRate) : null
   // Con audio pero sin codificador AAC (algún Safari/Firefox): MediaRecorder lo graba en tiempo real.
   if (cfg && (!pcm || audioCfg)) {
     const { Muxer, ArrayBufferTarget } = await import('mp4-muxer')
@@ -1385,10 +1427,12 @@ export async function encodeCanvasVideo(
   if (!mime) throw new Error('Este navegador no puede generar vídeo')
   const stream = canvas.captureStream(fps)
   // Audio: el fragmento suena por un grafo Web Audio que va directo a la grabación (no a los altavoces).
+  // Mejor el AudioContext desbloqueado en el toque (`audio.ctx`, imprescindible en iOS).
+  const ownCtx = !audio?.ctx
   let audioCtx: AudioContext | null = null
   let source: AudioBufferSourceNode | null = null
   if (pcm) {
-    audioCtx = new AudioContext({ sampleRate })
+    audioCtx = audio?.ctx ?? new AudioContext({ sampleRate })
     await audioCtx.resume().catch(() => undefined)
     const buf = audioCtx.createBuffer(2, pcm[0].length, sampleRate)
     buf.copyToChannel(pcm[0] as Float32Array<ArrayBuffer>, 0)
@@ -1423,7 +1467,7 @@ export async function encodeCanvasVideo(
   rec.stop()
   await done
   source?.stop()
-  await audioCtx?.close().catch(() => undefined)
+  if (ownCtx) await audioCtx?.close().catch(() => undefined)
   const type = mime.split(';')[0]
   return { blob: new Blob(chunks, { type }), mime: type, ext: type === 'video/mp4' ? 'mp4' : 'webm' }
 }

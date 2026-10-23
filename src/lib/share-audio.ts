@@ -17,8 +17,53 @@ export const SHARE_AUDIO_RATE = 44100
 const FADE_IN_SEC = 0.12
 const FADE_OUT_SEC = 1.2
 
-/** Audio decodificado + fragmento elegido: lo que necesita el renderizador. */
-export type ShareAudioSegment = { buffer: AudioBuffer; start: number }
+/**
+ * Audio decodificado + fragmento elegido: lo que necesita el renderizador.
+ * `ctx`: AudioContext creado y desbloqueado DENTRO del toque en «Generar».
+ * iOS deja mudo (suspendido) cualquier AudioContext creado después, y la
+ * grabación en tiempo real (`MediaRecorder`) depende de él.
+ */
+export type ShareAudioSegment = { buffer: AudioBuffer; start: number; ctx?: AudioContext | null }
+
+/** Crea y desbloquea un AudioContext: llamar de forma SÍNCRONA en el gesto del usuario. */
+export function unlockAudioContext(): AudioContext | null {
+  try {
+    const ctx = new AudioContext()
+    void ctx.resume()
+    // iOS: reproducir un buffer vacío dentro del gesto termina de desbloquearlo.
+    const src = ctx.createBufferSource()
+    src.buffer = ctx.createBuffer(1, 1, ctx.sampleRate)
+    src.connect(ctx.destination)
+    src.start(0)
+    return ctx
+  } catch {
+    return null
+  }
+}
+
+/**
+ * ¿El vídeo generado suena? Solo `no` cuando el navegador abre la pista y está
+ * en silencio. Si no sabe abrir el MP4 (muchos `decodeAudioData` rechazan un
+ * vídeo con imagen), `unknown`: no es prueba de que falte el audio.
+ */
+export async function videoHasAudibleAudio(blob: Blob): Promise<'yes' | 'no' | 'unknown'> {
+  try {
+    const ctx = new OfflineAudioContext(1, 1, SHARE_AUDIO_RATE)
+    const buf = await ctx.decodeAudioData(await blob.arrayBuffer())
+    if (buf.duration < 1 || buf.length < 1) return 'no'
+    let peak = 0
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c)
+      for (let i = 0; i < d.length; i += 32) {
+        const v = Math.abs(d[i])
+        if (v > peak) peak = v
+      }
+    }
+    return peak > 0.01 ? 'yes' : 'no'
+  } catch {
+    return 'unknown'
+  }
+}
 
 const decoded = new Map<string, Promise<AudioBuffer>>()
 

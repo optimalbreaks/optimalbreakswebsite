@@ -23,6 +23,7 @@ import {
   maxSegmentStart,
   saveSegmentStart,
   suggestSegmentStart,
+  unlockAudioContext,
   type ShareAudioSegment,
 } from '@/lib/share-audio'
 
@@ -185,7 +186,8 @@ export default function AudioSegmentPicker(props: Props) {
     stop()
     if (!buffer) return onConfirm(null)
     saveSegmentStart(segmentKey, start)
-    onConfirm({ buffer, start })
+    // Dentro del toque: iOS solo deja sonar audio creado en un gesto del usuario.
+    onConfirm({ buffer, start, ctx: unlockAudioContext() })
   }
 
   const pct = (t: number) => (duration ? (t / duration) * 100 : 0)
