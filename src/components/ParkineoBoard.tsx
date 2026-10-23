@@ -4,9 +4,15 @@ import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
+import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import { parkineoOpenHref } from '@/lib/parkineo'
 
 const PAGE = 24
+
+const VIEW_LABELS = {
+  es: { view_large: 'Grande', view_compact: 'Compacto', view_list: 'Lista' },
+  en: { view_large: 'Large', view_compact: 'Compact', view_list: 'List' },
+} as const
 
 export type ParkineoListItem = ParkineoPlayable & {
   slug: string
@@ -47,6 +53,7 @@ export default function ParkineoBoard({
   const es = lang === 'es'
   const { user, loading } = useAuth()
   const [visible, setVisible] = useState(PAGE)
+  const [view, setView] = useState<ViewMode>('large')
   const [djName, setDjName] = useState('')
   const [city, setCity] = useState('')
   const [title, setTitle] = useState('')
@@ -274,14 +281,19 @@ export default function ParkineoBoard({
 
       <section id="sesiones" className="scroll-mt-24 px-4 sm:px-6 py-12 sm:py-16">
         <div className="mx-auto max-w-[1280px]">
-          <div className="mb-8 flex flex-wrap items-end gap-4">
-            <h2 className="m-0" style={{ ...DISPLAY, fontSize: 'clamp(26px, 4vw, 44px)', lineHeight: 1, letterSpacing: '-1px' }}>
-              {es ? 'Las sesiones' : 'The sessions'}
-            </h2>
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-wrap items-end gap-4">
+              <h2 className="m-0" style={{ ...DISPLAY, fontSize: 'clamp(26px, 4vw, 44px)', lineHeight: 1, letterSpacing: '-1px' }}>
+                {es ? 'Las sesiones' : 'The sessions'}
+              </h2>
+              {sessions.length > 0 ? (
+                <span className="border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1" style={{ ...MONO, fontSize: '13px', fontWeight: 700 }}>
+                  {sessions.length}
+                </span>
+              ) : null}
+            </div>
             {sessions.length > 0 ? (
-              <span className="border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1" style={{ ...MONO, fontSize: '13px', fontWeight: 700 }}>
-                {sessions.length}
-              </span>
+              <ViewToggle view={view} setView={setView} labels={es ? VIEW_LABELS.es : VIEW_LABELS.en} />
             ) : null}
           </div>
           {sessions.length === 0 ? (
@@ -298,11 +310,17 @@ export default function ParkineoBoard({
             </div>
           ) : (
             <>
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {shown.map((session) => (
-                  <ParkineoCard key={session.id} session={session} lang={lang} />
-                ))}
-              </div>
+              {view === 'large' ? (
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {shown.map((session) => (
+                    <ParkineoCard key={session.id} session={session} lang={lang} />
+                  ))}
+                </div>
+              ) : view === 'compact' ? (
+                <ParkineoCompact sessions={shown} lang={lang} />
+              ) : (
+                <ParkineoList sessions={shown} lang={lang} />
+              )}
               {visible < sessions.length ? (
                 <div className="mt-10 text-center">
                   <button
@@ -326,7 +344,6 @@ export default function ParkineoBoard({
 function ParkineoCard({ session, lang }: { session: ParkineoListItem; lang: string }) {
   const es = lang === 'es'
   const href = parkineoOpenHref(session)
-  const platform = session.platform.toUpperCase()
   return (
     <article
       id={`parkineo-${session.id}`}
@@ -342,17 +359,100 @@ function ParkineoCard({ session, lang }: { session: ParkineoListItem; lang: stri
         <p className="mt-2 mb-0" style={{ ...MONO, fontSize: '14px', fontWeight: 700 }}>
           {session.dj_name} <span className="font-normal opacity-70">· {session.city}</span>
         </p>
-        <div className="mt-auto pt-4 flex flex-wrap items-center gap-2" style={{ ...MONO, fontSize: '11px', fontWeight: 700, letterSpacing: '1px' }}>
-          <span className="border-2 border-[var(--ink)] bg-[var(--yellow)] px-2 py-[2px]">{session.duration_minutes} MIN</span>
-          <span className="border-2 border-[var(--ink)] px-2 py-[2px]">{platform}</span>
-          {href ? (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="ml-auto text-[var(--red)]">
-              {es ? 'Abrir' : 'Open'} ↗
-            </a>
-          ) : null}
-        </div>
+        <ParkineoMeta session={session} href={href} openLabel={es ? 'Abrir' : 'Open'} />
       </div>
     </article>
+  )
+}
+
+function ParkineoCompact({ sessions, lang }: { sessions: ParkineoListItem[]; lang: string }) {
+  const es = lang === 'es'
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
+      {sessions.map((session) => {
+        const href = parkineoOpenHref(session)
+        return (
+          <article
+            key={session.id}
+            id={`parkineo-${session.id}`}
+            className="flex flex-col border-b-[3px] border-r-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden transition-colors hover:bg-[var(--yellow)]"
+          >
+            <ParkineoPlayer session={session} />
+            <div className="flex flex-1 flex-col p-3 min-h-0">
+              <h3 className="m-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: 'clamp(11px, 2vw, 14px)', lineHeight: 1.15, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+                <Link href={`/${lang}/parkineo/${session.slug}`} className="text-inherit no-underline hover:text-[var(--red)]">
+                  {session.title}
+                </Link>
+              </h3>
+              <p className="mt-1 mb-0 truncate" style={{ ...MONO, fontSize: '12px', fontWeight: 700 }}>
+                {session.dj_name}
+              </p>
+              <p className="mt-0 mb-0 truncate opacity-70" style={{ ...MONO, fontSize: '11px' }}>
+                {session.city}
+              </p>
+              <ParkineoMeta session={session} href={href} openLabel={es ? 'Abrir' : 'Open'} dense />
+            </div>
+          </article>
+        )
+      })}
+    </div>
+  )
+}
+
+function ParkineoList({ sessions, lang }: { sessions: ParkineoListItem[]; lang: string }) {
+  const es = lang === 'es'
+  return (
+    <div className="border-4 border-[var(--ink)]">
+      {sessions.map((session) => {
+        const href = parkineoOpenHref(session)
+        return (
+          <article
+            key={session.id}
+            id={`parkineo-${session.id}`}
+            className="flex items-stretch border-b-[2px] border-[var(--ink)] bg-[var(--paper)] transition-colors hover:bg-[var(--yellow)]"
+          >
+            <div className="w-[132px] shrink-0 border-r-[2px] border-[var(--ink)] sm:w-[240px]">
+              <ParkineoPlayer session={session} />
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col justify-center p-3 sm:p-4">
+              <h3 className="m-0 truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: 'clamp(13px, 2.4vw, 18px)', lineHeight: 1.15, textTransform: 'uppercase' }}>
+                <Link href={`/${lang}/parkineo/${session.slug}`} className="text-inherit no-underline hover:text-[var(--red)]">
+                  {session.title}
+                </Link>
+              </h3>
+              <p className="mt-1 mb-0 truncate" style={{ ...MONO, fontSize: '13px', fontWeight: 700 }}>
+                {session.dj_name} <span className="font-normal opacity-70">· {session.city}</span>
+              </p>
+              <ParkineoMeta session={session} href={href} openLabel={es ? 'Abrir' : 'Open'} />
+            </div>
+          </article>
+        )
+      })}
+    </div>
+  )
+}
+
+function ParkineoMeta({
+  session,
+  href,
+  openLabel,
+  dense = false,
+}: {
+  session: ParkineoListItem
+  href: string | null
+  openLabel: string
+  dense?: boolean
+}) {
+  return (
+    <div className={`mt-auto flex flex-wrap items-center gap-1.5 ${dense ? 'pt-2' : 'pt-4'}`} style={{ ...MONO, fontSize: dense ? '9px' : '11px', fontWeight: 700, letterSpacing: '1px' }}>
+      <span className="border-2 border-[var(--ink)] bg-[var(--yellow)] px-1.5 py-[1px]">{session.duration_minutes} MIN</span>
+      <span className="border-2 border-[var(--ink)] px-1.5 py-[1px]">{session.platform.toUpperCase()}</span>
+      {href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="ml-auto text-[var(--red)]">
+          {openLabel} ↗
+        </a>
+      ) : null}
+    </div>
   )
 }
 
