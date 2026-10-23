@@ -349,6 +349,8 @@ function isTopTracksEmpty(v) {
  */
 const ARTIST_TOP10_LABEL_ALLOWLIST = {
   lucas: ['dirty kitchen rave', 'top drawer digital', 'bass elements'],
+  // Beatport 85445 mezcla a esta Xana con otra de Eightball Digital (Take Me Away, Siempre Viva).
+  xana: ['dirty kitchen rave', 'ravesta', 'frequency fusion'],
 }
 
 function normalizeLabelKey(s) {
