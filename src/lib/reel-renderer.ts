@@ -1267,6 +1267,15 @@ export async function renderStillVideo(
 const AAC_BITRATE = 192_000
 /** Muestras por `AudioData` (AAC trabaja en tramas de 1024). */
 const AUDIO_CHUNK = 4096
+const AAC_FRAME_SAMPLES = 1024
+
+/** Quita la cabecera ADTS (7 o 9 bytes) si el codificador la mete: en un MP4 la trama va cruda. */
+function stripAdts(data: Uint8Array): Uint8Array {
+  if (data.length > 9 && data[0] === 0xff && (data[1] & 0xf6) === 0xf0) {
+    return data.subarray(data[1] & 0x01 ? 7 : 9)
+  }
+  return data
+}
 
 async function pickAudioConfig(sampleRate: number): Promise<AudioEncoderConfig | null> {
   if (typeof AudioEncoder === 'undefined') return null
@@ -1364,8 +1373,16 @@ async function encodeOnce(
     let audioPos = 0
     const audioLen = pcm ? pcm[0].length : 0
     if (pcm && audioCfg) {
+      const frameUs = (AAC_FRAME_SAMPLES * 1e6) / sampleRate
       audioEncoder = new AudioEncoder({
-        output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+        // Sin el `meta` del codificador: en iPhone puede venir sin `description` y
+        // mp4-muxer pisaría su AudioSpecificConfig (AAC-LC, bien calculado) con uno
+        // vacío. Safari reproduce ese MP4, pero Instagram sube la pista muda.
+        output: (chunk) => {
+          const raw = new Uint8Array(chunk.byteLength)
+          chunk.copyTo(raw)
+          muxer.addAudioChunkRaw(stripAdts(raw), chunk.type, chunk.timestamp, chunk.duration || frameUs)
+        },
         error: (e) => {
           failure = e
         },

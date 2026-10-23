@@ -18,6 +18,8 @@ Si el tema tiene preview de Beatport o Bandcamp, o un audio completo alojado (`f
 
 YouTube y SoundCloud no dan archivo: esos vídeos siguen **mudos** y la Story sigue siendo PNG con el aviso. Si el MP4 se abre y la pista está en silencio, se vuelve a grabar en tiempo real; si el navegador no sabe abrir el vídeo, se queda el archivo (no poder decodificarlo no cuenta como mudo). El aviso de «sale mudo» no sale antes del menú de compartir: en el móvil el botón pasa a **↗** y el cuadro aparece en ese momento.
 
+**Reel mudo en Instagram desde iPhone (23 oct 2026).** El fragmento sonaba bien en el selector y el reel subió mudo a Instagram. La pista AAC entra en el MP4 sin el `meta` del codificador: el iPhone puede dar la configuración sin `description`, y mp4-muxer pisaba con esa ficha vacía la que él ya calcula bien (AAC-LC, 44,1 kHz, estéreo). Safari reproduce ese archivo, pero Instagram no lee la pista. Además se quita la cabecera ADTS si el codificador la mete. No volver a `muxer.addAudioChunk(chunk, meta)`.
+
 Si el tema está en la biblioteca de Instagram o Facebook, quien publica **baja a cero** este audio y pone el oficial: así sale «Artista · Título» y se puede invitar al artista. Si no está en esa biblioteca, se publica con este fragmento. El vídeo sigue latiendo al **BPM real** del tema. Las sesiones, el Top 100, la semana de New Releases y el blog siguen sin audio.
 
 ## Flujo de uso
