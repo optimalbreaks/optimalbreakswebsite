@@ -349,8 +349,27 @@ function isTopTracksEmpty(v) {
  */
 const ARTIST_TOP10_LABEL_ALLOWLIST = {
   lucas: ['dirty kitchen rave', 'top drawer digital', 'bass elements'],
-  // Beatport 85445 mezcla a esta Xana con otra de Eightball Digital (Take Me Away, Siempre Viva).
-  xana: ['dirty kitchen rave', 'ravesta', 'frequency fusion'],
+  // Beatport 85445 mezcla a esta Xana con otra de Eightball Digital.
+  xana: ['dirty kitchen rave', 'ravesta', 'frequency fusion', 'distrokid'],
+}
+
+/** Títulos ya limpios en el catálogo. Un corte de Beatport que no esté aquí no entra en el Top 10. */
+const ARTIST_TOP10_TITLE_ALLOWLIST = {
+  xana: [
+    'energy',
+    'destroy',
+    'himno',
+    'old paradise',
+    'power',
+    'psy punch',
+    'like this',
+    'dance line',
+    'feel the cream',
+    'spacid',
+    'talk to me',
+    'afrika',
+    'make it work',
+  ],
 }
 
 function normalizeLabelKey(s) {
@@ -372,6 +391,15 @@ function applyArtistTop10LabelAllowlist(catalogSlug, tracks) {
     if (!allow.some((a) => lab.includes(a))) {
       dropped++
       continue
+    }
+    const titles = ARTIST_TOP10_TITLE_ALLOWLIST[catalogSlug]
+    if (titles?.length) {
+      const title = normalizeLabelKey(t.title)
+      const known = titles.some((a) => title === a || title.startsWith(`${a} `) || title.startsWith(`${a}(`))
+      if (!known) {
+        dropped++
+        continue
+      }
     }
     const artistKey = (t.artists || []).map((a) => normalizeLabelKey(a.name)).sort().join('|')
     const key = `${normalizeLabelKey(t.title)}\0${normalizeLabelKey(t.mix_name)}\0${artistKey}`
