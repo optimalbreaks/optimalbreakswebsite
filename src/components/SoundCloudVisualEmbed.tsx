@@ -137,7 +137,8 @@ export function buildSoundCloudVisualPlayerSrc(trackUrl: string): string {
   q.set('url', trackUrl.trim())
   q.set('visual', 'true')
   q.set('auto_play', 'false')
-  q.set('hide_related', 'false')
+  // Al pausar, SoundCloud mete «pistas similares» ajenas a la web. Ocultas.
+  q.set('hide_related', 'true')
   q.set('show_comments', 'false')
   q.set('show_user', 'false')
   q.set('show_reposts', 'false')
