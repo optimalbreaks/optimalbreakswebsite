@@ -1,10 +1,13 @@
 // ============================================
 // OPTIMAL BREAKS — Reel de Instagram por canción (render en el navegador)
 //
-// Genera un MP4 SIN AUDIO (~15 s) para los botones de `TrackShareButton`
-// (solo admins): «R» → reel vertical 1080×1920 para Instagram; «F» → vídeo
-// horizontal 1920×1080 para Facebook. El audio lo pone el admin en la red
-// social con la música oficial del tema → menciona al artista.
+// Genera un MP4 (~15 s) para los botones de `TrackShareButton` (admins y
+// artistas con ficha): «R» → reel vertical 1080×1920 para Instagram; «F» →
+// vídeo horizontal 1920×1080 para Facebook; «IG» → Story (imagen fija + audio,
+// `renderStillVideo`). Si el tema tiene preview, el vídeo lleva incrustado el
+// fragmento elegido en `AudioSegmentPicker` (AAC; ver `share-audio.ts`). Si
+// la música oficial está en Instagram, el admin baja a cero el audio original
+// y pone la de la plataforma; si no está, publica con nuestro audio.
 //
 // Todo ocurre en el cliente: Canvas 2D dibuja cada fotograma y WebCodecs
 // (VideoEncoder H.264) + `mp4-muxer` lo empaquetan, más rápido que tiempo
@@ -17,6 +20,7 @@
 // ============================================
 
 import { bakeSetBackground, dominantColor, drawSetFrame, type SetAssets } from './set-reel-design'
+import { segmentChannels, type ShareAudioSegment } from './share-audio'
 
 export type ReelData = {
   title: string
@@ -53,6 +57,8 @@ export type ReelOptions = {
   durationSec?: number
   fps?: number
   onProgress?: (ratio: number) => void
+  /** Audio del tema + arranque elegido. Sin él, el vídeo sale mudo. */
+  audio?: ShareAudioSegment | null
 }
 
 export type ReelResult = { blob: Blob; mime: string; ext: 'mp4' | 'webm' }
@@ -1232,7 +1238,39 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
       ? drawSetFrame(c, t, setData, setAssets, W, H, durationSec)
       : drawReelFrame(c, t, data, assets, durationSec)
 
-  return encodeCanvasVideo(W, H, durationSec, fps, draw, opts.onProgress)
+  return encodeCanvasVideo(W, H, durationSec, fps, draw, opts.onProgress, opts.audio)
+}
+
+/**
+ * Vídeo de una imagen fija con audio (Story del botón «IG»: el mismo diseño
+ * de la imagen PNG, en MP4 para que Instagram reproduzca el tema).
+ */
+export async function renderStillVideo(
+  image: CanvasImageSource,
+  width: number,
+  height: number,
+  opts: Omit<ReelOptions, 'format'> = {},
+): Promise<ReelResult> {
+  // 30 fps aunque sea una imagen fija: Instagram trata peor los vídeos de pocos fps.
+  const fps = opts.fps ?? 30
+  const durationSec = opts.durationSec ?? 15
+  const draw = (c: CanvasRenderingContext2D) => c.drawImage(image, 0, 0, width, height)
+  return encodeCanvasVideo(width, height, durationSec, fps, draw, opts.onProgress, opts.audio)
+}
+
+const AAC_BITRATE = 192_000
+/** Muestras por `AudioData` (AAC trabaja en tramas de 1024). */
+const AUDIO_CHUNK = 4096
+
+async function pickAudioConfig(sampleRate: number): Promise<AudioEncoderConfig | null> {
+  if (typeof AudioEncoder === 'undefined') return null
+  const cfg: AudioEncoderConfig = { codec: 'mp4a.40.2', sampleRate, numberOfChannels: 2, bitrate: AAC_BITRATE }
+  try {
+    const r = await AudioEncoder.isConfigSupported(cfg)
+    return r.supported ? cfg : null
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -1247,6 +1285,7 @@ export async function encodeCanvasVideo(
   fps: number,
   draw: (c: CanvasRenderingContext2D, t: number) => void,
   onProgress?: (ratio: number) => void,
+  audio?: ShareAudioSegment | null,
 ): Promise<ReelResult> {
   const total = Math.round(durationSec * fps)
   const canvas = document.createElement('canvas')
@@ -1254,13 +1293,21 @@ export async function encodeCanvasVideo(
   canvas.height = H
   const ctx = canvas.getContext('2d', { alpha: false })!
 
+  // El audio cubre SIEMPRE la duración del vídeo (si dura más de 15 s, también).
+  const pcm = audio ? segmentChannels(audio.buffer, audio.start, durationSec) : null
+  const sampleRate = audio?.buffer.sampleRate ?? 44100
   const cfg = await pickEncoderConfig(fps, W, H)
-  if (cfg) {
+  const audioCfg = pcm ? await pickAudioConfig(sampleRate) : null
+  // Con audio pero sin codificador AAC (algún Safari/Firefox): MediaRecorder lo graba en tiempo real.
+  if (cfg && (!pcm || audioCfg)) {
     const { Muxer, ArrayBufferTarget } = await import('mp4-muxer')
     const muxer = new Muxer({
       target: new ArrayBufferTarget(),
       video: { codec: cfg.codec.startsWith('avc') ? 'avc' : 'vp9', width: W, height: H, frameRate: fps },
+      ...(audioCfg ? { audio: { codec: 'aac' as const, numberOfChannels: 2, sampleRate } } : {}),
       fastStart: 'in-memory',
+      // Algún codificador AAC no arranca en t=0 exacto (priming): sin esto, mp4-muxer lanza error.
+      firstTimestampBehavior: 'offset',
     })
     let failure: unknown = null
     const encoder = new VideoEncoder({
@@ -1270,8 +1317,43 @@ export async function encodeCanvasVideo(
       },
     })
     encoder.configure(cfg)
+    // Audio intercalado con el vídeo: antes de cada fotograma, todo el audio hasta su final.
+    let audioEncoder: AudioEncoder | null = null
+    let audioPos = 0
+    const audioLen = pcm ? pcm[0].length : 0
+    if (pcm && audioCfg) {
+      audioEncoder = new AudioEncoder({
+        output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+        error: (e) => {
+          failure = e
+        },
+      })
+      audioEncoder.configure(audioCfg)
+    }
+    const feedAudio = (untilSec: number) => {
+      if (!audioEncoder || !pcm) return
+      const until = Math.min(audioLen, Math.round(untilSec * sampleRate))
+      while (audioPos < until) {
+        const frames = Math.min(AUDIO_CHUNK, audioLen - audioPos)
+        const data = new Float32Array(frames * 2)
+        data.set(pcm[0].subarray(audioPos, audioPos + frames), 0)
+        data.set(pcm[1].subarray(audioPos, audioPos + frames), frames)
+        const chunk = new AudioData({
+          format: 'f32-planar',
+          sampleRate,
+          numberOfFrames: frames,
+          numberOfChannels: 2,
+          timestamp: Math.round((audioPos * 1e6) / sampleRate),
+          data,
+        })
+        audioEncoder.encode(chunk)
+        chunk.close()
+        audioPos += frames
+      }
+    }
     for (let i = 0; i < total; i++) {
       if (failure) throw failure
+      feedAudio((i + 1) / fps)
       draw(ctx, i / fps)
       const frame = new VideoFrame(canvas, { timestamp: Math.round((i * 1e6) / fps), duration: Math.round(1e6 / fps) })
       encoder.encode(frame, { keyFrame: i % (fps * 2) === 0 })
@@ -1282,8 +1364,13 @@ export async function encodeCanvasVideo(
         await new Promise((r) => setTimeout(r, 0)) // deja respirar a la UI
       }
     }
+    feedAudio(durationSec)
     await encoder.flush()
     encoder.close()
+    if (audioEncoder) {
+      await audioEncoder.flush()
+      audioEncoder.close()
+    }
     if (failure) throw failure
     muxer.finalize()
     onProgress?.(1)
@@ -1291,16 +1378,37 @@ export async function encodeCanvasVideo(
   }
 
   // ----- Plan B: MediaRecorder (tiempo real) -----
-  const mime = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find(
-    (m) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m),
-  )
+  const mimes = pcm
+    ? ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm']
+    : ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm']
+  const mime = mimes.find((m) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m))
   if (!mime) throw new Error('Este navegador no puede generar vídeo')
   const stream = canvas.captureStream(fps)
-  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 })
+  // Audio: el fragmento suena por un grafo Web Audio que va directo a la grabación (no a los altavoces).
+  let audioCtx: AudioContext | null = null
+  let source: AudioBufferSourceNode | null = null
+  if (pcm) {
+    audioCtx = new AudioContext({ sampleRate })
+    await audioCtx.resume().catch(() => undefined)
+    const buf = audioCtx.createBuffer(2, pcm[0].length, sampleRate)
+    buf.copyToChannel(pcm[0] as Float32Array<ArrayBuffer>, 0)
+    buf.copyToChannel(pcm[1] as Float32Array<ArrayBuffer>, 1)
+    source = audioCtx.createBufferSource()
+    source.buffer = buf
+    const dest = audioCtx.createMediaStreamDestination()
+    source.connect(dest)
+    for (const tr of dest.stream.getAudioTracks()) stream.addTrack(tr)
+  }
+  const rec = new MediaRecorder(stream, {
+    mimeType: mime,
+    videoBitsPerSecond: 8_000_000,
+    ...(pcm ? { audioBitsPerSecond: AAC_BITRATE } : {}),
+  })
   const chunks: Blob[] = []
   rec.ondataavailable = (e) => e.data.size && chunks.push(e.data)
   const done = new Promise<void>((r) => (rec.onstop = () => r()))
   rec.start(250)
+  source?.start()
   const t0 = performance.now()
   await new Promise<void>((resolve) => {
     const tick = () => {
@@ -1314,6 +1422,8 @@ export async function encodeCanvasVideo(
   })
   rec.stop()
   await done
+  source?.stop()
+  await audioCtx?.close().catch(() => undefined)
   const type = mime.split(';')[0]
   return { blob: new Blob(chunks, { type }), mime: type, ext: type === 'video/mp4' ? 'mp4' : 'webm' }
 }

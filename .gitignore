@@ -78,6 +78,8 @@ tmp-responsive/
 
 # Subcarpetas antiguas de originales bajo public/ (no servir ni versionar).
 public/music/*/
+# RAR de másteres suelto en public/music (WAV cedidos). No va a GitHub ni a la web.
+public/music/*.rar
 
 # Logs de lotes NR / imports de vinilos / bios y colas pendientes (trabajo del agente)
 data/charts/**/*.log

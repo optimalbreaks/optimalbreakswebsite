@@ -13,18 +13,21 @@
 //     Vinilos y chart/featured usan path en optimalbreaks.com vía `path`.
 //     Beatport Top también genera story IG (`play=beatport:<id>` + snapshot).
 //
-// Admins y artistas con ficha reclamada ven además «IG» (imagen de Story),
-// «R» (reel vertical MP4 sin audio para Instagram) y «F» (vídeo horizontal
-// 16:9 sin audio para Facebook, solo descarga). Ambos vídeos se renderizan
-// en el navegador con `src/lib/reel-renderer.ts`; el audio oficial se añade
-// luego en la red social.
+// Admins y artistas con ficha reclamada ven además «IG» (Story), «R» (reel
+// vertical MP4 para Instagram) y «F» (vídeo horizontal 16:9 para Facebook,
+// solo descarga). Si el tema tiene preview, los tres llevan su audio: antes
+// de generar se elige el fragmento de 15 s en `AudioSegmentPicker` (el mismo
+// para los tres). Sin preview: Story en imagen con aviso y vídeos mudos.
+// Los vídeos se renderizan en el navegador con `src/lib/reel-renderer.ts`.
 // ============================================
 
 'use client'
 
 import { aiShareCaption } from '@/lib/share-caption'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import AudioSegmentPicker from '@/components/AudioSegmentPicker'
+import type { ShareAudioSegment } from '@/lib/share-audio'
 import type { Locale } from '@/lib/i18n-config'
 import {
   appendTrackStoryMeta,
@@ -77,6 +80,23 @@ interface ExternalUrlModeProps extends BaseProps {
 
 type Props = ChartModeProps | PathModeProps | ExternalUrlModeProps
 
+/** Datos del tema de `/api/og/story?format=json` (los usan los tres vídeos). */
+type VideoData = {
+  title: string
+  artists: string
+  meta: string
+  kicker: string
+  artwork: string | null
+  bpm?: number
+  releaseDate?: string | null
+  label?: string | null
+  musicKey?: string | null
+  year?: number | null
+  /** URL del mismo origen del audio del tema; null = sin preview (vídeo mudo). */
+  audio?: string | null
+  lang: 'en'
+}
+
 function resolveFullUrl(props: Props): string {
   if ('externalUrl' in props && props.externalUrl) {
     return buildAbsoluteShareUrl(props.externalUrl)
@@ -115,7 +135,13 @@ function resolveStoryPlayParam(props: Props): string | null {
 
 export default function TrackShareButton(props: Props) {
   const [copied, setCopied] = useState(false)
-  const [storyState, setStoryState] = useState<'idle' | 'busy' | 'done'>('idle')
+  const [storyState, setStoryState] = useState<'idle' | 'busy' | 'ready' | 'done'>('idle')
+  const [storyPct, setStoryPct] = useState(0)
+  /** Story ya generada a la espera del 2.º toque (ver `shareNeedsSecondTap`). */
+  const [storyFile, setStoryFile] = useState<File | null>(null)
+  /** Selector de fragmento abierto: qué botón lo pidió y con qué datos. */
+  const [picker, setPicker] = useState<{ kind: 'story' | 'reel' | 'fb'; data: VideoData; audioUrl: string } | null>(null)
+  const videoDataRef = useRef<{ play: string; p: Promise<VideoData> } | null>(null)
   const [reelState, setReelState] = useState<'idle' | 'busy' | 'ready' | 'done' | 'error'>('idle')
   const [reelPct, setReelPct] = useState(0)
   // Render de ~10 s: al terminar, el gesto del clic ya caducó y el navegador
@@ -127,6 +153,7 @@ export default function TrackShareButton(props: Props) {
   const [fbPct, setFbPct] = useState(0)
   // Un solo render a la vez (el renderer usa un lienzo por formato).
   const videoBusy = reelState === 'busy' || fbState === 'busy'
+  const anyBusy = videoBusy || storyState === 'busy' || picker != null
   const { isAdmin, isClaimedArtist } = useAuth()
   const es = props.lang === 'es'
   const fullUrl = resolveFullUrl(props)
@@ -163,37 +190,6 @@ export default function TrackShareButton(props: Props) {
     setTimeout(() => URL.revokeObjectURL(url), 4000)
   }
 
-  /**
-   * Botón "IG": baja el PNG 1080×1920 de `/api/og/story` y lo comparte como
-   * archivo (`navigator.share({ files })`) → en móvil aparece Instagram y el
-   * usuario lo publica en Stories. Antes copiamos el enlace del track al
-   * portapapeles para pegarlo en el sticker de enlace. En escritorio (sin
-   * share de archivos) se descarga la imagen y se copia el enlace.
-   */
-  async function onStoryClick() {
-    if (!storyPlay || storyState === 'busy') return
-    setStoryState('busy')
-    try {
-      await copyShareLink(fullUrl)
-      const params = storyParams(storyPlay)
-      const res = await fetch(`/api/og/story?${params.toString()}`)
-      if (!res.ok) throw new Error(`story ${res.status}`)
-      const blob = await res.blob()
-      const file = new File([blob], 'optimal-breaks-story.png', { type: 'image/png' })
-      await shareOrDownload(file)
-      setStoryState('done')
-      setTimeout(() => setStoryState('idle'), 1800)
-    } catch {
-      setStoryState('idle')
-    }
-  }
-
-  /**
-   * Botón "R": reel 1080×1920 sin audio (~15 s). Pide los datos del tema a
-   * `/api/og/story?format=json`, dibuja y codifica el MP4 en el navegador
-   * (WebCodecs; el módulo se carga solo al pulsar) y lo comparte/descarga.
-   * Copia el texto del post (tema, artistas, sello, fecha) para pegarlo en Instagram.
-   */
   /** Datos del tema para los vídeos (siempre en inglés: público internacional). */
   async function fetchVideoData(play: string) {
     const params = storyParams(play)
@@ -201,11 +197,23 @@ export default function TrackShareButton(props: Props) {
     params.set('lang', 'en')
     const res = await fetch(`/api/og/story?${params.toString()}`)
     if (!res.ok) throw new Error(`reel data ${res.status}`)
-    return { ...(await res.json()), lang: 'en' as const }
+    return { ...(await res.json()), lang: 'en' as const } as VideoData
+  }
+
+  /** Una sola petición de datos por tema: IG, R y F la comparten. */
+  function getVideoData(play: string): Promise<VideoData> {
+    const hit = videoDataRef.current
+    if (hit && hit.play === play) return hit.p
+    const p = fetchVideoData(play)
+    p.catch(() => {
+      if (videoDataRef.current?.p === p) videoDataRef.current = null
+    })
+    videoDataRef.current = { play, p }
+    return p
   }
 
   /** Texto del post: GPT‑5.6 (`/api/admin/share-caption`) con la plantilla de respaldo. */
-  function videoCaption(data: Awaited<ReturnType<typeof fetchVideoData>>, platform: 'instagram' | 'facebook') {
+  function videoCaption(data: VideoData, platform: 'instagram' | 'facebook') {
     return aiShareCaption({
       kind: 'track',
       platform,
@@ -224,8 +232,96 @@ export default function TrackShareButton(props: Props) {
     })
   }
 
+  /**
+   * Tras un render largo, el gesto del clic ya caducó y el navegador rechaza
+   * `navigator.share`: en ese caso guardamos el archivo y pedimos un 2.º toque.
+   */
+  function shareNeedsSecondTap(file: File): boolean {
+    const nav = navigator as Navigator & { userActivation?: { isActive: boolean } }
+    return !!nav.canShare?.({ files: [file] }) && !nav.userActivation?.isActive
+  }
+
+  /**
+   * Botón "IG": Story de Instagram. Si el tema tiene audio (preview o audio
+   * alojado), se elige el fragmento en `AudioSegmentPicker` y sale un MP4
+   * 1080×1920 con el diseño de la Story (`/api/og/story?audio=1`, sin aviso)
+   * y ese audio. Sin audio, la imagen PNG de siempre, con el aviso de que el
+   * sticker de música de Instagram no es el tema. Antes se copia el enlace del
+   * tema para pegarlo en el sticker de enlace. En escritorio se descarga.
+   */
+  async function onStoryClick() {
+    if (!storyPlay) return
+    if (storyState === 'ready' && storyFile) {
+      await shareOrDownload(storyFile)
+      setStoryFile(null)
+      setStoryState('done')
+      setTimeout(() => setStoryState('idle'), 1800)
+      return
+    }
+    if (anyBusy) return
+    setStoryState('busy')
+    setStoryPct(0)
+    try {
+      await copyShareLink(fullUrl)
+      const data = await getVideoData(storyPlay)
+      if (data.audio) {
+        setStoryState('idle')
+        setPicker({ kind: 'story', data, audioUrl: data.audio })
+        return
+      }
+      await renderStory(null)
+    } catch (err) {
+      console.error('[story]', err)
+      setStoryState('idle')
+    }
+  }
+
+  async function renderStory(segment: ShareAudioSegment | null) {
+    if (!storyPlay) return
+    setStoryState('busy')
+    setStoryPct(0)
+    try {
+      const params = storyParams(storyPlay)
+      if (segment) params.set('audio', '1')
+      const res = await fetch(`/api/og/story?${params.toString()}`)
+      if (!res.ok) throw new Error(`story ${res.status}`)
+      const png = await res.blob()
+      let file: File
+      if (segment) {
+        const image = await createImageBitmap(png)
+        const { renderStillVideo } = await import('@/lib/reel-renderer')
+        const video = await renderStillVideo(image, 1080, 1920, {
+          audio: segment,
+          onProgress: (r) => setStoryPct(Math.min(99, Math.round(r * 100))),
+        })
+        image.close()
+        file = new File([video.blob], `optimal-breaks-story.${video.ext}`, { type: video.mime })
+      } else {
+        file = new File([png], 'optimal-breaks-story.png', { type: 'image/png' })
+      }
+      if (shareNeedsSecondTap(file)) {
+        setStoryFile(file)
+        setStoryState('ready')
+        return
+      }
+      await shareOrDownload(file)
+      setStoryState('done')
+      setTimeout(() => setStoryState('idle'), 1800)
+    } catch (err) {
+      console.error('[story]', err)
+      setStoryState('idle')
+    }
+  }
+
+  /**
+   * Botón "R": reel 1080×1920 (~15 s). Pide los datos del tema a
+   * `/api/og/story?format=json`; si hay audio, primero el selector de
+   * fragmento. Dibuja y codifica el MP4 en el navegador (WebCodecs; el módulo
+   * se carga solo al pulsar) con ese audio y lo comparte/descarga. Copia el
+   * texto del post (tema, artistas, sello, fecha) para pegarlo en Instagram.
+   */
   async function onReelClick() {
-    if (!storyPlay || (videoBusy && reelState !== 'ready')) return
+    if (!storyPlay) return
     if (reelState === 'ready' && reelFile) {
       // Toque nuevo = gesto del usuario: copiar el texto aquí funciona también en iOS.
       if (reelCaption) await copyShareLink(reelCaption)
@@ -235,23 +331,41 @@ export default function TrackShareButton(props: Props) {
       setTimeout(() => setReelState('idle'), 2200)
       return
     }
+    if (anyBusy) return
     setReelState('busy')
     setReelPct(0)
     try {
       await copyShareLink(fullUrl)
-      const data = await fetchVideoData(storyPlay)
+      const data = await getVideoData(storyPlay)
+      if (data.audio) {
+        setReelState('idle')
+        setPicker({ kind: 'reel', data, audioUrl: data.audio })
+        return
+      }
+      await renderReelVideo(data, null)
+    } catch (err) {
+      console.error('[reel]', err)
+      setReelState('error')
+      setTimeout(() => setReelState('idle'), 2500)
+    }
+  }
+
+  async function renderReelVideo(data: VideoData, segment: ShareAudioSegment | null) {
+    setReelState('busy')
+    setReelPct(0)
+    try {
       // Texto con GPT‑5.6 en paralelo al render (plantilla si falla).
       const captionP = videoCaption(data, 'instagram')
       const { renderReel } = await import('@/lib/reel-renderer')
       const reel = await renderReel(data, {
         format: 'vertical',
+        audio: segment,
         onProgress: (r) => setReelPct(Math.min(99, Math.round(r * 100))),
       })
       const caption = await captionP
       setReelCaption(caption)
       const file = new File([reel.blob], `optimal-breaks-reel.${reel.ext}`, { type: reel.mime })
-      const nav = navigator as Navigator & { userActivation?: { isActive: boolean } }
-      if (nav.canShare?.({ files: [file] }) && !nav.userActivation?.isActive) {
+      if (shareNeedsSecondTap(file)) {
         setReelFile(file)
         setReelState('ready')
         return
@@ -268,21 +382,40 @@ export default function TrackShareButton(props: Props) {
   }
 
   /**
-   * Botón "F": vídeo horizontal 1920×1080 sin audio para Facebook. Mismo
-   * diseño que el reel, reorganizado en 16:9. Siempre se descarga (también en
-   * móvil, sin menú de compartir) y copia el texto del post con el enlace del tema.
+   * Botón "F": vídeo horizontal 1920×1080 para Facebook. Mismo diseño que el
+   * reel, reorganizado en 16:9, y mismo audio (el fragmento ya elegido para el
+   * tema sale preseleccionado). Siempre se descarga (también en móvil, sin
+   * menú de compartir) y copia el texto del post con el enlace del tema.
    */
   async function onFacebookClick() {
-    if (!storyPlay || videoBusy) return
+    if (!storyPlay || anyBusy) return
     setFbState('busy')
     setFbPct(0)
     try {
       await copyShareLink(fullUrl)
-      const data = await fetchVideoData(storyPlay)
+      const data = await getVideoData(storyPlay)
+      if (data.audio) {
+        setFbState('idle')
+        setPicker({ kind: 'fb', data, audioUrl: data.audio })
+        return
+      }
+      await renderFacebookVideo(data, null)
+    } catch (err) {
+      console.error('[facebook video]', err)
+      setFbState('error')
+      setTimeout(() => setFbState('idle'), 2500)
+    }
+  }
+
+  async function renderFacebookVideo(data: VideoData, segment: ShareAudioSegment | null) {
+    setFbState('busy')
+    setFbPct(0)
+    try {
       const captionP = videoCaption(data, 'facebook')
       const { renderReel } = await import('@/lib/reel-renderer')
       const video = await renderReel(data, {
         format: 'horizontal',
+        audio: segment,
         onProgress: (r) => setFbPct(Math.min(99, Math.round(r * 100))),
       })
       const caption = await captionP
@@ -302,6 +435,16 @@ export default function TrackShareButton(props: Props) {
       setFbState('error')
       setTimeout(() => setFbState('idle'), 2500)
     }
+  }
+
+  /** «Generar» en el selector: cada botón sigue con su render y ese fragmento. */
+  function onPickerConfirm(segment: ShareAudioSegment | null) {
+    const p = picker
+    setPicker(null)
+    if (!p) return
+    if (p.kind === 'story') void renderStory(segment)
+    else if (p.kind === 'reel') void renderReelVideo(p.data, segment)
+    else void renderFacebookVideo(p.data, segment)
   }
 
   async function onClick() {
@@ -335,15 +478,23 @@ export default function TrackShareButton(props: Props) {
     ? (es ? 'Enlace copiado' : 'Link copied')
     : (es ? 'Copiar / compartir enlace' : 'Copy / share link')
 
-  const storyStateCls = storyState === 'done'
+  const storyStateCls = storyState === 'done' || storyState === 'ready'
     ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
     : 'border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'
-  const storyLabel = storyState === 'done' ? '✓' : storyState === 'busy' ? '…' : 'IG'
+  const storyLabel = storyState === 'done'
+    ? '✓'
+    : storyState === 'ready'
+      ? '↗'
+      : storyState === 'busy'
+        ? (storyPct > 0 ? `${storyPct}%` : '…')
+        : 'IG'
   const storyTitle = storyState === 'done'
-    ? (es ? 'Imagen lista · enlace copiado' : 'Image ready · link copied')
-    : (es
-        ? 'Story de Instagram: genera la imagen y copia el enlace'
-        : 'Instagram Story: generate image and copy link')
+    ? (es ? 'Story lista · enlace copiado' : 'Story ready · link copied')
+    : storyState === 'ready'
+      ? (es ? 'Story lista: toca para compartir' : 'Story ready: tap to share')
+      : (es
+          ? 'Story de Instagram: con audio del tema si tiene preview (eliges el fragmento); copia el enlace'
+          : 'Instagram Story: with the track audio if there is a preview (you pick the fragment); copies the link')
 
   const reelStateCls = reelState === 'done' || reelState === 'ready'
     ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
@@ -366,8 +517,8 @@ export default function TrackShareButton(props: Props) {
     : reelState === 'error'
       ? (es ? 'No se pudo generar el reel' : 'Could not generate the reel')
       : (es
-          ? 'Reel de Instagram (sin audio): genera el vídeo y copia el texto del post'
-          : 'Instagram Reel (no audio): generate video and copy the post text')
+          ? 'Reel de Instagram con audio del tema (si tiene preview): genera el vídeo y copia el texto del post'
+          : 'Instagram Reel with the track audio (if there is a preview): generate video and copy the post text')
 
   const fbStateCls = fbState === 'done'
     ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
@@ -386,8 +537,8 @@ export default function TrackShareButton(props: Props) {
     : fbState === 'error'
       ? (es ? 'No se pudo generar el vídeo' : 'Could not generate the video')
       : (es
-          ? 'Vídeo horizontal para Facebook (sin audio): descarga el MP4 y copia el texto del post'
-          : 'Horizontal video for Facebook (no audio): download MP4 and copy the post text')
+          ? 'Vídeo horizontal para Facebook con audio del tema (si tiene preview): descarga el MP4 y copia el texto del post'
+          : 'Horizontal video for Facebook with the track audio (if there is a preview): download MP4 and copy the post text')
 
   return (
     <>
@@ -409,7 +560,7 @@ export default function TrackShareButton(props: Props) {
           style={{ fontFamily: "'Courier Prime', monospace" }}
           title={storyTitle}
           aria-label={storyTitle}
-          disabled={storyState === 'busy'}
+          disabled={storyState !== 'ready' && anyBusy}
         >
           {storyLabel}
         </button>
@@ -422,7 +573,7 @@ export default function TrackShareButton(props: Props) {
           style={{ fontFamily: "'Courier Prime', monospace" }}
           title={reelTitle}
           aria-label={reelTitle}
-          disabled={reelState === 'busy' || fbState === 'busy'}
+          disabled={reelState !== 'ready' && anyBusy}
         >
           {reelLabel}
         </button>
@@ -435,10 +586,27 @@ export default function TrackShareButton(props: Props) {
           style={{ fontFamily: "'Courier Prime', monospace" }}
           title={fbTitle}
           aria-label={fbTitle}
-          disabled={videoBusy}
+          disabled={anyBusy}
         >
           {fbLabel}
         </button>
+      ) : null}
+      {picker && storyPlay ? (
+        <AudioSegmentPicker
+          lang={props.lang}
+          audioUrl={picker.audioUrl}
+          segmentKey={storyPlay}
+          trackTitle={props.shareTitle}
+          confirmLabel={
+            picker.kind === 'story'
+              ? (es ? 'Generar story' : 'Generate story')
+              : picker.kind === 'reel'
+                ? (es ? 'Generar reel' : 'Generate reel')
+                : (es ? 'Generar vídeo' : 'Generate video')
+          }
+          onConfirm={onPickerConfirm}
+          onCancel={() => setPicker(null)}
+        />
       ) : null}
     </>
   )

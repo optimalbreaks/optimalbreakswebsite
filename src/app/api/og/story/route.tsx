@@ -1,8 +1,11 @@
 // ============================================
 // OPTIMAL BREAKS — Imagen de Story de Instagram por canción
 // GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&lang=es|en → PNG 1080×1920
+// GET /api/og/story?…&audio=1 → misma imagen sin el aviso del sticker (fotograma
+// de la Story en vídeo con el audio del tema, botón «IG» cuando hay preview).
 // GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&format=json → datos
-// del tema (título, artistas, sello·año·BPM, kicker, carátula como data URL) para
+// del tema (título, artistas, sello·año·BPM, kicker, carátula como data URL y
+// `audio`: URL del mismo origen del audio/preview, o null) para
 // el reel de Instagram que el botón «R» de `TrackShareButton` renderiza en el
 // navegador (`src/lib/reel-renderer.ts`).
 // GET /api/og/story?play=mix:<slug> → story de una sesión (festival, edición,
@@ -64,6 +67,48 @@ type StoryRow = {
   year?: number | null
   bpm?: number | null
   music_key?: string | null
+  /** Fuentes de audio para los vídeos con sonido (IG/R/F). */
+  sample_url?: string | null
+  platform?: string | null
+  link_url?: string | null
+  full_audio_url?: string | null
+}
+
+const BEATPORT_SAMPLE_HOSTS = new Set(['geo-samples.beatport.com', 'geo-media.beatport.com'])
+
+/**
+ * Audio del tema para incrustarlo en los vídeos de compartir, como URL del
+ * MISMO ORIGEN (el navegador lo decodifica con Web Audio: sin CORS). Orden:
+ * audio completo alojado por OB → preview de Bandcamp → sample de Beatport.
+ * SoundCloud y YouTube no dan archivo: null (el vídeo sale sin audio).
+ */
+function shareAudioSrc(row: StoryRow): string | null {
+  const full = (row.full_audio_url || '').trim()
+  if (full.startsWith('/')) return full
+  if (full) {
+    try {
+      const u = new URL(full)
+      if (u.origin === new URL(SITE_URL).origin) return `${u.pathname}${u.search}`
+    } catch {
+      /* sigue con el preview */
+    }
+  }
+  const link = (row.link_url || '').trim()
+  if ((row.platform || '').toLowerCase() === 'bandcamp' && /^https:\/\//i.test(link)) {
+    return `/api/bandcamp-preview?track=${encodeURIComponent(link)}`
+  }
+  const sample = (row.sample_url || '').trim()
+  if (sample) {
+    try {
+      const u = new URL(sample)
+      if (u.protocol === 'https:' && BEATPORT_SAMPLE_HOSTS.has(u.hostname.toLowerCase())) {
+        return `/api/audio-proxy?url=${encodeURIComponent(sample)}`
+      }
+    } catch {
+      /* sin audio */
+    }
+  }
+  return null
 }
 
 /** Descarga la carátula y la devuelve como data URL PNG/JPEG apto para Satori
@@ -168,6 +213,7 @@ async function fetchBeatportStoryRow(
     release_date: track.release_date ?? null,
     bpm: track.bpm,
     music_key: track.key || null,
+    sample_url: track.sample_url ?? null,
   }
 }
 
@@ -199,7 +245,9 @@ async function fetchStoryRow(
   const cols =
     kind === 'vinyl'
       ? 'title, mix_name, artists, label, artwork_url, youtube_url, year'
-      : 'title, mix_name, artists, label, artwork_url, release_year, release_date, bpm, music_key'
+      : kind === 'featured'
+        ? 'title, mix_name, artists, label, artwork_url, release_year, release_date, bpm, music_key, sample_url, platform, link_url, full_audio_url'
+        : 'title, mix_name, artists, label, artwork_url, release_year, release_date, bpm, music_key, sample_url'
   const { data } = await supabase.from(table).select(cols).eq('id', id).maybeSingle()
   return (data as StoryRow | null) ?? null
 }
@@ -531,19 +579,30 @@ export async function GET(request: NextRequest) {
         artwork: artworkDataUrl,
         bpm,
         lang,
+        // Audio del tema (mismo origen) para incrustarlo en IG/R/F; null = sin preview.
+        audio: shareAudioSrc(row),
       },
       { headers: { 'Cache-Control': 'private, no-store' } },
     )
   }
 
-  // El admin suele añadir un sticker de música de Instagram a la story
-  // (catálogo de Meta): avisamos de que ese audio NO es el tema compartido.
-  const footerWarning = es
-    ? 'La música que suena aquí no es este tema'
-    : 'The music playing here is not this track'
-  const footerDomain = es
-    ? 'Escúchalo real en el enlace · www.optimalbreaks.com'
-    : 'Hear the real one via the link · www.optimalbreaks.com'
+  // `audio=1`: la imagen es el fotograma de la Story en VÍDEO, que ya lleva
+  // el audio del tema → sin aviso. Sin preview (imagen suelta), el admin suele
+  // añadir un sticker de música de Instagram (catálogo de Meta): avisamos de
+  // que ese audio NO es el tema compartido.
+  const withAudio = sp.get('audio') === '1'
+  const footerWarning = withAudio
+    ? null
+    : es
+      ? 'La música que suena aquí no es este tema'
+      : 'The music playing here is not this track'
+  const footerDomain = withAudio
+    ? es
+      ? 'Escúchalo entero en el enlace · www.optimalbreaks.com'
+      : 'Hear the full track via the link · www.optimalbreaks.com'
+    : es
+      ? 'Escúchalo real en el enlace · www.optimalbreaks.com'
+      : 'Hear the real one via the link · www.optimalbreaks.com'
 
   return new ImageResponse(
     (
@@ -712,19 +771,21 @@ export async function GET(request: NextRequest) {
             gap: 14,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              fontSize: 30,
-              fontWeight: 800,
-              letterSpacing: 2,
-              color: YELLOW,
-              textTransform: 'uppercase',
-              fontFamily: MONO,
-            }}
-          >
-            {footerWarning}
-          </div>
+          {footerWarning ? (
+            <div
+              style={{
+                display: 'flex',
+                fontSize: 30,
+                fontWeight: 800,
+                letterSpacing: 2,
+                color: YELLOW,
+                textTransform: 'uppercase',
+                fontFamily: MONO,
+              }}
+            >
+              {footerWarning}
+            </div>
+          ) : null}
           <div
             style={{
               display: 'flex',
