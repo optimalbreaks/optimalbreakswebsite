@@ -5,7 +5,7 @@ import type { Locale } from '@/lib/i18n-config'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import { PUBLIC_PARKINEO_CACHE_TAG } from '@/lib/revalidate-public'
-import { PARKINEO_PUBLIC_COLUMNS, parkineoOpenHref } from '@/lib/parkineo'
+import { PARKINEO_PUBLIC_COLUMNS, formatParkineoPublished, parkineoOpenHref } from '@/lib/parkineo'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
 import type { ParkineoListItem } from '@/components/ParkineoBoard'
 
@@ -54,6 +54,7 @@ export default async function ParkineoSessionPage({
   if (!session) notFound()
   const es = lang === 'es'
   const open = parkineoOpenHref(session)
+  const published = formatParkineoPublished(session.published_at, lang)
   const playable: ParkineoPlayable = session
 
   return (
@@ -70,7 +71,10 @@ export default async function ParkineoSessionPage({
           {session.title}
         </h1>
         <p className="mt-0 mb-6" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '14px', letterSpacing: '0.5px' }}>
-          {session.dj_name} · {session.city} · {session.duration_minutes} min · {session.platform.toUpperCase()}
+          {session.dj_name} · {session.city}
+          {published ? ` · ${published}` : ''}
+          {' · '}
+          {session.duration_minutes} min · {session.platform.toUpperCase()}
           {open ? (
             <>
               {' · '}

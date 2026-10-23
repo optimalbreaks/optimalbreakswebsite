@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
-import { parkineoOpenHref } from '@/lib/parkineo'
+import { formatParkineoPublished, parkineoOpenHref } from '@/lib/parkineo'
 
 const PAGE = 24
 
@@ -359,7 +359,7 @@ function ParkineoCard({ session, lang }: { session: ParkineoListItem; lang: stri
         <p className="mt-2 mb-0" style={{ ...MONO, fontSize: '14px', fontWeight: 700 }}>
           {session.dj_name} <span className="font-normal opacity-70">· {session.city}</span>
         </p>
-        <ParkineoMeta session={session} href={href} openLabel={es ? 'Abrir' : 'Open'} />
+        <ParkineoMeta session={session} lang={lang} href={href} openLabel={es ? 'Abrir' : 'Open'} />
       </div>
     </article>
   )
@@ -390,7 +390,7 @@ function ParkineoCompact({ sessions, lang }: { sessions: ParkineoListItem[]; lan
               <p className="mt-0 mb-0 truncate opacity-70" style={{ ...MONO, fontSize: '11px' }}>
                 {session.city}
               </p>
-              <ParkineoMeta session={session} href={href} openLabel={es ? 'Abrir' : 'Open'} dense />
+              <ParkineoMeta session={session} lang={lang} href={href} openLabel={es ? 'Abrir' : 'Open'} dense />
             </div>
           </article>
         )
@@ -423,7 +423,7 @@ function ParkineoList({ sessions, lang }: { sessions: ParkineoListItem[]; lang: 
               <p className="mt-1 mb-0 truncate" style={{ ...MONO, fontSize: '13px', fontWeight: 700 }}>
                 {session.dj_name} <span className="font-normal opacity-70">· {session.city}</span>
               </p>
-              <ParkineoMeta session={session} href={href} openLabel={es ? 'Abrir' : 'Open'} />
+              <ParkineoMeta session={session} lang={lang} href={href} openLabel={es ? 'Abrir' : 'Open'} />
             </div>
           </article>
         )
@@ -434,17 +434,25 @@ function ParkineoList({ sessions, lang }: { sessions: ParkineoListItem[]; lang: 
 
 function ParkineoMeta({
   session,
+  lang,
   href,
   openLabel,
   dense = false,
 }: {
   session: ParkineoListItem
+  lang: string
   href: string | null
   openLabel: string
   dense?: boolean
 }) {
+  const published = formatParkineoPublished(session.published_at, lang)
   return (
     <div className={`mt-auto flex flex-wrap items-center gap-1.5 ${dense ? 'pt-2' : 'pt-4'}`} style={{ ...MONO, fontSize: dense ? '9px' : '11px', fontWeight: 700, letterSpacing: '1px' }}>
+      {published ? (
+        <time dateTime={session.published_at ?? undefined} className="border-2 border-[var(--ink)] px-1.5 py-[1px]">
+          {published}
+        </time>
+      ) : null}
       <span className="border-2 border-[var(--ink)] bg-[var(--yellow)] px-1.5 py-[1px]">{session.duration_minutes} MIN</span>
       <span className="border-2 border-[var(--ink)] px-1.5 py-[1px]">{session.platform.toUpperCase()}</span>
       {href ? (

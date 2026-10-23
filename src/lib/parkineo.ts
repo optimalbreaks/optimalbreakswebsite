@@ -13,6 +13,19 @@ export const PARKINEO_MAX_SECONDS = 3 * 60 * 60
 export const PARKINEO_PUBLIC_COLUMNS =
   'id, slug, dj_name, city, title, platform, embed_url, video_url, image_url, duration_minutes, published_at'
 
+/** Día de publicación en Madrid. El mismo texto en servidor y en el navegador. */
+export function formatParkineoPublished(iso: string | null | undefined, lang: string): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Europe/Madrid',
+  }).format(d)
+}
+
 export type ParkineoPlatform = 'soundcloud' | 'youtube' | 'mixcloud'
 export type ParkineoLang = 'es' | 'en'
 
