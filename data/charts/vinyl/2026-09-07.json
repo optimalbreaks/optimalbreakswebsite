@@ -684,6 +684,50 @@
       "artwork_url": "https://i.ytimg.com/vi/_0METheTwi4/hqdefault.jpg",
       "note_en": "2001 breaks remix by DJ Hyper and Dylan Rhymes of Puretone's Addicted To Bass. Beatport's 2022 Ekko reissue is a Summa Jae happy-hardcore remix, not this mix.",
       "note_es": "Remix de breaks de 2001 de DJ Hyper y Dylan Rhymes del Addicted To Bass de Puretone. La reedición Ekko de 2022 en Beatport es un remix happy hardcore de Summa Jae, no este corte."
+    },
+    {
+      "sort_order": 36,
+      "title": "You're No Good",
+      "mix_name": "More Bounce Mix",
+      "artists": [
+        {
+          "name": "Liquid Crystal"
+        }
+      ],
+      "label": "Ruff On Wax",
+      "catalog_number": "ROWTR-3",
+      "year": 1993,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=X9xP0rzBylM",
+      "artwork_url": "https://i.ytimg.com/vi/X9xP0rzBylM/hqdefault.jpg",
+      "note_en": "A1 of the 1993 UK 12\" (Ruff On Wax ROWTR-3). Kniteforce later reissued the EP; this row is the original More Bounce Mix.",
+      "note_es": "A1 del 12\" británico de 1993 (Ruff On Wax ROWTR-3). Kniteforce reeditó el EP después; esta fila es el More Bounce Mix original."
+    },
+    {
+      "sort_order": 37,
+      "title": "Bounce",
+      "mix_name": "Tommy Vee Deep Vocal Remix",
+      "artists": [
+        {
+          "name": "Lil Devious"
+        },
+        {
+          "name": "MC Raul"
+        },
+        {
+          "name": "Tommy Vee"
+        }
+      ],
+      "label": "Lowered Recordings",
+      "catalog_number": "LOW006P/R",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=dDcZ8ZC3MY8",
+      "artwork_url": "https://i.ytimg.com/vi/dDcZ8ZC3MY8/hqdefault.jpg",
+      "note_en": "2004 Lowered Recordings 12\" (LOW006). Beatport lists the same Tommy Vee Deep Vocal Remix; the archive row is the full YouTube.",
+      "note_es": "12\" de Lowered Recordings de 2004 (LOW006). Beatport tiene el mismo Tommy Vee Deep Vocal Remix; en el archivo se queda el YouTube entero."
     }
   ]
 }

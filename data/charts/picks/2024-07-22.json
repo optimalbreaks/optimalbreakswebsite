@@ -268,6 +268,32 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 74
+    },
+    {
+      "title": "Sub Goes Boom",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/agentcopy/761532",
+          "name": "agentCopy"
+        },
+        {
+          "url": "https://www.beatport.com/artist/opgroover/1228026",
+          "name": "O.P.Groover"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sub-goes-boom/19250482",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8835b985-9998-4dbb-864f-f976c0093a8b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eb715a19-364a-438b-8ab9-81538e0db96b.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-26",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

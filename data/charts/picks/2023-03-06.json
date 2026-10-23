@@ -143,6 +143,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 20
+    },
+    {
+      "title": "Unfriend",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/agentcopy/761532",
+          "name": "agentCopy"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/unfriend/17457586",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/de14b033-b68f-4fd8-bae9-235e714e57f3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6e7557e2-94f3-4744-ad37-03f2fd82dffe.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Minor",
+      "release_year": 2023,
+      "release_date": "2023-03-09",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

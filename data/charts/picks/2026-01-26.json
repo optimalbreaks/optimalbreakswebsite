@@ -1292,6 +1292,32 @@
       "note_es": "",
       "sort_order": 51,
       "spotify_url": "https://open.spotify.com/track/1PNZgXMDhaOgiFjKXlgHBW"
+    },
+    {
+      "title": "Alive",
+      "mix_name": "agentCopy Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tigress/927855",
+          "name": "Tigress"
+        },
+        {
+          "url": "https://www.beatport.com/artist/agentcopy/761532",
+          "name": "agentCopy"
+        }
+      ],
+      "label": "Lab Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/alive/27018594",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/388e30d2-1cbe-429a-b9b8-4941bbf0a305.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/518e3c27-5cd9-4504-8b65-855b8ce57c07.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-30",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
