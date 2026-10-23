@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request)
   if (!auth.ok) return auth.response
 
-  let body: { action?: string; id?: string; url?: string; nextData?: unknown }
+  let body: { action?: string; id?: string; url?: string; nextData?: unknown; published_id?: string | null }
   try {
     body = await request.json()
   } catch {
@@ -174,7 +174,16 @@ export async function POST(request: NextRequest) {
   }
   if (!body.id) return NextResponse.json({ error: 'Falta el tema' }, { status: 400 })
 
-  const result = await decideImport(body.id, body.action, auth.userId)
+  const publishedRaw = typeof body.published_id === 'string' ? body.published_id.trim() : ''
+  const publishedId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(publishedRaw)
+    ? publishedRaw
+    : null
+  if (body.action === 'restore' && publishedRaw && !publishedId) {
+    return NextResponse.json({ error: 'El tema publicado no es válido' }, { status: 400 })
+  }
+
+  const action = body.action as 'approve' | 'discard' | 'restore'
+  const result = await decideImport(body.id, action, auth.userId, publishedId)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, published_id: result.published_id })
 }

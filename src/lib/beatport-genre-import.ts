@@ -477,14 +477,14 @@ export async function publishFeaturedPick(
   sb: ReturnType<typeof createServiceSupabase>,
   cache: Map<string, EditionState>,
   pick: BeatportPickInput,
-): Promise<'inserted' | 'duplicate'> {
+): Promise<{ status: 'inserted'; id: string } | { status: 'duplicate' }> {
   const week = chartEditionWeekMondayFromPublish(pick.release_date)
   if (!week) throw new Error('Sin fecha de lanzamiento')
   const state = await editionFor(sb, cache, week)
   const key = dedupeKeyForFeaturedLink(pick.link_url)
-  if (state.keys.has(key)) return 'duplicate'
+  if (state.keys.has(key)) return { status: 'duplicate' }
   const artists = pick.artists as ChartFeaturedArtist[]
-  const { error } = await sb.from('chart_featured_tracks').insert({
+  const { data: inserted, error } = await sb.from('chart_featured_tracks').insert({
     chart_edition_id: state.id,
     sort_order: state.nextSort,
     title: pick.title,
@@ -504,14 +504,15 @@ export async function publishFeaturedPick(
     tidal_url: null,
     note_en: '',
     note_es: '',
-  })
+  }).select('id').single()
   if (error) {
-    if (/duplicate|unique/i.test(error.message)) return 'duplicate'
+    if (/duplicate|unique/i.test(error.message)) return { status: 'duplicate' }
     throw new Error(error.message)
   }
+  if (!inserted?.id) throw new Error('No se pudo publicar el tema')
   state.keys.add(key)
   state.nextSort += 1
-  return 'inserted'
+  return { status: 'inserted', id: inserted.id as string }
 }
 
 async function rememberQueue(
@@ -758,7 +759,7 @@ export async function runBeatportGenreImport(opts: {
         if (fromArtist.has(id) || matchesTop100(pick, rankKeys)) {
           const pub = await publishFeaturedPick(sb, cache, pick)
           await rememberQueue(sb, pick, 'approved', 'auto_top100', opts.userId ?? null)
-          if (pub === 'inserted') {
+          if (pub.status === 'inserted') {
             result.auto_approved += 1
             published += 1
             say(`  Publicado: ${pickLabel(pick)}`)
@@ -1019,7 +1020,7 @@ export async function ingestBeatportPage(opts: {
       if (publishAll || matchesTop100(pick, rankKeys)) {
         const pub = await publishFeaturedPick(sb, cache, pick)
         await rememberQueue(sb, pick, 'approved', 'auto_top100', opts.userId)
-        if (pub === 'inserted') {
+        if (pub.status === 'inserted') {
           result.auto_approved += 1
           published += 1
           say(`  Publicado: ${pickLabel(pick)}`)
@@ -1054,24 +1055,63 @@ export async function ingestBeatportPage(opts: {
   return result
 }
 
+/**
+ * Quita de New Releases la fila que acaba de crear «Incluir».
+ * Solo si el id de Beatport coincide: un duplicado que ya estaba en la web no se toca.
+ */
+async function unpublishMatchingPick(
+  sb: ReturnType<typeof createServiceSupabase>,
+  publishedId: string,
+  linkUrl: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const want = beatportIdFromLink(linkUrl)
+  if (!want) return { ok: false, error: 'Ese tema no tiene id de Beatport' }
+  const { data, error } = await sb
+    .from('chart_featured_tracks')
+    .select('id, link_url')
+    .eq('id', publishedId)
+    .maybeSingle()
+  if (error) return { ok: false, error: error.message }
+  if (!data) return { ok: true }
+  const got = beatportIdFromLink(String(data.link_url || ''))
+  if (got !== want) return { ok: false, error: 'El tema publicado no coincide con la cola' }
+  const { error: delErr } = await sb.from('chart_featured_tracks').delete().eq('id', publishedId)
+  if (delErr) return { ok: false, error: delErr.message }
+  return { ok: true }
+}
+
 export async function decideImport(
   id: string,
   action: 'approve' | 'discard' | 'restore',
   userId: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+  publishedId?: string | null,
+): Promise<{ ok: true; published_id: string | null } | { ok: false; error: string }> {
   const sb = createServiceSupabase()
   const { data: row, error } = await sb.from('chart_import_queue').select('*').eq('id', id).maybeSingle()
   if (error) return { ok: false, error: error.message }
   if (!row) return { ok: false, error: 'No está en la cola' }
 
   if (action === 'restore') {
-    if (row.status !== 'discarded') return { ok: false, error: 'Solo se recupera un descarte' }
+    if (row.status !== 'discarded' && row.status !== 'approved') {
+      return { ok: false, error: 'Ese tema ya no se puede deshacer' }
+    }
+    if (row.status === 'approved') {
+      if (row.via !== 'admin') return { ok: false, error: 'Ese tema lo publicó el pase automático' }
+      if (publishedId) {
+        const removed = await unpublishMatchingPick(sb, publishedId, row.link_url)
+        if (!removed.ok) return removed
+      }
+    }
     const { error: upErr } = await sb
       .from('chart_import_queue')
       .update({ status: 'pending', via: null, decided_at: null, decided_by: null })
       .eq('id', id)
     if (upErr) return { ok: false, error: upErr.message }
-    return { ok: true }
+    if (row.status === 'approved' && publishedId) {
+      revalidatePublicCharts()
+      revalidatePublicCatalog()
+    }
+    return { ok: true, published_id: null }
   }
 
   if (row.status !== 'pending') return { ok: false, error: 'Ese tema ya está decidido' }
@@ -1087,7 +1127,7 @@ export async function decideImport(
       })
       .eq('id', id)
     if (upErr) return { ok: false, error: upErr.message }
-    return { ok: true }
+    return { ok: true, published_id: null }
   }
 
   const pick: BeatportPickInput = {
@@ -1107,8 +1147,10 @@ export async function decideImport(
     note_en: '',
     note_es: '',
   }
+  let insertedId: string | null = null
   try {
-    await publishFeaturedPick(sb, new Map(), pick)
+    const pub = await publishFeaturedPick(sb, new Map(), pick)
+    if (pub.status === 'inserted') insertedId = pub.id
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }
   }
@@ -1126,5 +1168,5 @@ export async function decideImport(
   // enseñar el tema que /charts ya mostraba (Dub Elements, 9 oct 2026).
   revalidatePublicCharts()
   revalidatePublicCatalog()
-  return { ok: true }
+  return { ok: true, published_id: insertedId }
 }

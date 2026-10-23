@@ -50,6 +50,37 @@ type Payload = {
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 const PREVIEW_GROUP = 'admin-imports'
+const UNDO_LIMIT = 5
+
+type UndoEntry = {
+  row: PendingTrack
+  index: number
+  kind: 'approve' | 'discard'
+  publishedId: string | null
+  settled: Promise<void>
+  succeed: () => void
+  fail: (err: Error) => void
+}
+
+function createUndo(row: PendingTrack, index: number, kind: UndoEntry['kind']): UndoEntry {
+  let succeed: () => void = () => {}
+  let fail: (err: Error) => void = () => {}
+  let finished = false
+  const settled = new Promise<void>((resolve, reject) => {
+    succeed = () => {
+      if (finished) return
+      finished = true
+      resolve()
+    }
+    fail = (err: Error) => {
+      if (finished) return
+      finished = true
+      reject(err)
+    }
+  })
+  settled.catch(() => {})
+  return { row, index, kind, publishedId: null, settled, succeed, fail }
+}
 
 function sampleSrc(url: string) {
   return `/api/audio-proxy?url=${encodeURIComponent(url)}`
@@ -141,7 +172,10 @@ export default function AdminImportsPage() {
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
-  const [undo, setUndo] = useState<{ row: PendingTrack; index: number } | null>(null)
+  const [undoStack, setUndoStack] = useState<UndoEntry[]>([])
+  const undoRef = useRef<UndoEntry[]>([])
+  const actingRef = useRef(new Set<string>())
+  const restoringRef = useRef(new Set<string>())
   const [ingesting, setIngesting] = useState(false)
   const [job, setJob] = useState<Job | null>(null)
   const [jobOpen, setJobOpen] = useState(false)
@@ -521,11 +555,24 @@ export default function AdminImportsPage() {
 
   // La fila se quita (o se repone) en el acto; la red va detrás.
   function removeRow(id: string) {
-    setPayload((p) => p ? {
-      ...p,
-      pending: p.pending.filter((t) => t.id !== id),
-      pending_count: Math.max(0, p.pending_count - 1),
-    } : p)
+    setPayload((p) => {
+      if (!p || !p.pending.some((t) => t.id === id)) return p
+      return {
+        ...p,
+        pending: p.pending.filter((t) => t.id !== id),
+        pending_count: Math.max(0, p.pending_count - 1),
+      }
+    })
+  }
+  function pushUndo(entry: UndoEntry) {
+    const next = [entry, ...undoRef.current.filter((e) => e.row.id !== entry.row.id)].slice(0, UNDO_LIMIT)
+    undoRef.current = next
+    setUndoStack(next)
+  }
+  function dropUndo(id: string) {
+    const next = undoRef.current.filter((e) => e.row.id !== id)
+    undoRef.current = next
+    setUndoStack(next)
   }
   function insertRow(row: PendingTrack, index: number) {
     setPayload((p) => {
@@ -537,50 +584,89 @@ export default function AdminImportsPage() {
     })
   }
 
+  function leavePreview(id: string) {
+    if (previewGroupKey !== PREVIEW_GROUP) return
+    const current = previewQueue[previewIndex]
+    if (current?.rowKey === id) {
+      stopPreview()
+      return
+    }
+    if (!previewQueue.some((item) => item.rowKey === id)) return
+    const next = previewQueue.filter((item) => item.rowKey !== id)
+    const idx = next.findIndex((item) => item.rowKey === current?.rowKey)
+    if (next.length && idx >= 0) extendPreviewQueue(next, idx, PREVIEW_GROUP)
+    else stopPreview()
+  }
+
   async function act(id: string, action: 'approve' | 'discard' | 'restore') {
+    if (action === 'restore' ? restoringRef.current.has(id) : actingRef.current.has(id)) return
+    if (action === 'restore') restoringRef.current.add(id)
+    else actingRef.current.add(id)
     setBusyId(id)
     setNote(null)
     const index = payload?.pending.findIndex((t) => t.id === id) ?? -1
     const row = index >= 0 ? payload?.pending[index] : undefined
+    let entry: UndoEntry | undefined
     if (action === 'restore') {
-      if (undo?.row.id === id) insertRow(undo.row, undo.index)
-      setUndo(null)
+      entry = undoRef.current.find((item) => item.row.id === id)
+      if (!entry) {
+        restoringRef.current.delete(id)
+        setBusyId(null)
+        return
+      }
+      insertRow(entry.row, entry.index)
+      dropUndo(id)
     } else if (row) {
       removeRow(id)
-      setUndo(action === 'discard' ? { row, index } : null)
-    }
-    if (action === 'discard' && previewGroupKey === PREVIEW_GROUP) {
-      const current = previewQueue[previewIndex]
-      if (current?.rowKey === id) {
-        stopPreview()
-      } else if (previewQueue.some((row) => row.rowKey === id)) {
-        const next = previewQueue.filter((row) => row.rowKey !== id)
-        const idx = next.findIndex((row) => row.rowKey === current?.rowKey)
-        if (next.length && idx >= 0) extendPreviewQueue(next, idx, PREVIEW_GROUP)
-        else stopPreview()
-      }
+      entry = createUndo(row, index, action)
+      pushUndo(entry)
+      if (action === 'discard') leavePreview(id)
     }
     try {
+      if (action === 'restore' && entry) {
+        try {
+          await entry.settled
+        } catch {
+          return
+        }
+      }
       const r = await fetch('/api/admin/imports', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, id }),
+        body: JSON.stringify({
+          action,
+          id,
+          published_id: action === 'restore' ? entry?.publishedId ?? null : undefined,
+        }),
       })
-      const j = (await r.json()) as { error?: string }
+      const j = (await r.json()) as { error?: string; published_id?: string | null }
       if (!r.ok) throw new Error(j.error || r.statusText)
+      if (entry && action !== 'restore') {
+        entry.publishedId = action === 'approve' && typeof j.published_id === 'string' ? j.published_id : null
+        entry.succeed()
+      } else if (action === 'restore' && entry?.kind === 'approve' && !entry.publishedId) {
+        setNote(`«${entry.row.title}» vuelve a la cola. En la web ya estaba.`)
+      }
     } catch (e) {
       // Si la red falla, se deshace lo que ya se había pintado.
+      const message = e instanceof Error ? e.message : String(e)
       if (action === 'restore') {
         removeRow(id)
-        if (row) setUndo({ row, index })
-      } else if (row) {
+        if (entry) pushUndo(entry)
+      } else if (row && entry) {
         insertRow(row, index)
-        setUndo(null)
+        dropUndo(id)
+        entry.fail(e instanceof Error ? e : new Error(message))
       }
-      setNote(e instanceof Error ? e.message : String(e))
+      setNote(message)
     } finally {
-      setBusyId(null)
+      if (action === 'restore') restoringRef.current.delete(id)
+      else actingRef.current.delete(id)
+      // Un deshacer en curso sigue usando este id: no reactivar Incluir/Descartar.
+      if (action === 'restore' || !restoringRef.current.has(id)) {
+        setBusyId((current) => (current === id ? null : current))
+      }
     }
   }
 
@@ -696,13 +782,31 @@ export default function AdminImportsPage() {
       {note && (
         <p className="text-xs font-bold mb-4" style={mono}>{note}</p>
       )}
-      {undo && (
-        <p className="text-xs mb-4" style={mono}>
-          Descartado «{undo.row.title}».{' '}
-          <button type="button" className="underline font-black" onClick={() => act(undo.row.id, 'restore')}>
-            Deshacer
-          </button>
-        </p>
+      {undoStack.length > 0 && (
+        <div className="text-xs mb-4 space-y-1" style={mono}>
+          <p className="text-[var(--ink)]/50">Puedes deshacer los últimos {UNDO_LIMIT} gestos, en el orden que quieras.</p>
+          <ul className="space-y-1">
+            {undoStack.map((entry) => {
+              const mix = (entry.row.mix_name || '').trim()
+              const who = names(entry.row.artists)
+              return (
+                <li key={entry.row.id} className="break-words">
+                  {entry.kind === 'approve' ? 'Incluido' : 'Descartado'} «{entry.row.title}»
+                  {mix ? ` (${mix})` : ''}
+                  {who !== '—' ? ` — ${who}` : ''}.{' '}
+                  <button
+                    type="button"
+                    className="underline font-black disabled:opacity-40"
+                    disabled={busyId === entry.row.id}
+                    onClick={() => act(entry.row.id, 'restore')}
+                  >
+                    Deshacer
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
       {payload?.last_run && (
         <p className="text-[11px] text-[var(--ink)]/50 mb-4" style={mono}>
