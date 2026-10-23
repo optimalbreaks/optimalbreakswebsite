@@ -63,6 +63,23 @@
     "video_url": null,
     "embed_url": "https://soundcloud.com/franetikdj/sesion-especial-mia-break",
     "image_url": "https://i1.sndcdn.com/artworks-FhUBYgCMDSbUjUa7-R0o1Lg-t500x500.jpg",
+    "is_featured": false,
+    "event_slug": "mia-break-2026"
+  },
+  {
+    "slug": "franetik-45-5-vol-96-guest-dj-set",
+    "title": "Franetik — 45'5 Vol. 96 Guest DJ Set",
+    "artist_name": "Franetik",
+    "description_es": "Sesión invitada de Franetik en 45'5 Channel Vol. 96. Publicada en SoundCloud el 22 de septiembre de 2025.",
+    "description_en": "Guest DJ set by Franetik for 45'5 Channel Vol. 96. Published on SoundCloud on 22 September 2025.",
+    "mix_type": "classic_set",
+    "year": 2025,
+    "published_at": "2025-09-22T08:13:04.000Z",
+    "duration_minutes": 57,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/45-5channel/455-franetik-vol-96-guest-dj",
+    "image_url": "https://i1.sndcdn.com/artworks-EgUbtM4KDjtAJ7l9-FkOnWQ-t500x500.jpg",
     "is_featured": false
   },
   {
