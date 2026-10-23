@@ -198,6 +198,24 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
     },
   },
   {
+    img: 'pm_banger.jpg', fit: 'cover',
+    name: { es: 'The Banger', en: 'The Banger' },
+    role: { es: 'El colega inglés', en: 'The British mate' },
+    text: {
+      es: 'Una salchicha de cerdo del Reino Unido. En inglés, «banger» es salchicha… y también temazo: es el pepinazo británico. No siempre va con el lechón y el Pepino, pero se lo encuentran en todos los festivales y siempre acaban a su lado. Las manos, siempre en el aire haciendo pistolas. Y el acento, de Londres a muerte.',
+      en: 'A British pork sausage. In English a “banger” is a sausage… and a massive tune: he’s the UK cousin of the Pickle. He doesn’t always tag along with the pig and the Pickle, but they bump into him at every festival and always end up right next to him. Hands always in the air doing gun fingers. And the accent? Proper London.',
+    },
+    alt: { es: 'The Banger partido en dos: de día con chaqueta verde y gorra verde, de noche con americana azul, gorra de cuadros y reloj de oro, haciendo pistolas con los dedos', en: 'The Banger split in two: by day in a green jacket and green cap, by night in a navy blazer, check cap and gold watch, doing gun fingers' },
+    quote: { es: '¡Pull up, pull up!', en: 'Pull up, pull up!' },
+    more: {
+      label: { es: 'De día y de noche', en: 'Day and night' },
+      items: {
+        es: ['De día, festivalero inglés: chaqueta verde, camiseta de rayas, banderita y botas de agua con barro.', 'De noche, posh raver: americana azul marino, gorra de cuadros y reloj de oro.', 'Es tan elegante que se cambia de traje al caer el sol. Las gafas de sol, nunca.'],
+        en: ['By day, British festival-goer: green jacket, striped top, a little flag and muddy wellies.', 'By night, posh raver: navy blazer, check cap and a gold watch.', 'He’s so stylish he changes outfits at sunset. The sunglasses never come off.'],
+      },
+    },
+  },
+  {
     img: 'pm_mar_ia.jpg', fit: 'cover',
     name: { es: 'Mar IA', en: 'Mar IA' },
     role: { es: 'La mujer del lechón', en: 'The pig’s wife' },
