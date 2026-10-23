@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
+import { ParkineoTrackPlayButton } from '@/components/ParkineoTracks'
+import { formatTrackLength, parkineoTrackCycleLabel } from '@/lib/parkineo-tracks'
 
 type Row = ParkineoPlayable & {
   user_id: string
@@ -18,14 +20,30 @@ type Row = ParkineoPlayable & {
   account_email: string | null
 }
 
+type TrackRow = {
+  id: string
+  user_id: string
+  artist_name: string
+  title: string
+  duration_seconds: number
+  status: 'pending' | 'published' | 'rejected'
+  reject_reason: string | null
+  cycle: string | null
+  votes: number
+  account_name: string | null
+  account_email: string | null
+}
+
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 
 export default function ParkineoAdminPage() {
   const params = useParams<{ lang: string }>()
   const lang = params.lang || 'es'
   const [rows, setRows] = useState<Row[] | null>(null)
+  const [tracks, setTracks] = useState<TrackRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reasons, setReasons] = useState<Record<string, string>>({})
+  const [trackReasons, setTrackReasons] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -38,6 +56,14 @@ export default function ParkineoAdminPage() {
       return
     }
     setRows(json.data || [])
+    const tracksRes = await fetch('/api/admin/parkineo/tracks')
+    const tracksJson = await tracksRes.json()
+    if (!tracksRes.ok) {
+      setError(tracksJson.error || 'No se ha podido cargar la cola de temas')
+      setTracks([])
+      return
+    }
+    setTracks(tracksJson.data || [])
   }, [])
 
   useEffect(() => {
@@ -64,7 +90,28 @@ export default function ParkineoAdminPage() {
     }
   }
 
+  const decideTrack = async (id: string, action: 'publish' | 'reject') => {
+    setBusy(id)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/parkineo/tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action, reason: trackReasons[id] || '' }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setError(json.error || 'No se ha guardado')
+        return
+      }
+      await load()
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const pending = (rows || []).filter((r) => r.status === 'pending').length
+  const pendingTracks = (tracks || []).filter((r) => r.status === 'pending').length
 
   return (
     <div>
@@ -72,8 +119,8 @@ export default function ParkineoAdminPage() {
         Parkineo
       </h1>
       <p style={{ ...MONO, fontSize: '13px', lineHeight: 1.6 }}>
-        {pending} en cola. Publicar la saca en <Link href={`/${lang}/parkineo`}>/{lang}/parkineo</Link>. Descartar la quita de la lista.
-        No crea ficha de artista ni entra en Mixes.
+        {pending} sesiones en cola. {pendingTracks} temas en cola. Publicar los saca en <Link href={`/${lang}/parkineo`}>/{lang}/parkineo</Link>.
+        El tema no crea ficha de artista, no entra en Mixes y su marca no cuenta en el Top 100. El premio del semestre se mira aquí, no se otorga solo.
       </p>
       {error ? <p className="p-3 bg-[var(--red)] text-white" style={MONO}>{error}</p> : null}
       {rows === null ? <p style={MONO}>Cargando…</p> : null}
@@ -146,6 +193,78 @@ export default function ParkineoAdminPage() {
                   ) : null}
                 </div>
               </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <h2 className="mt-12" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '24px', textTransform: 'uppercase' }}>
+        Temas
+      </h2>
+      <p style={{ ...MONO, fontSize: '13px', lineHeight: 1.6 }}>
+        MP3 de un minuto a 15. La marca es el voto del semestre. No se enseña el número en la web.
+      </p>
+      {tracks === null ? <p style={MONO}>Cargando temas…</p> : null}
+      <div className="grid gap-4">
+        {(tracks || []).map((track) => (
+          <article key={track.id} className="border-4 border-[var(--ink)] bg-[var(--paper)] p-4">
+            <p className="m-0" style={{ ...MONO, fontSize: '11px', letterSpacing: '1px' }}>
+              {track.status === 'pending' ? 'EN COLA' : track.status === 'published' ? 'PUBLICADO' : 'DESCARTADO'}
+              {' · '}
+              {formatTrackLength(track.duration_seconds)}
+              {' · '}
+              {track.votes} {track.votes === 1 ? 'marca' : 'marcas'}
+              {parkineoTrackCycleLabel(track.cycle, true) ? ` · ${parkineoTrackCycleLabel(track.cycle, true)}` : ''}
+            </p>
+            <h3 className="mt-1 mb-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: '18px', textTransform: 'uppercase' }}>
+              {track.title}
+            </h3>
+            <p className="m-0" style={{ ...MONO, fontSize: '13px', lineHeight: 1.5 }}>
+              {track.artist_name}
+              <br />
+              {track.account_name || 'Sin nombre'}{track.account_email ? ` · ${track.account_email}` : ''}
+              {' · '}
+              <Link href={`/${lang}/administrator/users/${track.user_id}`}>Cuenta</Link>
+            </p>
+            <div className="mt-3">
+              <ParkineoTrackPlayButton trackId={track.id} label={track.title} />
+            </div>
+            {track.reject_reason ? (
+              <p className="mt-2 mb-0" style={{ ...MONO, fontSize: '13px' }}>{track.reject_reason}</p>
+            ) : null}
+            <label className="block mt-3" style={{ ...MONO, fontSize: '11px' }}>
+              Nota al descartar (la ve en su cuenta)
+              <input
+                value={trackReasons[track.id] ?? track.reject_reason ?? ''}
+                onChange={(e) => setTrackReasons((prev) => ({ ...prev, [track.id]: e.target.value }))}
+                maxLength={280}
+                className="mt-1 w-full border-[3px] border-[var(--ink)] bg-[var(--paper)] px-2 py-2"
+                style={{ ...MONO, fontSize: '13px' }}
+              />
+            </label>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {track.status !== 'published' ? (
+                <button
+                  type="button"
+                  disabled={busy === track.id}
+                  onClick={() => void decideTrack(track.id, 'publish')}
+                  className="border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 py-2 cursor-pointer"
+                  style={{ ...MONO, fontWeight: 700 }}
+                >
+                  Publicar
+                </button>
+              ) : null}
+              {track.status !== 'rejected' ? (
+                <button
+                  type="button"
+                  disabled={busy === track.id}
+                  onClick={() => void decideTrack(track.id, 'reject')}
+                  className="border-[3px] border-[var(--ink)] bg-[var(--red)] px-3 py-2 text-white cursor-pointer"
+                  style={{ ...MONO, fontWeight: 700 }}
+                >
+                  Descartar
+                </button>
+              ) : null}
             </div>
           </article>
         ))}

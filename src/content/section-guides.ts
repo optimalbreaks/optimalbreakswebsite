@@ -105,7 +105,7 @@ export const SECTION_GUIDES: SectionGuide[] = [
     base: '10_parkineo', href: '/parkineo', match: ['/parkineo'],
     label: { es: 'Parkineo', en: 'Parkineo' },
     host: { es: 'La choni', en: 'The choni' },
-    text: { es: 'Cómo enviar tu sesión si estás empezando, paso a paso.', en: 'How to send your session if you’re starting out, step by step.' },
+    text: { es: 'Cómo enviar tu sesión si estás empezando, y cómo mandar un tema si ya produces.', en: 'How to send your session if you’re starting out, and how to send a track if you already produce.' },
     seconds: { es: 30, en: 28 },
   },
   {

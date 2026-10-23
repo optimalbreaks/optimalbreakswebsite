@@ -284,6 +284,31 @@ export interface Database {
         Update: Partial<Omit<ParkineoSession, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
+      parkineo_tracks: {
+        Row: ParkineoTrack
+        Insert: Omit<
+          ParkineoTrack,
+          'id' | 'created_at' | 'updated_at' | 'reject_reason' | 'published_at' | 'decided_at' | 'decided_by' | 'status' | 'cycle'
+        > & {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          status?: ParkineoStatus
+          reject_reason?: string | null
+          published_at?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          cycle?: string | null
+        }
+        Update: Partial<Omit<ParkineoTrack, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
+      parkineo_track_votes: {
+        Row: ParkineoTrackVoteRow
+        Insert: Pick<ParkineoTrackVoteRow, 'user_id' | 'track_id'>
+        Update: Partial<Pick<ParkineoTrackVoteRow, 'user_id' | 'track_id'>>
+        Relationships: DbRelationship[]
+      }
       history_entries: {
         Row: HistoryEntry
         Insert: Omit<HistoryEntry, 'id' | 'created_at'>
@@ -1322,6 +1347,32 @@ export interface ParkineoSession extends Record<string, unknown> {
   published_at: string | null
   decided_at: string | null
   decided_by: string | null
+}
+
+/** Tema propio mandado a Parkineo. `user_id` y `storage_path` no se leen en la página pública. */
+export interface ParkineoTrack extends Record<string, unknown> {
+  id: string
+  created_at: string
+  updated_at: string
+  user_id: string
+  artist_name: string
+  title: string
+  storage_path: string
+  duration_seconds: number
+  slug: string
+  status: ParkineoStatus
+  reject_reason: string | null
+  published_at: string | null
+  decided_at: string | null
+  decided_by: string | null
+  cycle: string | null
+}
+
+export interface ParkineoTrackVoteRow extends Record<string, unknown> {
+  id: string
+  user_id: string
+  track_id: string
+  created_at: string
 }
 
 export interface HistoryEntry extends Record<string, unknown> {

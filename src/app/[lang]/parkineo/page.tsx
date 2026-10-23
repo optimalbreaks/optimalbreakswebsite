@@ -8,6 +8,8 @@ import { PUBLIC_PARKINEO_CACHE_TAG } from '@/lib/revalidate-public'
 import { PARKINEO_PUBLIC_COLUMNS } from '@/lib/parkineo'
 import { COMIC_IMG } from '@/content/comic'
 import ParkineoBoard, { type ParkineoListItem } from '@/components/ParkineoBoard'
+import ParkineoTracks from '@/components/ParkineoTracks'
+import { PARKINEO_TRACK_PUBLIC_COLUMNS, type ParkineoTrackPublic } from '@/lib/parkineo-tracks'
 
 export const revalidate = 300
 
@@ -32,6 +34,16 @@ export default async function ParkineoPage({ params }: { params: Promise<{ lang:
       .order('id', { ascending: true })
       .range(from, to),
   ).catch(() => [] as ParkineoListItem[])
+
+  const tracks = await fetchAllPages<ParkineoTrackPublic>((from, to) =>
+    supabase
+      .from('parkineo_tracks')
+      .select(PARKINEO_TRACK_PUBLIC_COLUMNS)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+  ).catch(() => [] as ParkineoTrackPublic[])
 
   const facts = es
     ? ['Gratis', 'Sin ser artista', 'Lista pública']
@@ -63,6 +75,13 @@ export default async function ParkineoPage({ params }: { params: Promise<{ lang:
                 style={{ ...DISPLAY, fontSize: '14px' }}
               >
                 {es ? 'Mandar mi sesión ↓' : 'Send my session ↓'}
+              </a>
+              <a
+                href="#tema"
+                className="inline-block border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-5 py-3 text-[var(--ink)] no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_var(--ink)]"
+                style={{ ...DISPLAY, fontSize: '14px' }}
+              >
+                {es ? 'Mandar mi tema ↓' : 'Send my track ↓'}
               </a>
               <a
                 href="#sesiones"
@@ -109,6 +128,7 @@ export default async function ParkineoPage({ params }: { params: Promise<{ lang:
         </div>
       </section>
       <ParkineoBoard lang={lang} sessions={sessions} />
+      <ParkineoTracks lang={lang} tracks={tracks} />
     </div>
   )
 }

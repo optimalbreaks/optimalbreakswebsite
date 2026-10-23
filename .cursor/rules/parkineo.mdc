@@ -5,13 +5,16 @@ Página pública `/parkineo`. No es `/mixes` y no es un alta de artista.
 ## Invariantes
 
 1. **La lista pública solo enseña lo publicado** (`status = published`). Mandar exige cuenta. Nada se publica solo: la cola está en `/administrator/parkineo`.
-2. **Un enlace, no un archivo.** SoundCloud, YouTube o Mixcloud. Prohibido aceptar MP3/WAV o meter la sesión en `private/music`, `/api/audio` o `mixes.download_url`.
+2. **Sesiones: un enlace, no un archivo.** SoundCloud, YouTube o Mixcloud. Prohibido aceptar MP3/WAV de una sesión o meterla en `private/music`, `/api/audio` o `mixes.download_url`. El MP3 de un tema va por el cajón del punto 9, no por aquí.
 3. **Duración.** 15 minutos o menos es un tema y se rechaza al enviar. Más de 3 horas también. El servidor lee la duración del enlace; si no puede, no entra en la cola.
 4. **Una en cola por cuenta.** Puede haber varias publicadas o descartadas. El mismo enlace no se repite mientras esté en cola o publicado.
 5. **No es artista.** No se crea fila en `artists`, no se escribe `claimed_by`, no se abren bookings, no cuenta en el Top de artistas ni en `/mixes`. El nombre de la tarjeta es el que escribió, sin enlace a `/artists`.
 6. **`user_id` no se selecciona** en la página pública. La ficha de cada sesión es `/parkineo/<slug>`.
 7. **Reproductor.** Portada + play. El iframe solo al clic, por el coordinador de audio (YouTube, SoundCloud y Mixcloud). Misma regla que las tarjetas de `/mixes`. El widget visual de SoundCloud lleva `hide_related=true`: al pausar no salen pistas similares de otros. Las tres vistas (grande, compacta, lista) usan el mismo reproductor: el iframe no se monta al cambiar de vista. Cada tarjeta y la ficha enseñan el día de `published_at` en hora de Madrid (`formatParkineoPublished`).
 8. **Corazón.** `favorite_parkineo` (un usuario, una sesión). El mismo botón que artistas y sellos, en las tres vistas y en la ficha. **Prohibido** pintar el recuento en `/parkineo`: el corazón solo dice si esa cuenta la ha marcado. No es un «+» de tema ni entra en el Top 100. El recuento se deja para un top de sesiones posterior. En Favoritos sí sale la lista de las suyas.
+9. **Temas (cajón aparte).** Quien ya produce manda un MP3 propio de breakbeat, de 1 a 15 minutos y como mucho 25 MB. El archivo va al bucket privado `parkineo-tracks`, nunca a `public/`, `private/music`, `/api/audio` ni `mixes.download_url`. Una fila `pending` por cuenta. No se publica sola: la cola está en el mismo `/administrator/parkineo`.
+10. **Marca del tema.** `parkineo_track_votes`. No es el «+» de charts, no entra en el Top 100 ni en el tablero de artistas, y la página no enseña el recuento. El premio del semestre se mira en el admin y no se otorga solo. El texto no promete un sello colaborador: todavía no hay uno.
+11. **Audio del tema.** `/api/parkineo-audio/[id]` redirige a una URL firmada de 6 h. Publicado: solo si la petición nace en la web. En cola: solo un admin. El ▶ pasa por el coordinador (`requestYouTubePlay` + `registerYouTubeEmbed`) para que no suene a la vez que otra fuente.
 
 Quien ya saca temas y quiere ficha sigue por Mi cuenta → Artista (`request_new`). Esa solicitud no mete la sesión en Parkineo.
 
