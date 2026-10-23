@@ -83,6 +83,12 @@ const nextConfig = {
         destination: '/:lang/artists/aquasky-vs-masterblaster',
         permanent: true,
       },
+      /** RitMika x ARÁ: el chat leyó el adhesivo AKA de Instagram. Es RITMIKA XXL, 21 nov 2026. */
+      {
+        source: '/:lang/events/ritmika-x-ara',
+        destination: '/:lang/events/ritmika',
+        permanent: true,
+      },
       /** Retro Halloween 2026: Raveart cambió Málaga Forum (31 oct) por Complejo Embrujo (1 nov) */
       {
         source: '/:lang/events/raveart-retro-halloween-2026-malaga-forum',

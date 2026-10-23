@@ -141,6 +141,7 @@ Incidente Olibass: el cartel del Open Air **2025** llegó con el slug de la fich
 3. Misma edición + misma fecha exacta → el existente, aunque el nombre del cartel sea distinto («Olibass Snow Edition» vs «OLIBASS Music Festival | Snow Edition»).
 4. Si el cartel sí trae año, se respeta (edición pasada = ficha pasada nueva).
 5. **Mismo año, otro día** (21 oct 2026, Electrolunch): no es la misma ficha. «Electrolunch XXL» cabía dentro de «Electrolunch XXL · Picnic 76 (Stanton Warriors)» y el confirm del 24 oct pisó la fila del 9 may. Con las dos fechas completas y distintas se inserta otra fila. El enriquecimiento posterior no puede meter en `stages` / `schedule` artistas que no estén ya en `lineup`.
+6. **Misma noche, mismo local, misma marca** (23 oct 2026, RitMika): un segundo cartel del mismo día y del mismo venue, cuyo nombre empieza por la misma palabra de 6 letras o más, actualiza la ficha. El título más largo sustituye al corto. No baja el umbral de 8 letras del nombre contenido: eso fue lo que pisó Electrolunch. Una captura de Instagram no se lee con los adhesivos: «AKA» no es «ARÁ», y «a-z» de «primeras confirmaciones» no es un artista.
 
 Si algo sale mal: restaurar sobre el **mismo id** (conserva favoritos/asistencias) y mover los datos de la otra edición a una fila propia.
 
@@ -269,7 +270,7 @@ A SoundCloud link is read the same way (`resolveSoundCloudLinks`): duration from
 
 `normalizeUpcomingEventDate` (`admin-chat.ts`) forces the next future `YYYY-MM-DD` so the model cannot park events in a past year (they would vanish from the public upcoming list).
 
-**Festival editions (29 Sep 2026):** `findDuplicateEvent` never updates a row of another year with the same slug (inserts `<slug>-<year>`), and when the year was guessed it matches an event of the same edition series on the same day/month and keeps that event's date. A different calendar day in the same year is also a new row (21 Oct 2026: an Electrolunch XXL poster for 24 Oct overwrote the 9 May Picnic 76 row because the shorter name was contained in the longer one). Enrichment cannot add stage or schedule artists that are not already in `lineup`. Olibass incident details in the Spanish section above.
+**Festival editions (29 Sep 2026):** `findDuplicateEvent` never updates a row of another year with the same slug (inserts `<slug>-<year>`), and when the year was guessed it matches an event of the same edition series on the same day/month and keeps that event's date. A different calendar day in the same year is also a new row (21 Oct 2026: an Electrolunch XXL poster for 24 Oct overwrote the 9 May Picnic 76 row because the shorter name was contained in the longer one). The same night at the same venue, with the same leading brand of 6+ letters, updates the existing row (23 Oct 2026: a second RitMika poster became a duplicate because «RITMIKA» is only 7 letters). An Instagram screenshot is not read with its stickers: «AKA» is not a brand, and «a-z» next to “first confirmations” is not an act. Enrichment cannot add stage or schedule artists that are not already in `lineup`. Olibass incident details in the Spanish section above.
 
 ### Tools (summary)
 

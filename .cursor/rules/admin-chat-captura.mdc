@@ -32,7 +32,7 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 
 Cartel sin año («21 de agosto») → `normalizeUpcomingEventDate` (`admin-chat.ts`): próxima ocurrencia **futura** `YYYY-MM-DD`. Nunca dejar el evento en un año pasado (desaparece del listado `/events`).
 
-**Ediciones de festival (29 sep 2026, incidente Olibass):** `findDuplicateEvent` **no** actualiza una ficha del mismo slug de **otro año** (inserta `<slug>-<año>`). Si el año fue adivinado, un evento de la misma edición (`FESTIVAL_SERIES` + temporada) el mismo día/mes **es** ese evento y conserva su fecha (no duplicar a +1 año). Si algo se pisa: restaurar sobre el mismo id y mover la otra edición a su fila. Detalle: `docs/ADMIN_CHAT_CAPTURA.md`.
+**Ediciones de festival (29 sep 2026, incidente Olibass):** `findDuplicateEvent` **no** actualiza una ficha del mismo slug de **otro año** (inserta `<slug>-<año>`). Si el año fue adivinado, un evento de la misma edición (`FESTIVAL_SERIES` + temporada) el mismo día/mes **es** ese evento y conserva su fecha (no duplicar a +1 año). Misma noche, mismo local y la misma marca al principio del nombre (6 letras o más) también es la misma ficha: el título más largo se queda (23 oct 2026, RitMika XXL / «RitMika x ARÁ»). Un adhesivo «AKA» de Instagram no es una marca, y «a-z» de «primeras confirmaciones» no es un artista. Si algo se pisa: restaurar sobre el mismo id y mover la otra edición a su fila. Detalle: `docs/ADMIN_CHAT_CAPTURA.md`.
 
 ## Tools
 

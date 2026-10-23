@@ -2237,6 +2237,7 @@ type ExistingEventRow = {
   name: string
   date_start: string | null
   city: string | null
+  venue: string | null
   image_url: string | null
   gallery_urls?: string[] | null
 }
@@ -2259,12 +2260,31 @@ function isDifferentCalendarDay(
  * Un nombre más corto dentro de otro («Electrolunch XXL» dentro de «Electrolunch XXL · Picnic 76»)
  * no basta si el día es distinto (21 oct 2026: el cartel del 24 oct pisó el Picnic 76 del 9 may).
  */
+function eventNameTokens(s: string): string[] {
+  return normalizeEventName(s).split(' ').filter(Boolean)
+}
+
+/** Misma marca al principio del nombre («RITMIKA» y «RitMika x ARÁ»). */
+function sameLeadingBrand(a: string, b: string): boolean {
+  const leadA = eventNameTokens(a)[0] || ''
+  const leadB = eventNameTokens(b)[0] || ''
+  return leadA.length >= 6 && leadA === leadB
+}
+
+function sameVenueName(a: string | null | undefined, b: string | null | undefined): boolean {
+  const na = normalizeEventName(a || '')
+  const nb = normalizeEventName(b || '')
+  if (!na || !nb || na.length < 4 || nb.length < 4) return false
+  return na === nb || na.includes(nb) || nb.includes(na)
+}
+
 function findDuplicateEvent(
   all: ExistingEventRow[],
   slug: string,
   name: string,
   dateStart: string | null | undefined,
   yearGuessed = false,
+  venue?: string | null,
 ): ExistingEventRow | null {
   const newYear = (dateStart || '').slice(0, 4)
   const bySlug = all.find((e) => e.slug === slug)
@@ -2303,7 +2323,12 @@ function findDuplicateEvent(
       normOld === normNew ||
       (normOld.length >= 8 && normNew.includes(normOld)) ||
       (normNew.length >= 8 && normOld.includes(normNew))
-    if (!sameName) continue
+    // Misma noche en el mismo local, aunque el segundo cartel acorte o alargue el título
+    // (RITMIKA XXL y «RitMika x ARÁ», 23 oct 2026). No basta el nombre corto suelto:
+    // Electrolunch XXL pisó otra fecha porque el nombre corto cabía en el largo.
+    const sameNight =
+      sameVenueName(e.venue, venue) && sameLeadingBrand(e.name, name)
+    if (!sameName && !sameNight) continue
     // Ediciones anuales: si ambos tienen año y difiere, NO es duplicado.
     // Mismo año y otro día tampoco: el nombre corto de una serie cabe dentro del largo.
     const oldYear = (e.date_start || '').slice(0, 4)
@@ -2383,7 +2408,7 @@ async function upsertEventAction(
   const { data: allEvents } = await fetchAllRows<ExistingEventRow>((from, to) =>
     sb
       .from('events')
-      .select('id, slug, name, date_start, city, image_url, gallery_urls')
+      .select('id, slug, name, date_start, city, venue, image_url, gallery_urls')
       .order('id', { ascending: true })
       .range(from, to),
   )
@@ -2391,7 +2416,14 @@ async function upsertEventAction(
   const yearGuessed = Boolean(
     dateStart && action.date_start && String(action.date_start).slice(0, 4) !== dateStart.slice(0, 4),
   )
-  const existing = findDuplicateEvent(events, slug, name, dateStart, yearGuessed)
+  const existing = findDuplicateEvent(
+    events,
+    slug,
+    name,
+    dateStart,
+    yearGuessed,
+    action.venue,
+  )
   if (existing && yearGuessed) {
     // El cartel no traía año: se conserva la fecha de la edición ya dada de alta
     row.date_start = null
@@ -2442,6 +2474,12 @@ async function upsertEventAction(
       ])
     }
     if (Array.isArray(row.lineup) && (row.lineup as string[]).length) patch.lineup = row.lineup
+    if (
+      sameLeadingBrand(existing.name, name) &&
+      eventNameTokens(name).length > eventNameTokens(existing.name).length
+    ) {
+      patch.name = name
+    }
     if (Array.isArray(row.tags) && (row.tags as string[]).length) patch.tags = row.tags
     if (typeof row.description_es === 'string' && row.description_es.trim()) {
       patch.description_es = row.description_es
