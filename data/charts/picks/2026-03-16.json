@@ -526,6 +526,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 76
+    },
+    {
+      "title": "Psy Punch",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xana",
+          "url": "https://www.beatport.com/artist/xana/85445"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/psy-punch/23980342",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/70f70749-3d7b-4c1d-a18b-371bc9f8180f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/97c0121a-7bdf-4971-932c-73ce4e0dc01b.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

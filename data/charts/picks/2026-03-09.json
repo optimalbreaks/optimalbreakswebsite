@@ -269,6 +269,32 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 78
+    },
+    {
+      "title": "POWER (feat. XANA)",
+      "mix_name": "feat. XANA",
+      "artists": [
+        {
+          "name": "Xana",
+          "url": "https://www.beatport.com/artist/xana/85445"
+        },
+        {
+          "name": "DJ Ask",
+          "url": "https://www.beatport.com/artist/dj-ask/173340"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/power-feat-xana/26885728",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/51656ba6-cdb2-43c1-b959-4785225dc4e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ab455f86-8b6c-4610-8cd1-debb2c5a9ec9.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-03-09",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

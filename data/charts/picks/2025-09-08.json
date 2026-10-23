@@ -248,6 +248,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 93
+    },
+    {
+      "title": "Energy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xana",
+          "url": "https://www.beatport.com/artist/xana/85445"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/energy/21004016",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8d24b5f3-8f61-4ab0-a3c0-6a1032615468.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ef47db09-c0f9-44d2-9c7c-5f032a348858.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Db Major",
+      "release_year": 2025,
+      "release_date": "2025-09-12",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

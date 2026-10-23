@@ -2130,6 +2130,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 94
+    },
+    {
+      "title": "Dance Line",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xana",
+          "url": "https://www.beatport.com/artist/xana/85445"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dance-line/29316912",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c7cff9ee-71ee-42fc-93e2-a84280c45c43.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c7ace384-ad5c-4ae7-98a0-2bf7c9c49c06.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-07-15",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
