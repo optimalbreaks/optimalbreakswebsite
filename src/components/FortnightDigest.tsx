@@ -143,6 +143,55 @@ const QUARTER = {
   },
 }
 
+/** Lo que sale la semana que viene: todo son adelantos y los números son de antes del lanzamiento. */
+const WEEK = {
+  es: {
+    fortnight: 'PRÓXIMA SEMANA',
+    prev: 'esta semana',
+    released: 'Lo que ya suena',
+    releasedLine: (list: string) => `Adelantos que ya se escuchan en la web, solo por escuchas. Abren la lista ${list}.`,
+    played: 'Los adelantos más escuchados',
+    voted: 'Lo más votado antes de salir',
+    live: (at: string) => `En directo: lo que ha recibido cada adelanto hasta ahora. Actualizado ${at}.`,
+    artistsTitle: 'Quién más publica',
+    labelsTitle: 'Sellos de la semana',
+    top100: 'Estrellas del top histórico con temas en camino',
+    debut: 'Debutan en el catálogo',
+    playAll: (n: number) => `▶ ESCUCHAR LA PRÓXIMA SEMANA · ${n} TEMAS`,
+    weekCta: 'La semana entera está en Tracks, con preview de todos los temas.',
+    weekBtn: 'VER LA SEMANA →',
+    releasesCta: 'Cuando salgan, lo más escuchado de cada quincena pasa a Top novedades.',
+  },
+  en: {
+    fortnight: 'NEXT WEEK',
+    prev: 'this week',
+    released: 'Already playing',
+    releasedLine: (list: string) => `Pre-releases already playing on the site, ranked by plays alone. Leading the list: ${list}.`,
+    played: 'Most played pre-releases',
+    voted: 'Most voted before release',
+    live: (at: string) => `Live: what each pre-release has received so far. Updated ${at}.`,
+    artistsTitle: 'Who releases the most',
+    labelsTitle: 'Labels of the week',
+    top100: 'All-time top stars with music on the way',
+    debut: 'Debuting in the catalogue',
+    playAll: (n: number) => `▶ PLAY NEXT WEEK · ${n} TRACKS`,
+    weekCta: 'The whole week is on Tracks, with a preview of every track.',
+    weekBtn: 'SEE THE WEEK →',
+    releasesCta: 'Once they are out, the most played of each fortnight moves to Top releases.',
+  },
+}
+
+const PICKS = {
+  es: {
+    title: 'La selección de Optimal Breaks',
+    line: (n: number) => `${n} temas con el + de la casa, por orden de salida.`,
+  },
+  en: {
+    title: 'The Optimal Breaks selection',
+    line: (n: number) => `${n} tracks with the house +, in release order.`,
+  },
+}
+
 /** Primer día con escuchas registradas (`track_plays`). */
 const PLAYS_SINCE = '2026-10-06'
 const PLAYS_SINCE_NOTE = {
@@ -387,6 +436,44 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
   )
 }
 
+/** Carátula limpia y botones en su fila: encima de la portada se apelotonaban en móvil. */
+function CoverGrid({ tracks, spot, lang, showDate = false }: { tracks: FortnightDigestTrack[]; spot: Spot; lang: Locale; showDate?: boolean }) {
+  const { play } = useContext(PlayCtx)
+  const cardPlay = cardPlayWith(play)
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+      {tracks.map((r, i) => {
+        const advance = isAdvanceRelease(r.release_date)
+        return (
+          <div
+            key={i}
+            id={spotId(spot, r)}
+            onClick={cardPlay(r, spot)}
+            className={`flex flex-col border-[3px] border-[var(--ink)] bg-[var(--paper)] ${r.audio_src ? 'cursor-pointer' : ''}`}
+          >
+            <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 190px" />
+            <div className="flex items-center gap-1.5 px-2 pt-2">
+              <PlayButton track={r} spot={spot} className="h-[34px] w-[34px] sm:h-[30px] sm:w-[30px] shrink-0 rounded-full text-[12px]" />
+              <SaveButton track={r} lang={lang} className="!h-[34px] !w-[34px] sm:!h-[30px] sm:!w-[30px]" />
+              {advance ? null : (
+                <SpotifyLinkButton url={r.spotify_url} title={r.title} artists={splitArtistDisplayLine(r.artists)} lang={lang} />
+              )}
+            </div>
+            <div className="p-2 pt-1.5 min-w-0">
+              {showDate && r.release_date ? (
+                <div className="text-[10px] font-black tracking-[1px] text-[var(--red)]" style={mono}>{shortDate(r.release_date, lang)}</div>
+              ) : null}
+              <div className="text-[11px] sm:text-[12px] font-black uppercase leading-tight line-clamp-2" style={display}>{r.artists}</div>
+              <div className="mt-0.5 text-[11px] truncate" style={mono}>{trackName(r)}</div>
+              {r.label ? <div className="text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function queueItem(t: FortnightDigestTrack, spot: Spot, pathname: string | null): PreviewTrack {
   return {
     rowKey: rowKeyOf(t),
@@ -512,11 +599,13 @@ export default function FortnightDigest({
   /** Artistas ordenados por escuchas de los temas del periodo. */
   playedArtists?: FortnightPlayedArtist[]
 }) {
-  const t = d.kind === 'trimestre' ? { ...T[lang], ...QUARTER[lang] } : T[lang]
+  const week = d.kind === 'semana'
+  const t = d.kind === 'trimestre' ? { ...T[lang], ...QUARTER[lang] } : week ? { ...T[lang], ...WEEK[lang] } : T[lang]
   const copy = d.copy[lang]
+  const picks = d.picks ?? []
   const delta = d.totals.tracks - d.totals.prev_tracks
   const stats: [string, number, string?][] = [
-    [t.tracks, d.totals.tracks, `${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} · ${t.prev}`],
+    [t.tracks, d.totals.tracks, week ? undefined : `${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} · ${t.prev}`],
     [t.artists, d.totals.artists],
     [t.labels, d.totals.labels],
     [t.releases, d.totals.releases],
@@ -530,6 +619,7 @@ export default function FortnightDigest({
     const seen = new Set<string>()
     const out: PreviewTrack[] = []
     const all: [Spot, FortnightDigestTrack][] = [
+      ...(d.picks ?? []).map((t): [Spot, FortnightDigestTrack] => ['pick', t]),
       ...(d.released ?? []).map((t): [Spot, FortnightDigestTrack] => ['rel', t]),
       ...d.played.map((t): [Spot, FortnightDigestTrack] => ['played', t]),
       ...d.voted.map((t): [Spot, FortnightDigestTrack] => ['voted', t]),
@@ -558,7 +648,6 @@ export default function FortnightDigest({
     [current, queue, groupKey, playPreviewQueue, togglePreview],
   )
   const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
-  const cardPlay = cardPlayWith(play)
   const { user } = useAuth()
   const lastWeek = (d.released ?? []).map((r) => r.week_date || '').sort().pop() || ''
   const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
@@ -638,37 +727,17 @@ export default function FortnightDigest({
         </div>
       )}
 
+      {picks.length > 0 && (
+        <Section title={PICKS[lang].title} copy={copy.picks || PICKS[lang].line(picks.length)}>
+          <CoverGrid tracks={picks} spot="pick" lang={lang} showDate />
+          <Cta text={t.weekCta} label={t.weekBtn} href={`/${lang}/charts?week=${d.from}`} />
+        </Section>
+      )}
+
       {d.released?.length > 0 && (
         <Section title={t.released} copy={liveAt ? t.releasedLine(names(d.released.slice(0, 3))) : copy.released}>
-          {/* Carátula limpia y botones en su fila: encima de la portada se apelotonaban en móvil. */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-            {d.released.map((r, i) => {
-              const advance = isAdvanceRelease(r.release_date)
-              return (
-                <div
-                  key={i}
-                  id={spotId('rel', r)}
-                  onClick={cardPlay(r, 'rel')}
-                  className={`flex flex-col border-[3px] border-[var(--ink)] bg-[var(--paper)] ${r.audio_src ? 'cursor-pointer' : ''}`}
-                >
-                  <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 190px" />
-                  <div className="flex items-center gap-1.5 px-2 pt-2">
-                    <PlayButton track={r} spot="rel" className="h-[34px] w-[34px] sm:h-[30px] sm:w-[30px] shrink-0 rounded-full text-[12px]" />
-                    <SaveButton track={r} lang={lang} className="!h-[34px] !w-[34px] sm:!h-[30px] sm:!w-[30px]" />
-                    {advance ? null : (
-                      <SpotifyLinkButton url={r.spotify_url} title={r.title} artists={splitArtistDisplayLine(r.artists)} lang={lang} />
-                    )}
-                  </div>
-                  <div className="p-2 pt-1.5 min-w-0">
-                    <div className="text-[11px] sm:text-[12px] font-black uppercase leading-tight line-clamp-2" style={display}>{r.artists}</div>
-                    <div className="mt-0.5 text-[11px] truncate" style={mono}>{trackName(r)}</div>
-                    {r.label ? <div className="text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <Cta text={t.weekCta} label={t.weekBtn} href={lastWeek ? `/${lang}/charts?week=${lastWeek}` : `/${lang}/charts`} />
+          <CoverGrid tracks={d.released} spot="rel" lang={lang} showDate={week} />
+          {week ? null : <Cta text={t.weekCta} label={t.weekBtn} href={lastWeek ? `/${lang}/charts?week=${lastWeek}` : `/${lang}/charts`} />}
           <Cta text={t.releasesCta} label={t.releasesBtn} href={`/${lang}/topreleases`} />
         </Section>
       )}

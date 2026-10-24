@@ -14,7 +14,7 @@ export function isReleaseRoundupSlug(slug: string): boolean {
  */
 export function isReleaseRoundup(slug: string, kind?: string | null): boolean {
   if (kind === 'quincena' || kind === 'trimestre') return true
-  if (kind === 'agenda') return false
+  if (kind === 'agenda' || kind === 'semana') return false
   return isReleaseRoundupSlug(slug)
 }
 

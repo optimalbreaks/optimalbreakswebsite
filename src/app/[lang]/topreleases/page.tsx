@@ -196,7 +196,7 @@ export default async function TopReleasesPage({
   ).catch(() => [] as PostRow[])
 
   const posts: Post[] = rows
-    .filter((r): r is PostRow & { from: string; until: string } => !!r.slug && r.kind !== 'agenda' && !!r.from && !!r.until)
+    .filter((r): r is PostRow & { from: string; until: string } => !!r.slug && r.kind !== 'agenda' && r.kind !== 'semana' && !!r.from && !!r.until)
     .map((r) => ({ ...r, season: r.kind === 'trimestre', rank: rankOf(r.until), ...quarterOf(r.from, r.until) }))
     .sort((a, b) => b.until.localeCompare(a.until))
 

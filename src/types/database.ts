@@ -1249,11 +1249,15 @@ export interface FortnightDigestCopy {
   labels: string
   sound: string
   debut: string
+  /** Solo `semana`: la selección de la casa. */
+  picks?: string
 }
 
 export interface FortnightDigest {
-  /** Ausente = quincena. */
-  kind?: 'quincena' | 'trimestre'
+  /** Ausente = quincena. `semana` = lo que sale la semana que viene (adelantos). */
+  kind?: 'quincena' | 'trimestre' | 'semana'
+  /** Solo `semana`: temas con el «+» de la cuenta editorial, en el orden en que se guardaron. */
+  picks?: FortnightDigestTrack[]
   from: string
   until: string
   totals: { tracks: number; artists: number; labels: number; releases: number; prev_tracks: number }

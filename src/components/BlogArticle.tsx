@@ -156,6 +156,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   const storedDigest: FortnightDigestData | null = rawDigest && rawDigest.kind !== 'agenda' ? rawDigest : null
   const agendaNights = agendaStored ? await loadAgendaNights(supabase, agendaStored.from, agendaStored.until, agendaStored.places) : []
   const quarter = storedDigest?.kind === 'trimestre'
+  const week = storedDigest?.kind === 'semana'
   const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10) : null
   const digest = storedDigest && live
     ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
@@ -200,7 +201,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   let labelSlugMap: Record<string, string> | undefined
   let saveRefsByUrl: ReturnType<typeof collectSaveRefsByBeatportUrl> | undefined
 
-  if (albumTracks.length > 0) {
+  if (albumTracks.length > 0 || digest) {
     const trackArtistNames = new Set<string>()
     const trackLabelNames = new Set<string>()
     const titles = new Set<string>()
@@ -215,7 +216,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
       if (titleName) titles.add(titleName)
     }
     if (digest) {
-      for (const tr of [...(digest.released ?? []), ...digest.played, ...digest.voted]) {
+      for (const tr of [...(digest.picks ?? []), ...(digest.released ?? []), ...digest.played, ...digest.voted]) {
         for (const name of splitArtistDisplayLine(tr.artists)) trackArtistNames.add(name)
         const labelName = (tr.label || '').trim()
         if (labelName) trackLabelNames.add(labelName)
@@ -347,7 +348,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
               stars: digest.top100.slice(0, 6).map((a) => ({ rank: a.rank, name: a.name, track: a.tracks[0]?.title || '', image: abs(a.image_url) })),
             }
           })(),
-          period: quarter ? ('QUARTER' as const) : undefined,
+          period: quarter ? ('QUARTER' as const) : week ? ('WEEK' as const) : undefined,
           from: digest.from,
           until: digest.until,
           totals: { ...digest.totals, prev: digest.totals.prev_tracks },
@@ -492,16 +493,22 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
               : `Want all ${digest.totals.tracks} tracks?`}
           </p>
           <p className="text-[14px] leading-snug mt-2 mb-4" style={{ fontFamily: "'Courier Prime', monospace" }}>
-            {safeLang === 'es'
-              ? `Están todos en New Releases, en las ${fortnightWeeks}.`
-              : `They are all in New Releases, in the ${fortnightWeeks}.`}
+            {week
+              ? safeLang === 'es'
+                ? `Están todos en New Releases, en la semana del ${dayLabel(digest.from)}.`
+                : `They are all in New Releases, in the week of ${dayLabel(digest.from)}.`
+              : safeLang === 'es'
+                ? `Están todos en New Releases, en las ${fortnightWeeks}.`
+                : `They are all in New Releases, in the ${fortnightWeeks}.`}
           </p>
           <Link
-            href={`/${safeLang}/charts`}
+            href={week ? `/${safeLang}/charts?week=${digest.from}` : `/${safeLang}/charts`}
             className="inline-block bg-[var(--red)] text-white border-4 border-[var(--ink)] px-5 py-3 text-[15px] tracking-wider shadow-[4px_4px_0_var(--ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)] transition-transform"
             style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}
           >
-            {safeLang === 'es' ? '▶ ESCUCHAR LAS SEMANAS ENTERAS' : '▶ PLAY THE FULL WEEKS'}
+            {week
+              ? safeLang === 'es' ? '▶ ESCUCHAR LA SEMANA ENTERA' : '▶ PLAY THE FULL WEEK'
+              : safeLang === 'es' ? '▶ ESCUCHAR LAS SEMANAS ENTERAS' : '▶ PLAY THE FULL WEEKS'}
           </Link>
         </div>
       )}

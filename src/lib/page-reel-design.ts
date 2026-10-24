@@ -896,7 +896,7 @@ export type FortnightTrackAnim = { title: string; artists: string; value: number
 export type FortnightAnim = {
   range: string
   /** Ausente = FORTNIGHT. */
-  period?: 'FORTNIGHT' | 'QUARTER'
+  period?: 'FORTNIGHT' | 'QUARTER' | 'WEEK'
   totals: { tracks: number; artists: number; labels: number; releases: number; prev: number }
   covers: (Img | null)[]
   played: FortnightTrackAnim[]
@@ -1171,7 +1171,10 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   }
 
   if (sc.k === 'intro') {
-    fnHeader(ctx, L, lt, `BREAKBEAT ${P}`, d.range.replace(' — ', ' —\n'), `${d.totals.tracks} NEW TRACKS · ${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} VS PREVIOUS`, RED)
+    const sub = P === 'WEEK'
+      ? `${d.totals.tracks} TRACKS ON THE WAY`
+      : `${d.totals.tracks} NEW TRACKS · ${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} VS PREVIOUS`
+    fnHeader(ctx, L, lt, P === 'WEEK' ? 'BREAKBEAT NEXT WEEK' : `BREAKBEAT ${P}`, d.range.replace(' — ', ' —\n'), sub, RED)
     const gap = 22
     const cw = (S.w - gap) / 2
     const ch = V ? 250 : 220

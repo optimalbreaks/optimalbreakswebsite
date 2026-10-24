@@ -67,7 +67,7 @@ export type PageReelInput =
 
 type FortnightReelTrack = { title: string; artists: string; value: number; artwork: string | null }
 export type FortnightReelInput = {
-  period?: 'FORTNIGHT' | 'QUARTER'
+  period?: 'FORTNIGHT' | 'QUARTER' | 'WEEK'
   from: string
   until: string
   totals: { tracks: number; artists: number; labels: number; releases: number; prev: number }
