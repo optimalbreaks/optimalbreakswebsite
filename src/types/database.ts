@@ -684,7 +684,7 @@ export interface EventRatingRow extends Record<string, unknown> {
   country: string
 }
 
-export type MailDispatchKind = 'claim_approved' | 'booking_new'
+export type MailDispatchKind = 'claim_approved' | 'booking_new' | 'parkineo_published'
 export type MailDispatchStatus = 'sent' | 'failed' | 'skipped'
 
 /** Sin index signature / `unknown`: rompe el cliente tipado de Supabase (build Vercel → `never`). */
@@ -693,6 +693,8 @@ export type MailDispatchMetadata = {
   note?: string
   skip_reason?: string
   draft?: boolean
+  session_id?: string
+  session_slug?: string
 }
 
 export type MailDispatchRow = {
@@ -1347,6 +1349,8 @@ export interface ParkineoSession extends Record<string, unknown> {
   published_at: string | null
   decided_at: string | null
   decided_by: string | null
+  /** Móvil para WhatsApp. No entra en la lectura pública. */
+  contact_phone: string | null
 }
 
 /** Tema propio mandado a Parkineo. `user_id` y `storage_path` no se leen en la página pública. */

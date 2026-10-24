@@ -58,6 +58,7 @@ export default function ParkineoBoard({
   const [djName, setDjName] = useState('')
   const [city, setCity] = useState('')
   const [title, setTitle] = useState('')
+  const [phone, setPhone] = useState('')
   const [url, setUrl] = useState('')
   const [confirm, setConfirm] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -95,6 +96,7 @@ export default function ParkineoBoard({
           dj_name: djName,
           city,
           title,
+          phone,
           url,
           confirm,
         }),
@@ -108,6 +110,7 @@ export default function ParkineoBoard({
       setHasPending(true)
       setJustSent(true)
       setTitle('')
+      setPhone('')
       setUrl('')
       setConfirm(false)
     } catch {
@@ -121,18 +124,19 @@ export default function ParkineoBoard({
   const loginHref = `/${lang}/login?next=${encodeURIComponent(`/${lang}/parkineo#mandar`)}`
   const artistHref = user ? `/${lang}/mi-cuenta/artista` : `/${lang}/login?next=${encodeURIComponent(`/${lang}/mi-cuenta/artista`)}`
   const platform = detectPlatform(url)
-  const ready = djName.trim() && city.trim() && title.trim() && url.trim() && confirm && platform !== 'other'
+  const phoneOk = phone.replace(/\D/g, '').length >= 9
+  const ready = djName.trim() && city.trim() && title.trim() && phoneOk && url.trim() && confirm && platform !== 'other'
 
   const steps = es
     ? [
         { n: '01', t: 'Cuélgala', d: 'En SoundCloud, YouTube o Mixcloud. Puede estar oculta: el archivo no se sube aquí.' },
         { n: '02', t: 'Pega el enlace', d: 'Con tu cuenta, la misma de guardar temas. De 15 minutos a 3 horas: un tema suelto no es una sesión.' },
-        { n: '03', t: 'La escuchamos', d: 'Si entra, sale en la lista con tu nombre de DJ. El estado lo ves en tu cuenta.' },
+        { n: '03', t: 'La escuchamos', d: 'Si entra, sale en la lista con tu nombre de DJ y te llega un correo. El estado también está en tu cuenta.' },
       ]
     : [
         { n: '01', t: 'Upload it', d: 'To SoundCloud, YouTube or Mixcloud. It can be hidden: the file is never uploaded here.' },
         { n: '02', t: 'Paste the link', d: 'With your account, the same one you use to save tracks. 15 minutes to 3 hours: a single track is not a session.' },
-        { n: '03', t: 'We listen', d: 'If it goes in, it shows up in the list under your DJ name. You can check its status in your account.' },
+        { n: '03', t: 'We listen', d: 'If it goes in, it shows up in the list under your DJ name and you get an email. The status is also in your account.' },
       ]
 
   return (
@@ -207,6 +211,18 @@ export default function ParkineoBoard({
                   </div>
                   <div className="mt-4">
                     <Field
+                      label={es ? 'Móvil (WhatsApp)' : 'Mobile (WhatsApp)'}
+                      value={phone}
+                      onChange={setPhone}
+                      maxLength={40}
+                      placeholder="+34 600 000 000"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      hint={es ? 'No sale en la web. Sirve para escribirte si hace falta.' : 'Not shown on the site. So we can message you if we need to.'}
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <Field
                       label={es ? 'Enlace de SoundCloud, YouTube o Mixcloud' : 'SoundCloud, YouTube or Mixcloud link'}
                       value={url}
                       onChange={setUrl}
@@ -248,7 +264,7 @@ export default function ParkineoBoard({
                   </button>
                   {!ready && !busy ? (
                     <p className="mt-3 mb-0 opacity-70" style={{ ...MONO, fontSize: '12px' }}>
-                      {es ? 'Rellena los cuatro campos y marca la casilla.' : 'Fill in the four fields and tick the box.'}
+                      {es ? 'Rellena los campos y marca la casilla.' : 'Fill in the fields and tick the box.'}
                     </p>
                   ) : null}
                 </form>
@@ -484,7 +500,7 @@ function Field({
   maxLength: number
   placeholder?: string
   autoComplete?: string
-  inputMode?: 'url' | 'text'
+  inputMode?: 'url' | 'text' | 'tel'
   hint?: ReactNode
 }) {
   return (

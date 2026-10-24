@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { notifyParkineoPublished } from '@/lib/transactional-mail'
 import { revalidateParkineo } from '@/lib/revalidate-public'
 import type { ParkineoSession } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 const ADMIN_COLUMNS =
-  'id, user_id, dj_name, city, title, source_url, platform, embed_url, video_url, image_url, duration_minutes, slug, status, reject_reason, published_at, created_at'
+  'id, user_id, dj_name, city, title, contact_phone, source_url, platform, embed_url, video_url, image_url, duration_minutes, slug, status, reject_reason, published_at, created_at'
 
 // GET /api/admin/parkineo — cola y decisiones recientes
 export async function GET(request: NextRequest) {
@@ -33,9 +34,8 @@ export async function GET(request: NextRequest) {
     for (const p of profiles || []) {
       names[p.id] = { display_name: p.display_name, username: p.username, email: null }
     }
-    const pendingIds = rows.filter((r) => r.status === 'pending').map((r) => r.user_id)
     await Promise.all(
-      Array.from(new Set(pendingIds)).slice(0, 40).map(async (id) => {
+      ids.slice(0, 40).map(async (id) => {
         try {
           const { data: userData } = await svc.auth.admin.getUserById(id)
           const email = userData.user?.email || null
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
   const svc = createServiceSupabase()
   const { data: existing, error: readError } = await svc
     .from('parkineo_sessions')
-    .select('id, slug, status, source_key')
+    .select('id, user_id, dj_name, title, slug, status, source_key')
     .eq('id', id)
     .maybeSingle()
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 })
@@ -129,9 +129,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  let mail: string | null = null
+  if (action === 'publish' && existing.status !== 'published') {
+    try {
+      mail = await notifyParkineoPublished({
+        userId: existing.user_id,
+        djName: existing.dj_name,
+        title: existing.title,
+        slug: existing.slug,
+        sessionId: existing.id,
+      })
+    } catch (err) {
+      console.warn('[parkineo] aviso no enviado', err)
+      mail = 'failed'
+    }
+  }
+
   if (action === 'publish' || existing.status === 'published') {
     revalidateParkineo(existing.slug)
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, mail })
 }

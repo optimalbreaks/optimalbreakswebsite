@@ -6,10 +6,12 @@ import { useParams } from 'next/navigation'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
 import { ParkineoTrackPlayButton } from '@/components/ParkineoTracks'
 import { formatTrackLength, parkineoTrackCycleLabel } from '@/lib/parkineo-tracks'
+import { parkineoWhatsAppHref } from '@/lib/parkineo'
 
 type Row = ParkineoPlayable & {
   user_id: string
   city: string
+  contact_phone: string | null
   source_url: string
   duration_minutes: number
   slug: string
@@ -36,12 +38,22 @@ type TrackRow = {
 
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 
+function sessionWhatsApp(row: Pick<Row, 'contact_phone' | 'status' | 'dj_name' | 'title' | 'slug'>): string | null {
+  if (!row.contact_phone) return null
+  const text =
+    row.status === 'published'
+      ? `Hola ${row.dj_name}, hemos publicado tu sesión «${row.title}» en Parkineo: https://www.optimalbreaks.com/es/parkineo/${row.slug}`
+      : `Hola ${row.dj_name}, te escribimos de Optimal Breaks por tu sesión «${row.title}».`
+  return parkineoWhatsAppHref(row.contact_phone, text)
+}
+
 export default function ParkineoAdminPage() {
   const params = useParams<{ lang: string }>()
   const lang = params.lang || 'es'
   const [rows, setRows] = useState<Row[] | null>(null)
   const [tracks, setTracks] = useState<TrackRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [reasons, setReasons] = useState<Record<string, string>>({})
   const [trackReasons, setTrackReasons] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<string | null>(null)
@@ -73,6 +85,7 @@ export default function ParkineoAdminPage() {
   const decide = async (id: string, action: 'publish' | 'reject') => {
     setBusy(id)
     setError(null)
+    setNotice(null)
     try {
       const res = await fetch('/api/admin/parkineo', {
         method: 'POST',
@@ -83,6 +96,15 @@ export default function ParkineoAdminPage() {
       if (!res.ok) {
         setError(json.error || 'No se ha guardado')
         return
+      }
+      if (action === 'publish') {
+        setNotice(
+          json.mail === 'sent'
+            ? 'Publicada. Le ha llegado un correo a su cuenta.'
+            : json.mail === 'skipped_no_email'
+              ? 'Publicada. Su cuenta no tiene el correo confirmado, así que el aviso no ha salido.'
+              : 'Publicada. El correo no ha salido: míralo en Correos.',
+        )
       }
       await load()
     } finally {
@@ -122,6 +144,7 @@ export default function ParkineoAdminPage() {
         {pending} sesiones en cola. {pendingTracks} temas en cola. Publicar los saca en <Link href={`/${lang}/parkineo`}>/{lang}/parkineo</Link>.
         El tema no crea ficha de artista, no entra en Mixes y su marca no cuenta en el Top 100. El premio del semestre se mira aquí, no se otorga solo.
       </p>
+      {notice ? <p className="p-3 bg-[var(--yellow)] border-[3px] border-[var(--ink)]" style={MONO}>{notice}</p> : null}
       {error ? <p className="p-3 bg-[var(--red)] text-white" style={MONO}>{error}</p> : null}
       {rows === null ? <p style={MONO}>Cargando…</p> : null}
       <div className="grid gap-6">
@@ -146,6 +169,23 @@ export default function ParkineoAdminPage() {
                   {row.account_name || 'Sin nombre'}{row.account_email ? ` · ${row.account_email}` : ''}
                   {' · '}
                   <Link href={`/${lang}/administrator/users/${row.user_id}`}>Cuenta</Link>
+                  {row.contact_phone ? (
+                    <>
+                      {' · '}
+                      <a href={`tel:${row.contact_phone.replace(/[^\d+]/g, '')}`}>{row.contact_phone}</a>
+                      {sessionWhatsApp(row) ? (
+                        <>
+                          {' · '}
+                          <a href={sessionWhatsApp(row) || '#'} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                        </>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      {' · '}
+                      Sin móvil
+                    </>
+                  )}
                   {' · '}
                   <a href={row.source_url} target="_blank" rel="noopener noreferrer">Enlace</a>
                   {row.status === 'published' ? (

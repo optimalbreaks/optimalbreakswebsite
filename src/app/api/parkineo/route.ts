@@ -4,6 +4,7 @@ import { createServiceSupabase } from '@/lib/supabase-admin'
 import {
   parkineoLang,
   parkineoMessage,
+  normalizeParkineoPhone,
   parkineoSlugBase,
   resolveParkineoLink,
   type ParkineoErrorCode,
@@ -54,11 +55,13 @@ export async function POST(request: NextRequest) {
   const city = String(body.city || '').trim()
   const title = String(body.title || '').trim()
   const url = String(body.url || '').trim()
+  const phone = normalizeParkineoPhone(String(body.phone || ''))
 
   if (body.confirm !== true) return fail(lang, 'confirm', 400)
   if (djName.length < 2 || djName.length > 60) return fail(lang, 'name', 400)
   if (city.length < 2 || city.length > 60) return fail(lang, 'city', 400)
   if (title.length < 2 || title.length > 120) return fail(lang, 'title', 400)
+  if (!phone) return fail(lang, 'phone', 400)
   if (!url) return fail(lang, 'fields', 400)
 
   const svc = createServiceSupabase()
@@ -90,6 +93,7 @@ export async function POST(request: NextRequest) {
       dj_name: djName,
       city,
       title,
+      contact_phone: phone,
       source_url: link.sourceUrl,
       source_key: link.sourceKey,
       platform: link.platform,

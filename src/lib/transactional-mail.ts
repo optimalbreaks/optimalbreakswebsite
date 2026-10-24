@@ -514,3 +514,157 @@ export function renderClaimApprovedHtml(opts: {
 }) {
   return claimApprovedHtml(opts)
 }
+
+type ParkineoPublishedNotice = {
+  userId: string
+  djName: string
+  title: string
+  slug: string
+  sessionId: string
+}
+
+function parkineoPublishedHtml(opts: { djName: string; title: string; slug: string }) {
+  const name = escapeHtml(opts.djName)
+  const title = escapeHtml(opts.title)
+  const slug = encodeURIComponent(opts.slug)
+  const pageEs = `${SITE_URL}/es/parkineo/${slug}`
+  const pageEn = `${SITE_URL}/en/parkineo/${slug}`
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Optimal Breaks</title>
+</head>
+<body style="margin:0;padding:0;background:#d4c9b8;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#d4c9b8">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" bgcolor="#e8dcc8" style="max-width:600px;border:4px solid #1a1a1a;">
+          <tr>
+            <td bgcolor="#1a1a1a" style="padding:12px 16px;">
+              <span style="font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;letter-spacing:1px;color:#ffffff;">OPTIMAL</span>
+              <span style="font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;letter-spacing:1px;color:#d62828;">BREAKS</span>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f7e733" style="padding:8px 16px;border-top:3px solid #1a1a1a;border-bottom:3px solid #1a1a1a;">
+              <span style="font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:1.5px;color:#1a1a1a;text-transform:uppercase;">Parkineo</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 20px 8px 20px;">
+              <p style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;">
+                Hola, <strong>${name}</strong>. Ya está publicada tu sesión <strong>${title}</strong>.
+              </p>
+              <p style="margin:0 0 16px 0;font-family:Courier New,Courier,monospace;font-size:13px;line-height:1.5;color:#4a4238;">
+                Sale en Parkineo, la lista de sesiones de quien aún no tiene ficha de artista. No respondas a este mensaje.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td bgcolor="#d62828" style="border:3px solid #1a1a1a;">
+                    <a href="${pageEs}" style="display:inline-block;padding:12px 18px;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:1px;color:#ffffff;text-decoration:none;text-transform:uppercase;">Ver la sesión</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#ddd3c2" style="padding:18px 20px 22px 20px;border-top:3px solid #1a1a1a;">
+              <p style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;">
+                Hi, <strong>${name}</strong>. Your session <strong>${title}</strong> is now published.
+              </p>
+              <p style="margin:0 0 16px 0;font-family:Courier New,Courier,monospace;font-size:13px;line-height:1.5;color:#4a4238;">
+                It is on Parkineo, the list of sessions from DJs who do not have an artist profile yet. Don’t reply to this email.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td bgcolor="#1a1a1a" style="border:3px solid #1a1a1a;">
+                    <a href="${pageEn}" style="display:inline-block;padding:12px 18px;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:1px;color:#f7e733;text-decoration:none;text-transform:uppercase;">See the session</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+/** Aviso a la cuenta cuando una sesión de Parkineo pasa a publicada. No tumba la publicación si el correo falla. */
+export async function notifyParkineoPublished(opts: ParkineoPublishedNotice): Promise<TransactionalMailResult> {
+  const subject = `Tu sesión ya está en Parkineo / Your session is on Parkineo — ${opts.title}`
+  const meta: MailDispatchMetadata = {
+    source: 'parkineo_publish',
+    session_id: opts.sessionId,
+    session_slug: opts.slug,
+  }
+  const ids = { userId: opts.userId }
+
+  if (!smtpReady()) {
+    console.warn('[mail] SMTP no configurado: aviso de Parkineo no enviado')
+    const to = (await confirmedAccountEmail(opts.userId)) || '(sin-smtp)'
+    await recordMailDispatch({
+      kind: 'parkineo_published',
+      status: 'skipped',
+      toEmail: to,
+      ccEmail: editorialCopy(to) ?? null,
+      subject,
+      errorMessage: 'smtp_not_configured',
+      metadata: { ...meta, skip_reason: 'smtp_not_configured' },
+      ...ids,
+    })
+    return 'skipped_no_smtp'
+  }
+
+  const to = await confirmedAccountEmail(opts.userId)
+  if (!to) {
+    await recordMailDispatch({
+      kind: 'parkineo_published',
+      status: 'skipped',
+      toEmail: '(sin-email-confirmado)',
+      subject,
+      errorMessage: 'email_unconfirmed',
+      metadata: { ...meta, skip_reason: 'email_unconfirmed' },
+      ...ids,
+    })
+    return 'skipped_no_email'
+  }
+
+  try {
+    const sent = await sendTransactional({
+      to,
+      subject,
+      html: parkineoPublishedHtml(opts),
+      text: `Hola, ${opts.djName}. Ya está publicada tu sesión «${opts.title}» en Parkineo: ${SITE_URL}/es/parkineo/${encodeURIComponent(opts.slug)}\n\nHi. Your session is now on Parkineo: ${SITE_URL}/en/parkineo/${encodeURIComponent(opts.slug)}`,
+    })
+    await recordMailDispatch({
+      kind: 'parkineo_published',
+      status: 'sent',
+      toEmail: to,
+      ccEmail: sent.cc,
+      subject,
+      smtpMessageId: sent.messageId,
+      metadata: meta,
+      ...ids,
+    })
+    return 'sent'
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.warn('[mail] aviso de Parkineo falló', message)
+    await recordMailDispatch({
+      kind: 'parkineo_published',
+      status: 'failed',
+      toEmail: to,
+      ccEmail: editorialCopy(to) ?? null,
+      subject,
+      errorMessage: message.slice(0, 500),
+      metadata: meta,
+      ...ids,
+    })
+    return 'failed'
+  }
+}

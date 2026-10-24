@@ -11,6 +11,7 @@ type AdminMail = MailDispatchRow & {
 const KIND_LABELS: Record<MailDispatchKind, string> = {
   claim_approved: 'Ficha verificada',
   booking_new: 'Booking nuevo',
+  parkineo_published: 'Parkineo publicada',
 }
 
 const STATUS_LABELS: Record<MailDispatchStatus, string> = {
@@ -23,6 +24,7 @@ const KIND_FILTERS: Array<{ value: string; label: string }> = [
   { value: '', label: 'Todos' },
   { value: 'claim_approved', label: 'Ficha verificada' },
   { value: 'booking_new', label: 'Booking' },
+  { value: 'parkineo_published', label: 'Parkineo' },
 ]
 
 const STATUS_FILTERS: Array<{ value: string; label: string }> = [

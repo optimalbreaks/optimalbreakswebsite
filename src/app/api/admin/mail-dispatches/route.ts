@@ -6,7 +6,7 @@ import type { MailDispatchKind, MailDispatchRow, MailDispatchStatus } from '@/ty
 
 export const dynamic = 'force-dynamic'
 
-const KINDS: MailDispatchKind[] = ['claim_approved', 'booking_new']
+const KINDS: MailDispatchKind[] = ['claim_approved', 'booking_new', 'parkineo_published']
 const STATUSES: MailDispatchStatus[] = ['sent', 'failed', 'skipped']
 
 function isKind(value: string): value is MailDispatchKind {

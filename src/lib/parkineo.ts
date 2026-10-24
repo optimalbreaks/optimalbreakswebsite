@@ -43,6 +43,7 @@ export type ParkineoErrorCode =
   | 'name'
   | 'city'
   | 'title'
+  | 'phone'
 
 export type ResolvedParkineoLink = {
   platform: ParkineoPlatform
@@ -70,6 +71,7 @@ const COPY: Record<ParkineoLang, Record<ParkineoErrorCode, string>> = {
     name: 'El nombre de DJ tiene que tener entre 2 y 60 caracteres.',
     city: 'La ciudad tiene que tener entre 2 y 60 caracteres.',
     title: 'El título tiene que tener entre 2 y 120 caracteres.',
+    phone: 'Indica un móvil con el prefijo, para poder escribirte por WhatsApp. No se publica.',
   },
   en: {
     invalid_url: 'Paste an https link from SoundCloud, YouTube or Mixcloud.',
@@ -85,6 +87,7 @@ const COPY: Record<ParkineoLang, Record<ParkineoErrorCode, string>> = {
     name: 'The DJ name must be between 2 and 60 characters.',
     city: 'The city must be between 2 and 60 characters.',
     title: 'The title must be between 2 and 120 characters.',
+    phone: 'Add a mobile number with the country code, so we can message you on WhatsApp. It is not published.',
   },
 }
 
@@ -94,6 +97,27 @@ export function parkineoLang(raw: unknown): ParkineoLang {
 
 export function parkineoMessage(code: ParkineoErrorCode, lang: ParkineoLang): string {
   return COPY[lang][code]
+}
+
+/** Texto que se guarda. Nulo si no hay entre 9 y 15 dígitos. */
+export function normalizeParkineoPhone(raw: string): string | null {
+  const trimmed = raw.trim().replace(/\s+/g, ' ')
+  if (trimmed.length < 9 || trimmed.length > 40) return null
+  if (/[^\d+\s().-]/.test(trimmed)) return null
+  const digits = trimmed.replace(/\D/g, '')
+  if (digits.length < 9 || digits.length > 15) return null
+  return trimmed
+}
+
+/** Chat de WhatsApp. Un móvil de 9 dígitos se toma como España. */
+export function parkineoWhatsAppHref(phone: string, text?: string): string | null {
+  let digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('00')) digits = digits.slice(2)
+  if (digits.length === 9) digits = `34${digits}`
+  if (digits.length < 10 || digits.length > 15) return null
+  const base = `https://wa.me/${digits}`
+  if (!text?.trim()) return base
+  return `${base}?text=${encodeURIComponent(text.trim())}`
 }
 
 export function parkineoSlugBase(djName: string, title: string): string {
