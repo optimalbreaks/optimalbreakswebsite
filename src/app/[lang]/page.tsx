@@ -266,9 +266,10 @@ const MUSIC_COPY = {
     thisWeek: 'ESTA SEMANA',
     plays: ['escucha', 'escuchas'] as const,
     playFortnight: '▶ ESCUCHAR LA QUINCENA · {n} TEMAS',
-    playWeek: '▶ ESCUCHAR LO QUE VIENE · {n} TEMAS',
+    playWeek: '▶ ESCUCHAR LOS {n} DESTACADOS',
     fortnightNote: 'Lo más escuchado en Optimal Breaks, en directo.',
-    weekStats: (tracks: number, artists: number, labels: number) => `${tracks} temas · ${artists} artistas · ${labels} sellos en camino`,
+    weekStats: (top: number, tracks: number, artists: number, labels: number) =>
+      `Los ${top} destacados de ${tracks} temas en camino · ${artists} artistas · ${labels} sellos`,
     readTop: 'VER EL TOP →',
     readWeek: 'LEER EL AVANCE →',
   },
@@ -282,9 +283,10 @@ const MUSIC_COPY = {
     thisWeek: 'THIS WEEK',
     plays: ['play', 'plays'] as const,
     playFortnight: '▶ PLAY THE FORTNIGHT · {n} TRACKS',
-    playWeek: "▶ PLAY WHAT'S NEXT · {n} TRACKS",
+    playWeek: '▶ PLAY THE {n} HIGHLIGHTS',
     fortnightNote: 'The most played on Optimal Breaks, live.',
-    weekStats: (tracks: number, artists: number, labels: number) => `${tracks} tracks · ${artists} artists · ${labels} labels on the way`,
+    weekStats: (top: number, tracks: number, artists: number, labels: number) =>
+      `The ${top} highlights of ${tracks} tracks on the way · ${artists} artists · ${labels} labels`,
     readTop: 'SEE THE TOP →',
     readWeek: 'READ THE PREVIEW →',
   },
@@ -302,6 +304,8 @@ type HomeWeekPost = HomeDigestPost & {
   totals: { tracks: number; artists: number; labels: number } | null
   picks: FortnightDigestTrack[] | null
   released: FortnightDigestTrack[] | null
+  played: FortnightDigestTrack[] | null
+  voted: FortnightDigestTrack[] | null
 }
 
 function homePeriodLabel(from: string, until: string, lang: Locale): string {
@@ -312,15 +316,32 @@ function homePeriodLabel(from: string, until: string, lang: Locale): string {
   return `${fmt(from)} — ${fmt(until)}`
 }
 
-/** La selección de la casa primero; el resto de la semana detrás, sin repetir disco. */
+/** Igual que el top de la quincena: 20 temas. */
+const HOME_WEEK_TOP = 20
+
+/**
+ * Los 20 destacados de la semana que viene: la selección de la casa primero y,
+ * si no llega, el resto de discos. Dentro de cada grupo manda la foto fija del
+ * artículo (votos + escuchas de adelantos); a igualdad, el que sale antes.
+ */
 function weekQueue(post: HomeWeekPost): FortnightDigestTrack[] {
+  const keyOf = (t: FortnightDigestTrack) => t.featured_id || `${t.artists}|${t.title}|${t.mix_name ?? ''}`
+  const score = new Map<string, number>()
+  for (const t of [...(post.voted ?? []), ...(post.played ?? [])]) {
+    score.set(keyOf(t), (score.get(keyOf(t)) || 0) + t.value)
+  }
+  const rank = (list: FortnightDigestTrack[]) =>
+    [...list].sort(
+      (a, b) => (score.get(keyOf(b)) || 0) - (score.get(keyOf(a)) || 0) || (a.release_date || '').localeCompare(b.release_date || ''),
+    )
   const seen = new Set<string>()
   const out: FortnightDigestTrack[] = []
-  for (const t of [...(post.picks ?? []), ...(post.released ?? [])]) {
-    const key = t.featured_id || `${t.artists}|${t.title}|${t.mix_name ?? ''}`
-    if (seen.has(key)) continue
+  for (const t of [...rank(post.picks ?? []), ...rank(post.released ?? [])]) {
+    const key = keyOf(t)
+    if (seen.has(key) || !t.audio_src) continue
     seen.add(key)
     out.push(t)
+    if (out.length >= HOME_WEEK_TOP) break
   }
   return out
 }
@@ -425,7 +446,7 @@ export default async function HomePage({
     supabase
       .from('blog_posts')
       .select(
-        'slug, title_es, title_en, from:digest->>from, until:digest->>until, totals:digest->totals, picks:digest->picks, released:digest->released',
+        'slug, title_es, title_en, from:digest->>from, until:digest->>until, totals:digest->totals, picks:digest->picks, released:digest->released, played:digest->played, voted:digest->voted',
       )
       .eq('is_published', true)
       .like('slug', 'proxima-semana-breakbeat-%')
@@ -668,7 +689,7 @@ export default async function HomePage({
                     </h3>
                     {weekPost.totals ? (
                       <p className="m-0 mb-3 text-[12px] text-[var(--dim)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                        {music.weekStats(weekPost.totals.tracks, weekPost.totals.artists, weekPost.totals.labels)}
+                        {music.weekStats(weekTracks.length, weekPost.totals.tracks, weekPost.totals.artists, weekPost.totals.labels)}
                       </p>
                     ) : null}
                     <DigestTrackStrip
