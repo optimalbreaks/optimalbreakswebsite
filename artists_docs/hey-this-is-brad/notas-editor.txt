@@ -1,0 +1,38 @@
+Alta editorial — Hey! This is Brad (24 oct 2026)
+==================================================
+
+No había ficha. Beatport https://www.beatport.com/artist/hey-this-is-brad/2413690
+id 2413690. El informe que llegó con el enlace no había podido abrir
+Beatport y se quedaba en un remix. El catálogo de la web ya tenía
+cinco cortes, todos en Quintessential Records.
+
+No confundir
+------------
+«Hey, this is Brad» es un diálogo de The Rockafeller Skank, de
+Fatboy Slim. No se escribe en la ficha. No se le atribuye esa voz
+ni esa identidad. El nombre artístico puede aludir a eso; no hay
+prueba y no se afirma.
+
+Identidad
+---------
+- name / name_display / slug: Hey! This is Brad / HEY! THIS IS BRAD /
+  hey-this-is-brad. En el remix de Simply Shook el crédito va con
+  «Is» mayúscula. Es el mismo.
+- real_name null. country vacío. category current. Sin ciudad.
+- era: 2026-present. El primer corte es Freek the Beat, 2 jul 2026.
+- styles: Breakbeat, Breaks. No se documenta cabina de DJ.
+- related_artists vacío. Quentin SounDrive no tiene ficha.
+- No funda Quintessential Records: es el sello de los cinco temas.
+
+Catálogo
+--------
+- 2 jul 2026. Freek the Beat. Original. 135 BPM, si menor.
+- 3 ago 2026. Simply Shook (Hey! This Is Brad Remix), de Quentin
+  SounDrive. 130 BPM, la menor. Con Spotify y TIDAL en el pick.
+- 25 ago 2026. Leave the Trumpet Alone!. Original. 132 BPM, la menor.
+- 9 oct 2026. M. D. M. A (A Is for Acid). Original. 132 BPM, re mayor.
+- 13 oct 2026. Dopamean. Original. 135 BPM, la menor.
+
+El Top 10 de ventas de Beatport, el 24 oct 2026, trae tres:
+Leave the Trumpet Alone!, M. D. M. A (A Is for Acid) y Freek the Beat.
+Simply Shook y Dopamean están en el catálogo y no en ese bloque.
