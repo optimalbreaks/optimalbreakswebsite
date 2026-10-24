@@ -25,6 +25,9 @@ import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
 import EventFlyer from '@/components/EventFlyer'
 import HomeCommunityTop10, { type HomeTop10Dict } from '@/components/HomeCommunityTop10'
+import { DigestTrackStrip } from '@/components/FortnightDigest'
+import { getFortnightLive } from '@/lib/fortnight-live'
+import type { FortnightDigestTrack } from '@/types/database'
 
 const DjDeck = dynamic(() => import('@/components/DjDeck'), {
   loading: () => (
@@ -251,6 +254,77 @@ function eventLocationLine(e: Pick<BreakEvent, 'venue' | 'city' | 'country'>): s
 
 type HomeBlogRow = BlogSpotlightRow
 
+/** Última quincena (/topreleases) y próxima semana (/blog): la música, arriba del todo. */
+const MUSIC_COPY = {
+  es: {
+    tag: '● AHORA SUENA',
+    title1: 'LO QUE SUENA',
+    title2: 'Y LO QUE VIENE',
+    all: 'TOP NOVEDADES',
+    fortnight: 'ÚLTIMA QUINCENA',
+    nextWeek: 'PRÓXIMA SEMANA',
+    thisWeek: 'ESTA SEMANA',
+    plays: ['escucha', 'escuchas'] as const,
+    playFortnight: '▶ ESCUCHAR LA QUINCENA · {n} TEMAS',
+    playWeek: '▶ ESCUCHAR LO QUE VIENE · {n} TEMAS',
+    fortnightNote: 'Lo más escuchado en Optimal Breaks, en directo.',
+    weekStats: (tracks: number, artists: number, labels: number) => `${tracks} temas · ${artists} artistas · ${labels} sellos en camino`,
+    readTop: 'VER EL TOP →',
+    readWeek: 'LEER EL AVANCE →',
+  },
+  en: {
+    tag: '● NOW PLAYING',
+    title1: "WHAT'S PLAYING",
+    title2: "AND WHAT'S NEXT",
+    all: 'TOP RELEASES',
+    fortnight: 'LATEST FORTNIGHT',
+    nextWeek: 'NEXT WEEK',
+    thisWeek: 'THIS WEEK',
+    plays: ['play', 'plays'] as const,
+    playFortnight: '▶ PLAY THE FORTNIGHT · {n} TRACKS',
+    playWeek: "▶ PLAY WHAT'S NEXT · {n} TRACKS",
+    fortnightNote: 'The most played on Optimal Breaks, live.',
+    weekStats: (tracks: number, artists: number, labels: number) => `${tracks} tracks · ${artists} artists · ${labels} labels on the way`,
+    readTop: 'SEE THE TOP →',
+    readWeek: 'READ THE PREVIEW →',
+  },
+} as const
+
+type HomeDigestPost = {
+  slug: string
+  title_es: string
+  title_en: string
+  from: string | null
+  until: string | null
+}
+
+type HomeWeekPost = HomeDigestPost & {
+  totals: { tracks: number; artists: number; labels: number } | null
+  picks: FortnightDigestTrack[] | null
+  released: FortnightDigestTrack[] | null
+}
+
+function homePeriodLabel(from: string, until: string, lang: Locale): string {
+  const fmt = (ymd: string) =>
+    new Date(`${ymd}T12:00:00Z`)
+      .toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+      .replace('.', '')
+  return `${fmt(from)} — ${fmt(until)}`
+}
+
+/** La selección de la casa primero; el resto de la semana detrás, sin repetir disco. */
+function weekQueue(post: HomeWeekPost): FortnightDigestTrack[] {
+  const seen = new Set<string>()
+  const out: FortnightDigestTrack[] = []
+  for (const t of [...(post.picks ?? []), ...(post.released ?? [])]) {
+    const key = t.featured_id || `${t.artists}|${t.title}|${t.mix_name ?? ''}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(t)
+  }
+  return out
+}
+
 function formatBlogPublishedAt(publishedAt: string, lang: Locale): string {
   try {
     const d = new Date(publishedAt)
@@ -338,6 +412,34 @@ export default async function HomePage({
       focus,
     })
   }))
+
+  const music = MUSIC_COPY[lang]
+  const [{ data: fortnightRows }, { data: weekRows }] = await Promise.all([
+    supabase
+      .from('blog_posts')
+      .select('slug, title_es, title_en, from:digest->>from, until:digest->>until')
+      .eq('is_published', true)
+      .like('slug', 'quincena-breakbeat-%')
+      .order('slug', { ascending: false })
+      .limit(1),
+    supabase
+      .from('blog_posts')
+      .select(
+        'slug, title_es, title_en, from:digest->>from, until:digest->>until, totals:digest->totals, picks:digest->picks, released:digest->released',
+      )
+      .eq('is_published', true)
+      .like('slug', 'proxima-semana-breakbeat-%')
+      .order('slug', { ascending: false })
+      .limit(1),
+  ])
+  const fortnightPost = ((fortnightRows || []) as unknown as HomeDigestPost[]).find((p) => p.from && p.until) ?? null
+  const weekCandidate = ((weekRows || []) as unknown as HomeWeekPost[])[0] ?? null
+  const weekPost = weekCandidate?.from && weekCandidate.until && weekCandidate.until >= todayHome ? weekCandidate : null
+  const fortnightLive = fortnightPost ? await getFortnightLive(fortnightPost.from!, fortnightPost.until!, 10) : null
+  const fortnightTracks = fortnightLive?.released?.length ? fortnightLive.released : fortnightLive?.played ?? []
+  const weekTracks = weekPost ? weekQueue(weekPost) : []
+  const showFortnight = !!fortnightPost && fortnightTracks.length > 0
+  const showWeek = !!weekPost && weekTracks.length > 0
 
   const sectionBlog =
     'section_blog' in h
@@ -495,6 +597,101 @@ export default async function HomePage({
 
       {/* ===== MARQUEE ===== */}
       <Marquee items={h.marquee} />
+
+      {/* ===== LA MÚSICA — última quincena + próxima semana, suenan aquí mismo ===== */}
+      {showFortnight || showWeek ? (
+        <section className="px-3 sm:px-6 py-10 sm:py-14 relative z-[1] border-b-[5px] border-[var(--ink)]">
+          <div className="home-wrap">
+            <SectionHead
+              tag={music.tag}
+              title1={music.title1}
+              title2={music.title2}
+              action={{ href: `/${lang}/topreleases`, label: music.all }}
+            />
+            <div className={`grid grid-cols-1 gap-5 sm:gap-6 mt-6 sm:mt-8 ${showFortnight && showWeek ? 'lg:grid-cols-2' : ''}`}>
+              {showFortnight && fortnightPost ? (
+                <article className="flex flex-col min-w-0 border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
+                  <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b-[3px] border-[var(--ink)] bg-[var(--acid)]">
+                    <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--ink)] text-[var(--paper)]" style={HOME_BTN_STYLE}>
+                      {music.fortnight}
+                    </span>
+                    <span className="text-[11px] font-bold uppercase" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                      {homePeriodLabel(fortnightPost.from!, fortnightPost.until!, lang)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col flex-grow p-3 sm:p-5">
+                    <h3
+                      className="m-0 mb-1"
+                      style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(17px, 2.4vw, 22px)', lineHeight: 1.15, textTransform: 'uppercase' }}
+                    >
+                      <Link href={`/${lang}/topreleases/${fortnightPost.slug}`} className="text-[var(--ink)] no-underline hover:text-[var(--red)]">
+                        {lang === 'es' ? fortnightPost.title_es : fortnightPost.title_en}
+                      </Link>
+                    </h3>
+                    <p className="m-0 mb-3 text-[12px] text-[var(--dim)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                      {music.fortnightNote}
+                    </p>
+                    <DigestTrackStrip
+                      tracks={fortnightTracks}
+                      spot="home-q"
+                      groupKey={`home:quincena:${fortnightPost.from}`}
+                      units={music.plays}
+                      playAll={music.playFortnight}
+                      large
+                    />
+                    <div className="mt-auto pt-4">
+                      <Link href={`/${lang}/topreleases/${fortnightPost.slug}`} className={HOME_BTN_CLASS} style={HOME_BTN_STYLE}>
+                        {music.readTop}
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ) : null}
+              {showWeek && weekPost ? (
+                <article className="flex flex-col min-w-0 border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
+                  <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b-[3px] border-[var(--ink)] bg-[var(--yellow)]">
+                    <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={HOME_BTN_STYLE}>
+                      {todayHome >= weekPost.from! ? music.thisWeek : music.nextWeek}
+                    </span>
+                    <span className="text-[11px] font-bold uppercase" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                      {homePeriodLabel(weekPost.from!, weekPost.until!, lang)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col flex-grow p-3 sm:p-5">
+                    <h3
+                      className="m-0 mb-1"
+                      style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(17px, 2.4vw, 22px)', lineHeight: 1.15, textTransform: 'uppercase' }}
+                    >
+                      <Link href={publicArticlePath(lang, weekPost.slug, 'semana')} className="text-[var(--ink)] no-underline hover:text-[var(--red)]">
+                        {lang === 'es' ? weekPost.title_es : weekPost.title_en}
+                      </Link>
+                    </h3>
+                    {weekPost.totals ? (
+                      <p className="m-0 mb-3 text-[12px] text-[var(--dim)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                        {music.weekStats(weekPost.totals.tracks, weekPost.totals.artists, weekPost.totals.labels)}
+                      </p>
+                    ) : null}
+                    <DigestTrackStrip
+                      tracks={weekTracks}
+                      spot="home-w"
+                      groupKey={`home:semana:${weekPost.from}`}
+                      units={music.plays}
+                      playAll={music.playWeek}
+                      large
+                      dateLang={lang}
+                    />
+                    <div className="mt-auto pt-4">
+                      <Link href={publicArticlePath(lang, weekPost.slug, 'semana')} className={HOME_BTN_CLASS} style={HOME_BTN_STYLE}>
+                        {music.readWeek}
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* ===== WHAT IS BREAKBEAT ===== */}
       <section className="lined px-3 sm:px-6 py-12 sm:py-20 relative z-[1]">

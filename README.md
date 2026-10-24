@@ -69,6 +69,8 @@ What each list shows (first article, week of 26 Oct 2026: 46 tracks, 29 with the
 
 **▶ PLAY NEXT WEEK** queues every track that appears in some list, without repeats and with audio (41 of 46 on 24 Oct). Tracks in no list are only on `/charts?week=<monday>` (yellow button at the end). They are Beatport previews (~2 min) unless the row has `full_audio_url`. The decision of 24 Oct 2026 was to keep it like this: no «all tracks» list in the article. Header figures, the selection and the frozen blocks only change when regenerated: `--semana --forzar --mantener-textos` (same texts, fresh data; e.g. on Thursday before the big Friday).
 
+**On the home page (24 Oct 2026).** Right below the hero, a «● NOW PLAYING — What's playing and what's next» block with two cards that play in place (`DigestTrackStrip`): the **latest fortnight** (latest `quincena-breakbeat-*` slug, live ranking from `getFortnightLive`, links to `/topreleases/<slug>`) and **next week** (latest `proxima-semana-breakbeat-*` slug, house picks first then the rest of the releases, release date instead of plays, links to `/blog/<slug>`). The week card disappears by itself after its Sunday and reads «THIS WEEK» from its Monday. With neither article, the block does not render.
+
 ### Editorial rule of thumb
 
 If a topic answers **"what is this, who belongs here, where did it happen, when did it happen?"**, it should usually live in the structural sections.

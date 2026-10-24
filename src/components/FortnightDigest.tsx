@@ -495,7 +495,7 @@ function queueItem(t: FortnightDigestTrack, spot: Spot, pathname: string | null)
  * `spot` distingue la misma canción en dos tarjetas de la página (quincena y su temporada).
  */
 export function DigestTrackStrip({
-  tracks, spot, groupKey, units, show = 8, playAll, large = false,
+  tracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang,
 }: {
   tracks: FortnightDigestTrack[]
   spot: string
@@ -506,6 +506,8 @@ export function DigestTrackStrip({
   /** Texto del botón; `{n}` = temas en cola. */
   playAll?: string
   large?: boolean
+  /** Temas que aún no han salido: la fecha de salida en lugar del valor. */
+  dateLang?: Locale
 }) {
   const pathname = usePathname()
   const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
@@ -574,7 +576,11 @@ export function DigestTrackStrip({
               {large ? (
                 <>
                   <span className="block text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(t)}</span>
-                  <span className="block text-[9px] sm:text-[10px] text-[var(--dim)]" style={mono}>{t.value} {t.value === 1 ? units[0] : units[1]}</span>
+                  {dateLang ? (
+                    <span className="block text-[9px] sm:text-[10px] font-black text-[var(--red)]" style={mono}>{shortDate(t.release_date, dateLang)}</span>
+                  ) : (
+                    <span className="block text-[9px] sm:text-[10px] text-[var(--dim)]" style={mono}>{t.value} {t.value === 1 ? units[0] : units[1]}</span>
+                  )}
                 </>
               ) : null}
             </li>
