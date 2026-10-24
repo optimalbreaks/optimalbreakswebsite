@@ -518,6 +518,9 @@ async function editorPicks(sb, tracks) {
     .sort((x, y) => String(x.release_date).localeCompare(String(y.release_date)) || x.title.localeCompare(y.title))
 }
 
+/** Temas destacados del artículo de la próxima semana (home y ficha). */
+const WEEK_HIGHLIGHTS = 20
+
 /** Mismo recuento que la ficha de la quincena (src/lib/fortnight-live.ts). Requiere `--import tsx`. */
 async function loadLiveRanking(from, until, topN) {
   const mod = await import('../src/lib/fortnight-live.ts')
@@ -678,7 +681,22 @@ async function computeQuincena(untilArg, trimestre = null, semana = null) {
     .slice(0, TOP)
 
   const exclusives = win.filter((f) => f.full_audio_url)
-  const housePicks = semana ? await editorPicks(sb, win) : []
+  // Los 20 destacados que vienen (igual que el top 20 de la quincena): la selección de la casa
+  // primero y, si no llega, el resto de la semana. Manda votos + escuchas de los adelantos;
+  // a igualdad, el que sale antes.
+  const housePicks = []
+  if (semana) {
+    const voteUsers = new Map((votes.top_tracks || []).map((t) => [t.canonical_key, t.unique_users || 0]))
+    const scoreOf = (f) => (playCount.get(f.id) || 0) + (f.link_url ? voteUsers.get(normUrl(f.link_url)) || 0 : 0)
+    const byScore = (list) =>
+      [...list].sort((a, b) => scoreOf(b) - scoreOf(a) || String(a.release_date).localeCompare(String(b.release_date)) || a.title.localeCompare(b.title))
+    const marked = await editorPicks(sb, win)
+    const markedIds = new Set(marked.map((f) => f.id))
+    for (const f of [...byScore(marked), ...byScore(win.filter((f) => !markedIds.has(f.id)))]) {
+      if (housePicks.length >= WEEK_HIGHLIGHTS) break
+      housePicks.push(f)
+    }
+  }
 
   // Temas que se podrán escuchar dentro del artículo (Beatport con preview).
   const voteKeys = votedWin.map((t) => t.canonical_key)
@@ -721,8 +739,8 @@ async function computeQuincena(untilArg, trimestre = null, semana = null) {
     for (const f of win) inc(perDay, f.release_date)
     sec('Calendario: temas por día de salida', [...perDay.entries()].sort().map(([d, c]) => `${d}: ${c}`))
     sec(
-      `La selección de Optimal Breaks: ${housePicks.length} de ${win.length} temas llevan el «+» de la casa`,
-      housePicks.map((f) => `${f.release_date} · ${trackLine(f)}`),
+      `Los ${housePicks.length} destacados que vienen (de ${win.length} temas): la selección de Optimal Breaks, ordenada por votos y escuchas de los adelantos`,
+      housePicks.map((f, i) => `${i + 1}. ${f.release_date} · ${trackLine(f)}`),
     )
   }
   sec('Panorama de lanzamientos (New Releases de /charts, fecha de salida en tienda)', [
@@ -755,7 +773,7 @@ async function computeQuincena(untilArg, trimestre = null, semana = null) {
   const data = L.join('\n')
   const scopeRule = semana
     ? `- El artículo trata SOLO de los temas que salen la semana que viene (del ${from} al ${until}): nada ha salido todavía. Habla en futuro o en presente de anuncio («sale el viernes», «llega», «se espera»). Son adelantos: las fechas pueden moverse; no prometas nada. Nada de sesiones ni de lo que ya salió.
-- «picks» presenta la selección de la casa (los temas con el «+» de Optimal Breaks): 1–2 frases, cita 2–3 nombres de esa lista.
+- «picks» presenta los ${WEEK_HIGHLIGHTS} destacados que vienen (la selección de Optimal Breaks): 1–2 frases, cita 2–3 nombres de esa lista. No digas cuál va primero.
 - Si un día concentra casi todo (normalmente el viernes), dilo en el intro.`
     : `- El artículo trata SOLO de los temas que han salido en ${trimestre ? `estos tres meses (${SEASONS[from.slice(5, 7)].es.replace(/^de la |^del /, '')})` : 'estas dos semanas'}: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.`
   const brief = `ARTÍCULO ${trimestre ? 'TRIMESTRAL' : semana ? 'DE LA PRÓXIMA SEMANA (A DÍA DE HOY)' : 'QUINCENAL'} DE OPTIMAL BREAKS — DATOS DE LA WEB (fuente única; no inventes ni redondees cifras)
@@ -943,7 +961,7 @@ function digestToHtml(digest, lang) {
     .join('\n')
   return [
     c.intro ? `<p>${escHtml(c.intro)}</p>` : '',
-    picks ? `<h2>${es ? 'La selección de Optimal Breaks' : 'The Optimal Breaks selection'}</h2>\n${c.picks ? `<p>${escHtml(c.picks)}</p>\n` : ''}<ul>\n${picks}\n</ul>` : '',
+    picks ? `<h2>${es ? `Los ${digest.picks.length} destacados que vienen` : `The ${digest.picks.length} highlights on the way`}</h2>\n${c.picks ? `<p>${escHtml(c.picks)}</p>\n` : ''}<ul>\n${picks}\n</ul>` : '',
     h(es ? 'Lo que ha salido' : q ? 'Out this quarter' : 'Out this fortnight', c.released),
     h(es ? 'Lo más escuchado' : 'Most played', c.played),
     h(es ? 'Lo más votado' : 'Most voted', c.voted),

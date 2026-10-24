@@ -304,8 +304,6 @@ type HomeWeekPost = HomeDigestPost & {
   totals: { tracks: number; artists: number; labels: number } | null
   picks: FortnightDigestTrack[] | null
   released: FortnightDigestTrack[] | null
-  played: FortnightDigestTrack[] | null
-  voted: FortnightDigestTrack[] | null
 }
 
 function homePeriodLabel(from: string, until: string, lang: Locale): string {
@@ -320,23 +318,14 @@ function homePeriodLabel(from: string, until: string, lang: Locale): string {
 const HOME_WEEK_TOP = 20
 
 /**
- * Los 20 destacados de la semana que viene: la selección de la casa primero y,
- * si no llega, el resto de discos. Dentro de cada grupo manda la foto fija del
- * artículo (votos + escuchas de adelantos); a igualdad, el que sale antes.
+ * Los 20 destacados de la semana que viene, en el orden que guardó el artículo
+ * (`digest.picks`, generar-blog-agente). Si no llegan a 20, el resto de discos.
  */
 function weekQueue(post: HomeWeekPost): FortnightDigestTrack[] {
   const keyOf = (t: FortnightDigestTrack) => t.featured_id || `${t.artists}|${t.title}|${t.mix_name ?? ''}`
-  const score = new Map<string, number>()
-  for (const t of [...(post.voted ?? []), ...(post.played ?? [])]) {
-    score.set(keyOf(t), (score.get(keyOf(t)) || 0) + t.value)
-  }
-  const rank = (list: FortnightDigestTrack[]) =>
-    [...list].sort(
-      (a, b) => (score.get(keyOf(b)) || 0) - (score.get(keyOf(a)) || 0) || (a.release_date || '').localeCompare(b.release_date || ''),
-    )
   const seen = new Set<string>()
   const out: FortnightDigestTrack[] = []
-  for (const t of [...rank(post.picks ?? []), ...rank(post.released ?? [])]) {
+  for (const t of [...(post.picks ?? []), ...(post.released ?? [])]) {
     const key = keyOf(t)
     if (seen.has(key) || !t.audio_src) continue
     seen.add(key)
@@ -446,7 +435,7 @@ export default async function HomePage({
     supabase
       .from('blog_posts')
       .select(
-        'slug, title_es, title_en, from:digest->>from, until:digest->>until, totals:digest->totals, picks:digest->picks, released:digest->released, played:digest->played, voted:digest->voted',
+        'slug, title_es, title_en, from:digest->>from, until:digest->>until, totals:digest->totals, picks:digest->picks, released:digest->released',
       )
       .eq('is_published', true)
       .like('slug', 'proxima-semana-breakbeat-%')

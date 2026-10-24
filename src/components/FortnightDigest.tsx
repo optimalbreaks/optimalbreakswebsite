@@ -183,12 +183,12 @@ const WEEK = {
 
 const PICKS = {
   es: {
-    title: 'La selección de Optimal Breaks',
-    line: (n: number) => `${n} temas con el + de la casa, por orden de salida.`,
+    title: (n: number) => `Los ${n} destacados que vienen`,
+    line: (n: number) => `${n} temas de la selección de Optimal Breaks, ordenados por votos y escuchas de los adelantos.`,
   },
   en: {
-    title: 'The Optimal Breaks selection',
-    line: (n: number) => `${n} tracks with the house +, in release order.`,
+    title: (n: number) => `The ${n} highlights on the way`,
+    line: (n: number) => `${n} tracks from the Optimal Breaks selection, ranked by votes and plays of the pre-releases.`,
   },
 }
 
@@ -736,7 +736,7 @@ export default function FortnightDigest({
       )}
 
       {picks.length > 0 && (
-        <Section title={PICKS[lang].title} copy={copy.picks || PICKS[lang].line(picks.length)}>
+        <Section title={PICKS[lang].title(picks.length)} copy={copy.picks || PICKS[lang].line(picks.length)}>
           <CoverGrid tracks={picks} spot="pick" lang={lang} showDate />
           <Cta text={t.weekCta} label={t.weekBtn} href={`/${lang}/charts?week=${d.from}`} />
         </Section>
