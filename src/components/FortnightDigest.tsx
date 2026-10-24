@@ -640,33 +640,30 @@ export default function FortnightDigest({
 
       {d.released?.length > 0 && (
         <Section title={t.released} copy={liveAt ? t.releasedLine(names(d.released.slice(0, 3))) : copy.released}>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+          {/* Carátula limpia y botones en su fila: encima de la portada se apelotonaban en móvil. */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
             {d.released.map((r, i) => {
-              const text = (
-                <div className="p-1.5 sm:p-2">
-                  <div className="text-[10px] sm:text-[12px] font-black uppercase line-clamp-2" style={display}>{r.artists}</div>
-                  <div className="text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(r)}</div>
-                  {r.label ? <div className="text-[9px] sm:text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
-                </div>
-              )
+              const advance = isAdvanceRelease(r.release_date)
               return (
                 <div
                   key={i}
                   id={spotId('rel', r)}
                   onClick={cardPlay(r, 'rel')}
-                  className={`border-[3px] border-[var(--ink)] bg-[var(--paper)] ${r.audio_src ? 'cursor-pointer' : ''}`}
+                  className={`flex flex-col border-[3px] border-[var(--ink)] bg-[var(--paper)] ${r.audio_src ? 'cursor-pointer' : ''}`}
                 >
-                  <div className="relative">
-                    <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
-                    <PlayButton track={r} spot="rel" className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
-                    <SaveButton track={r} lang={lang} className="absolute top-12 right-1.5 sm:top-14 !h-9 !w-9 sm:!h-10 sm:!w-10 shadow-[2px_2px_0_var(--ink)]" />
-                    {isAdvanceRelease(r.release_date) ? null : (
-                      <span className="absolute bottom-1.5 left-1.5 shadow-[2px_2px_0_var(--ink)] rounded-full">
-                        <SpotifyLinkButton url={r.spotify_url} title={r.title} artists={splitArtistDisplayLine(r.artists)} lang={lang} />
-                      </span>
+                  <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 190px" />
+                  <div className="flex items-center gap-1.5 px-2 pt-2">
+                    <PlayButton track={r} spot="rel" className="h-[34px] w-[34px] sm:h-[30px] sm:w-[30px] shrink-0 rounded-full text-[12px]" />
+                    <SaveButton track={r} lang={lang} className="!h-[34px] !w-[34px] sm:!h-[30px] sm:!w-[30px]" />
+                    {advance ? null : (
+                      <SpotifyLinkButton url={r.spotify_url} title={r.title} artists={splitArtistDisplayLine(r.artists)} lang={lang} />
                     )}
                   </div>
-                  {text}
+                  <div className="p-2 pt-1.5 min-w-0">
+                    <div className="text-[11px] sm:text-[12px] font-black uppercase leading-tight line-clamp-2" style={display}>{r.artists}</div>
+                    <div className="mt-0.5 text-[11px] truncate" style={mono}>{trackName(r)}</div>
+                    {r.label ? <div className="text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
+                  </div>
                 </div>
               )
             })}
