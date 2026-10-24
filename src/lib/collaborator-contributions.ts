@@ -3,11 +3,24 @@
 // `executed` (ops + resultado). Las anteriores se reconstruyen con el último pending_ops y el «Hecho».
 
 import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
+import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 
 const CATALOG = new Set(['vinyl', 'new_release', 'mix', 'event', 'artist', 'label'])
 const CREATED_WINDOW_MS = 15 * 60 * 1000
 
-export type ContributionStatus = 'sigue' | 'actualizado' | 'no-entro' | 'ya-no-esta' | 'sin-comprobar'
+/**
+ * sigue: lo creó y sigue publicado. actualizado: completó una ficha que ya existía.
+ * repetido: ya estaba en la web. sistema: falló por nosotros (Beatport, bug), no por él.
+ * fusionado: se unió con otra ficha suya. ya-no-esta: se quitó del catálogo.
+ */
+export type ContributionStatus =
+  | 'sigue'
+  | 'actualizado'
+  | 'repetido'
+  | 'sistema'
+  | 'fusionado'
+  | 'ya-no-esta'
+  | 'sin-comprobar'
 
 export type ContributionKind = 'tema' | 'mix' | 'evento' | 'artista' | 'sello'
 
@@ -20,17 +33,28 @@ export type ContributionRow = {
   href: string | null
   note: string
   attempts: number
+  /** Escuchas y «+» de otros usuarios (temas y mixes). */
+  plays: number
+  saves: number
+  cause: string | null
+  mergedInto: { title: string; href: string | null } | null
 }
 
 export type ContributionCounts = {
   temas: number
   mixes: number
   eventos: number
-  actualizados: number
   artistas: number
   sellos: number
-  noEntraron: number
+  actualizados: number
+  repetidos: number
+  sistema: number
+  fusionados: number
   yaNoEstan: number
+  plays: number
+  saves: number
+  thisWeek: number
+  lastWeek: number
 }
 
 export type CollaboratorContribution = {
@@ -38,6 +62,10 @@ export type CollaboratorContribution = {
   name: string
   email: string
   username: string | null
+  /** Ficha reclamada, si la tiene. Sin ficha no hay sello público. */
+  artistName: string | null
+  artistSlug: string | null
+  lastAt: string | null
   counts: ContributionCounts
   rows: ContributionRow[]
 }
@@ -80,7 +108,7 @@ type Draft = {
   attempts: number
 }
 
-type LiveHit = { id: string; title: string; href: string; createdAt: string | null }
+type LiveHit = { id: string; title: string; href: string; createdAt: string | null; playKey?: string }
 
 const STRENGTH: Record<Intent, number> = {
   new: 5,
@@ -165,6 +193,34 @@ function stableUrl(url: string): string {
   }
 }
 
+/** «beatport.com/es/track/magic-carpet/23871793» → «Magic Carpet (Beatport)». */
+function titleFromUrl(url: string): string {
+  const words = (slug: string) =>
+    slug
+      .split('-')
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+  const m = url.match(/beatport\.com\/(?:[a-z]{2}\/)?(track|release)\/([^/?#]+)/i)
+  if (m) return `${words(m[2])} (${m[1].toLowerCase() === 'release' ? 'disco en Beatport' : 'Beatport'})`
+  const sc = url.match(/soundcloud\.com\/[^/?#]+\/([^/?#]+)/i)
+  if (sc) return `${words(sc[1])} (SoundCloud)`
+  return stableUrl(url)
+}
+
+function cleanTitle(s: string): string {
+  return s.replace(/\.(mp4|mp3|wav|m4a|webm)$/i, '').trim()
+}
+
+/** «X — X» o «X — X @ sala» repite al DJ: deja solo el título. */
+function joinWhoTitle(who: string, title: string): string {
+  const w = who.trim()
+  const t = cleanTitle(title)
+  if (!w) return t
+  if (t.toLowerCase().startsWith(w.toLowerCase())) return t
+  return `${w} — ${t}`
+}
+
 function clip(s: string, n = 160): string {
   const t = s.replace(/\s+/g, ' ').trim()
   return t.length > n ? `${t.slice(0, n - 1)}…` : t
@@ -232,9 +288,9 @@ function vinylTitle(item: {
   artists?: Array<{ name?: string } | string>
 }): string {
   const who = artistLabel(item.artists)
-  const title = (item.title || 'Tema').trim()
+  const title = cleanTitle(item.title || 'Tema')
   const mix = item.mix_name && !/original mix/i.test(item.mix_name) ? ` (${item.mix_name})` : ''
-  return who ? `${who} — ${title}${mix}` : `${title}${mix}`
+  return joinWhoTitle(who, `${title}${mix}`)
 }
 
 function expand(op: LooseOp | undefined, line: ResultLine, at: string): Omit<Draft, 'attempts'>[] {
@@ -286,7 +342,7 @@ function expand(op: LooseOp | undefined, line: ResultLine, at: string): Omit<Dra
       return {
         key: bp ? `nr:${bp}` : `nr:${stableUrl(url).toLowerCase()}`,
         kind: 'tema' as const,
-        title: isUrl ? stableUrl(url) : clip(summary),
+        title: isUrl ? titleFromUrl(url) : clip(summary),
         at,
         note: clip(summary),
         intended,
@@ -339,7 +395,7 @@ function expand(op: LooseOp | undefined, line: ResultLine, at: string): Omit<Dra
       {
         key: `${line.type}:${slug || title.toLowerCase()}`,
         kind,
-        title: who ? `${who} — ${title}` : title,
+        title: joinWhoTitle(who || '', title),
         at,
         note: fail ? clip(summary) : '',
         intended: fail ? 'fail' : 'upsert',
@@ -398,16 +454,37 @@ function emptyCounts(): ContributionCounts {
     temas: 0,
     mixes: 0,
     eventos: 0,
-    actualizados: 0,
     artistas: 0,
     sellos: 0,
-    noEntraron: 0,
+    actualizados: 0,
+    repetidos: 0,
+    sistema: 0,
+    fusionados: 0,
     yaNoEstan: 0,
+    plays: 0,
+    saves: 0,
+    thisWeek: 0,
+    lastWeek: 0,
   }
 }
 
-function addCount(counts: ContributionCounts, row: ContributionRow) {
-  if (row.status === 'no-entro') counts.noEntraron += 1
+/** Lunes de la semana de `ms` en Madrid (00:00 UTC de ese día, para agrupar y comparar). */
+export function weekStartMs(ms: number): number {
+  const [y, m, d] = new Date(ms).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' }).split('-').map(Number)
+  const day = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7
+  return Date.UTC(y, m - 1, d - day)
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+export function isLiveContribution(status: ContributionStatus): boolean {
+  return status === 'sigue' || status === 'actualizado'
+}
+
+function addCount(counts: ContributionCounts, row: ContributionRow, thisMonday: number) {
+  if (row.status === 'sistema') counts.sistema += 1
+  else if (row.status === 'repetido') counts.repetidos += 1
+  else if (row.status === 'fusionado') counts.fusionados += 1
   else if (row.status === 'ya-no-esta') counts.yaNoEstan += 1
   else if (row.status === 'actualizado') counts.actualizados += 1
   else if (row.status === 'sigue') {
@@ -417,6 +494,80 @@ function addCount(counts: ContributionCounts, row: ContributionRow) {
     else if (row.kind === 'artista') counts.artistas += 1
     else counts.sellos += 1
   }
+  counts.plays += row.plays
+  counts.saves += row.saves
+  if (isLiveContribution(row.status)) {
+    const at = weekStartMs(Date.parse(row.at))
+    if (at >= thisMonday) counts.thisWeek += 1
+    else if (at >= thisMonday - WEEK_MS) counts.lastWeek += 1
+  }
+}
+
+/** El error lo puso el sistema (Beatport, un bug del chat), no el colaborador. */
+function failureCause(note: string): string {
+  if (/too dynamic/i.test(note)) return 'Bug del chat del 11 oct (ya arreglado)'
+  if (/beatport no devolvi|challenge|cloudflare|403/i.test(note)) return 'Beatport bloqueó la ficha'
+  if (/fetch failed|timeout|timed out|abort/i.test(note)) return 'Se cortó la conexión'
+  return 'Error al guardar'
+}
+
+function isRepeatNote(note: string): boolean {
+  return /ya estaban? en el cat|ya est[aá]\b|ya exist/i.test(note)
+}
+
+function squash(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+}
+
+const MERGE_PREFIX = 6
+const MERGE_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
+
+/** Una ficha que desapareció y otra suya del mismo tipo que empieza igual: se fusionaron. */
+function findMergeTarget(row: ContributionRow, live: ContributionRow[]): ContributionRow | null {
+  const a = squash(row.title)
+  if (a.length < MERGE_PREFIX) return null
+  const at = Date.parse(row.at)
+  let best: { row: ContributionRow; len: number } | null = null
+  for (const other of live) {
+    if (other.kind !== row.kind || other.key === row.key) continue
+    if (Math.abs(Date.parse(other.at) - at) > MERGE_WINDOW_MS) continue
+    const b = squash(other.title)
+    let len = 0
+    while (len < a.length && len < b.length && a[len] === b[len]) len++
+    if (len >= MERGE_PREFIX && (!best || len > best.len)) best = { row: other, len }
+  }
+  return best?.row || null
+}
+
+type CountRow = Record<string, string | null>
+
+async function countByUser(
+  ids: string[],
+  run: (chunk: string[], from: number, to: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+  idCol: string,
+): Promise<Map<string, Array<string | null>>> {
+  const out = new Map<string, Array<string | null>>()
+  const unique = [...new Set(ids.filter(Boolean))]
+  for (let i = 0; i < unique.length; i += 80) {
+    const chunk = unique.slice(i, i + 80)
+    const res = await fetchAllRows<CountRow>((from, to) => run(chunk, from, to))
+    if (res.error) throw new Error(res.error.message)
+    for (const r of res.data) {
+      const id = String(r[idCol] || '')
+      const list = out.get(id) || []
+      list.push(r.user_id ?? null)
+      out.set(id, list)
+    }
+  }
+  return out
+}
+
+function othersCount(users: Array<string | null> | undefined, self: string): number {
+  return (users || []).filter((u) => u !== self).length
 }
 
 export async function loadCollaboratorContributions(lang: string): Promise<CollaboratorContribution[]> {
@@ -431,12 +582,21 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
 
   const ids = people.map((p) => p.id)
   const emails = new Map<string, string>()
+  const fichas = new Map<string, { name: string; slug: string }>()
   await Promise.all(
     ids.map(async (id) => {
       const { data } = await sb.auth.admin.getUserById(id)
       if (data.user?.email) emails.set(id, data.user.email)
     }),
   )
+  const { data: claimed, error: claimErr } = await sb
+    .from('artists')
+    .select('name, slug, claimed_by')
+    .in('claimed_by', ids)
+  if (claimErr) throw new Error(claimErr.message)
+  for (const row of claimed || []) {
+    if (row.claimed_by) fichas.set(row.claimed_by, { name: row.name, slug: row.slug })
+  }
 
   const { data: threads, error: threadErr } = await selectByIds<{ id: string; user_id: string }>(ids, (chunk) =>
     sb.from('admin_chat_threads').select('id, user_id').in('user_id', chunk),
@@ -516,9 +676,10 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
         const who = artistLabel(row.artists as Array<{ name?: string } | string>)
         vinylHits.set(youtubeId.toLowerCase(), {
           id: row.id,
-          title: who ? `${who} — ${row.title}` : row.title,
+          title: joinWhoTitle(who, row.title),
           href: `/${lang}/charts?play=vinyl:${row.id}`,
           createdAt: null,
+          playKey: normalizeTrackCanonicalUrl(row.youtube_url) || `t:vinyl:${row.id}`,
         })
       }
     }),
@@ -537,9 +698,10 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
         const who = artistLabel(row.artists as Array<{ name?: string } | string>)
         featuredHits.set(`bp:${bp}`, {
           id: row.id,
-          title: who ? `${who} — ${row.title}` : row.title,
+          title: joinWhoTitle(who, row.title),
           href: `/${lang}/charts?play=featured:${row.id}`,
           createdAt: null,
+          playKey: normalizeTrackCanonicalUrl(row.link_url),
         })
       }
     }),
@@ -556,9 +718,10 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
       const who = artistLabel(row.artists as Array<{ name?: string } | string>)
       featuredHits.set(`url:${url}`, {
         id: row.id,
-        title: who ? `${who} — ${row.title}` : row.title,
+        title: joinWhoTitle(who, row.title),
         href: `/${lang}/charts?play=featured:${row.id}`,
         createdAt: null,
+        playKey: normalizeTrackCanonicalUrl(row.link_url),
       })
     }),
   )
@@ -587,7 +750,7 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
     for (const row of data) {
       const label =
         table === 'mixes'
-          ? `${row.artist_name || ''} — ${row.title || row.slug}`.replace(/^ — /, '')
+          ? joinWhoTitle(row.artist_name || '', row.title || row.slug)
           : row.name || row.slug
       const href =
         table === 'mixes'
@@ -601,8 +764,8 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
     }
   }
 
-  const out: CollaboratorContribution[] = people.map((person) => {
-    const counts = emptyCounts()
+  const hitOf = new Map<ContributionRow, LiveHit>()
+  const rowsByUser = people.map((person) => {
     const rows: ContributionRow[] = []
     for (const draft of draftsByUser.get(person.id) || []) {
       let intended = draft.intended
@@ -626,40 +789,100 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
       }
 
       let status: ContributionStatus
-      if (intended === 'fail') status = 'no-entro'
-      else if (intended === 'ambiguous' || !draft.lookup) status = 'sin-comprobar'
+      let cause: string | null = null
+      if (intended === 'fail') {
+        if (isRepeatNote(draft.note)) status = 'repetido'
+        else {
+          status = 'sistema'
+          cause = failureCause(draft.note)
+        }
+      } else if (intended === 'ambiguous' || !draft.lookup) status = 'sin-comprobar'
       else if (intended === 'update') status = hit ? 'actualizado' : 'ya-no-esta'
       else status = hit ? 'sigue' : 'ya-no-esta'
 
-      let note = draft.note
-      if (status === 'ya-no-esta') note = note || 'Se guardó y ya no está en el catálogo.'
-      if (draft.attempts > 1) {
-        const times = `${draft.attempts} confirmaciones`
-        note = note ? `${note} · ${times}` : times
-      }
-
+      const note = draft.attempts > 1 ? `${draft.attempts} confirmaciones` : ''
+      const live = status === 'sigue' || status === 'actualizado'
       const row: ContributionRow = {
         key: draft.key,
         kind: draft.kind,
         status,
-        title: hit && status !== 'no-entro' ? hit.title : draft.title,
+        title: hit && live ? hit.title : draft.title,
         at: draft.at,
-        href: hit && (status === 'sigue' || status === 'actualizado') ? hit.href : null,
-        note,
+        href: hit && live ? hit.href : null,
+        note: status === 'sin-comprobar' ? [draft.note, note].filter(Boolean).join(' · ') : note,
         attempts: draft.attempts,
+        plays: 0,
+        saves: 0,
+        cause,
+        mergedInto: null,
       }
-      addCount(counts, row)
+      if (hit && live) hitOf.set(row, hit)
       rows.push(row)
+    }
+    const live = rows.filter((r) => isLiveContribution(r.status))
+    for (const row of rows) {
+      if (row.status !== 'ya-no-esta') continue
+      const target = findMergeTarget(row, live)
+      if (!target) continue
+      row.status = 'fusionado'
+      row.mergedInto = { title: target.title, href: target.href }
+    }
+    return rows
+  })
+
+  const trackIds: string[] = []
+  const playKeys: string[] = []
+  const mixIds: string[] = []
+  for (const [row, hit] of hitOf) {
+    if (row.kind === 'tema') {
+      trackIds.push(hit.id)
+      if (hit.playKey) playKeys.push(hit.playKey, `${hit.playKey}/`)
+    } else if (row.kind === 'mix') mixIds.push(hit.id)
+  }
+  const [trackSaves, trackPlays, mixPlays, mixSaves] = await Promise.all([
+    countByUser(trackIds, (c, f, t) => sb.from('saved_chart_tracks').select('track_id, user_id').in('track_id', c).order('id').range(f, t), 'track_id'),
+    countByUser(playKeys, (c, f, t) => sb.from('track_play_events').select('canonical_key, user_id').in('canonical_key', c).order('id').range(f, t), 'canonical_key'),
+    countByUser(mixIds, (c, f, t) => sb.from('mix_play_events').select('mix_id, user_id').in('mix_id', c).order('id').range(f, t), 'mix_id'),
+    countByUser(mixIds, (c, f, t) => sb.from('saved_mixes').select('mix_id, user_id').in('mix_id', c).order('mix_id').order('user_id').range(f, t), 'mix_id'),
+  ])
+
+  const thisMonday = weekStartMs(Date.now())
+  const out: CollaboratorContribution[] = people.map((person, i) => {
+    const rows = rowsByUser[i]
+    const counts = emptyCounts()
+    for (const row of rows) {
+      const hit = hitOf.get(row)
+      if (hit && row.kind === 'tema') {
+        row.saves = othersCount(trackSaves.get(hit.id), person.id)
+        if (hit.playKey) {
+          row.plays =
+            othersCount(trackPlays.get(hit.playKey), person.id) + othersCount(trackPlays.get(`${hit.playKey}/`), person.id)
+        }
+      } else if (hit && row.kind === 'mix') {
+        row.plays = othersCount(mixPlays.get(hit.id), person.id)
+        row.saves = othersCount(mixSaves.get(hit.id), person.id)
+      }
+      addCount(counts, row, thisMonday)
     }
     rows.sort((a, b) => b.at.localeCompare(a.at))
     const email = emails.get(person.id) || ''
+    const ficha = fichas.get(person.id)
     const name = person.display_name?.trim() || person.username?.trim() || email || 'Colaborador'
-    return { id: person.id, name, email, username: person.username, counts, rows }
+    return {
+      id: person.id,
+      name,
+      email,
+      username: person.username,
+      artistName: ficha?.name || null,
+      artistSlug: ficha?.slug || null,
+      lastAt: rows[0]?.at || null,
+      counts,
+      rows,
+    }
   })
 
-  out.sort((a, b) => {
-    const score = (p: CollaboratorContribution) => p.counts.temas + p.counts.mixes + p.counts.eventos
-    return score(b) - score(a) || a.name.localeCompare(b.name, 'es')
-  })
+  const score = (p: CollaboratorContribution) =>
+    p.counts.temas + p.counts.mixes + p.counts.eventos + p.counts.artistas + p.counts.sellos + p.counts.actualizados
+  out.sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name, 'es'))
   return out
 }
