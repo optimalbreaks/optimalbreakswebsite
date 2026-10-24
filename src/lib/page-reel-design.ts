@@ -1130,22 +1130,22 @@ function fnNoteText(k: FnScene, d: FortnightAnim, P: string): string {
   switch (k) {
     case 'intro':
       return P === 'WEEK'
-        ? `Everything due out next week on Optimal Breaks (${d.range}): ${d.totals.tracks} tracks by ${d.totals.artists} artists on ${d.totals.labels} labels.`
-        : `Every breakbeat track added to Optimal Breaks from ${d.range}: ${d.totals.tracks} tracks by ${d.totals.artists} artists, ${d.totals.releases} releases on ${d.totals.labels} labels. That is ${Math.abs(delta)} ${delta >= 0 ? 'more' : 'fewer'} than the previous ${p}.`
+        ? `Due out next week (${d.range}): ${d.totals.tracks} tracks by ${d.totals.artists} artists on ${d.totals.labels} labels.`
+        : `${d.totals.tracks} new breakbeat tracks from ${d.range}: ${d.totals.artists} artists, ${d.totals.labels} labels. ${Math.abs(delta)} ${delta >= 0 ? 'more' : 'fewer'} than the previous ${p}.`
     case 'played':
-      return `The five tracks people played the most this ${p}. Only plays on optimalbreaks.com count: no Spotify, no Beatport, no other platform.`
+      return `The five most played tracks this ${p}. Only plays on optimalbreaks.com count: no Spotify, no Beatport.`
     case 'voted':
-      return `The five tracks our users saved the most with the «+» button. Every save is one vote.`
+      return `The five tracks our users saved most with the «+» button. Every save is one vote.`
     case 'artists':
-      return `The artists with the most new tracks this ${p}. The bar is the number of tracks; the note says in how many releases they came out.`
+      return `Who put out the most new tracks this ${p}. The bar counts tracks; the note, in how many releases.`
     case 'stars':
-      return `Artists from our community Top 100 who released new music this ${p}. The red tag is their position on that board, under it the track.`
+      return `Artists from our community Top 100 with new music this ${p}. The red tag is their spot on that board.`
     case 'labels':
-      return `The labels that put out the most tracks this ${p}. The longest bar is the busiest label.`
+      return `The labels that put out the most tracks this ${p}.`
     case 'sound':
-      return `The tempo of the ${p}: the average BPM of all its tracks, and below, how many tracks fall in each BPM range. Red marks the busiest range.${d.key ? ` The most common key was ${d.key}.` : ''}`
+      return `Average BPM of the ${p}, and how many tracks fall in each BPM range. Red is the busiest.${d.key ? ` Top key: ${d.key}.` : ''}`
     default:
-      return `A wall of this ${p}'s covers. Every track is in the article with its preview: play them all on Optimal Breaks.`
+      return `Every cover of the ${p}. All the tracks are in the article, with their preview.`
   }
 }
 
@@ -1153,13 +1153,20 @@ function fnNoteText(k: FnScene, d: FortnightAnim, P: string): string {
 function fnNote(ctx: C, L: FnLayout, lt: number, text: string) {
   const N = L.note
   if (!N) return
-  const fs = L.V ? 26 : 25
-  const lh = fs * 1.32
   slide(ctx, ph(lt, 0.6, 0.45), 0, 40, () => {
     box(ctx, N.x, N.y, N.w, N.h, '#fff', INK, 8, 4)
-    chip(ctx, N.x + 24, N.y - 18, 'WHAT YOU SEE', INK, YELLOW, L.V ? 20 : 18)
+    chip(ctx, N.x + 24, N.y - 18, 'WHAT YOU SEE', INK, YELLOW, L.V ? 22 : 20)
+    // Letra grande para leerla en el móvil; solo baja si la frase no cabe entera.
+    let fs = L.V ? 34 : 32
+    let lh = fs * 1.3
     ctx.font = MONO(fs)
-    const lines = wrap(ctx, text, N.w - 56).slice(0, Math.max(1, Math.floor((N.h - 44) / lh)))
+    let lines = wrap(ctx, text, N.w - 56)
+    while (fs > 24 && lines.length * lh > N.h - 40) {
+      fs -= 2
+      lh = fs * 1.3
+      ctx.font = MONO(fs)
+      lines = wrap(ctx, text, N.w - 56)
+    }
     const total = lines.join(' ').length
     let left = Math.floor(total * ph(lt, 0.9, Math.max(1.2, total * 0.022)))
     ctx.fillStyle = INK
@@ -1180,13 +1187,13 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     ? {
         V, hx: 70, kY: 180, hY: 340, hW: 940,
         S: { x: 70, y: 590, w: 940, h: 820 },
-        note: { x: 70, y: 1436, w: 940, h: 200 },
-        foot: { x: 70, y: 1660, w: 940, h: 18 },
+        note: { x: 70, y: 1432, w: 940, h: 226 },
+        foot: { x: 70, y: 1682, w: 940, h: 18 },
       }
     : {
         V, hx: 90, kY: 160, hY: 310, hW: 760,
         S: { x: 940, y: 130, w: 890, h: 850 },
-        note: { x: 90, y: 610, w: 760, h: 230 },
+        note: { x: 90, y: 580, w: 760, h: 280 },
         foot: { x: 90, y: 880, w: 760, h: 16 },
       }
   const S = L.S
