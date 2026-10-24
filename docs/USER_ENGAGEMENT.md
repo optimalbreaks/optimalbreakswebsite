@@ -400,6 +400,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `filisoporte@gmail.com` | The Legends | `the legends` | `the-legends` | `75a6ca14-c30e-4269-8c4a-6619c10ed9ff` |
 | `alkimista1974@gmail.com` | MacGroove | `macgroove` | `macgroove` | `2940e39a-bfea-4db1-966d-a46f68d938eb` |
 | `djbrownie@gmail.com` | DJ Brownie | `dj brownie` | `dj-brownie` | `424a70e8-4db6-49b8-9c0a-92bf58d46f8e` |
+| `heythisisbrad@gmail.com` | HEY! THIS IS BRAD | `hey this is brad` | `hey-this-is-brad` | `1b623ca0-c5bf-48f8-b2ce-99aff4bec527` |
 
 **Family marks** (25 Sep 2026; song chart 6 Oct 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board and do not raise that song on the track Top 100. Other credits on the same track still count on the artist board. My Tracks stays. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
 
@@ -477,6 +478,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 **Audit — MacGroove (9 Oct 2026).** `alkimista1974@gmail.com` (display MacGroove; do not guess the email from the name). Catalog ficha `/artists/macgroove` already existed (`claimed_by` left null, `accepts_bookings` left false). On 26 Aug he saved **4/4** of his own titles in two minutes, all on Br8kn: *FM Chaos*, *Fracture (PhoenixRising Remix)*, *Kali Rage*, *Void*. Fase 2 only: no claim, no bookings, no label mark. Those 4 no longer bump MacGroove on the artist board and do not raise those songs. My Tracks keeps them. Collabs on a future save still count on the artist board.
 
 **Audit — DJ Brownie (22 Oct 2026).** `djbrownie@gmail.com` (display name empty; do not guess another email). Signed up the same day, 15:51 UTC. Catalog ficha `/artists/dj-brownie` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. His 19 saves all credit DJ Brownie. Those 19 stay in My Tracks and no longer bump DJ Brownie or raise those songs. A collab name on the same track still counts on the artist board.
+
+**Audit — HEY! THIS IS BRAD (24 Oct 2026).** `heythisisbrad@gmail.com` (display Brad Cousins; do not guess the email from the name). Signed up the same day, 08:28 UTC. Catalog ficha `/artists/hey-this-is-brad` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. One save, *Dopamean*, credits him. It stays in My Tracks and no longer bumps HEY! THIS IS BRAD or raises that song. A collab name on the same track still counts on the artist board.
 
 ### Periodic cheat-vote audit
 
