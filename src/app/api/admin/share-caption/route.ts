@@ -3,7 +3,7 @@
 // Admin: todos los tipos. Artista con ficha reclamada: solo tema y sesión.
 //
 // POST { kind, platform, lang, url, context } → { caption }
-//   kind: 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events'
+//   kind: 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest'
 //   platform: 'instagram' (enlace en la bio) | 'facebook' (URL en el texto)
 //
 // Lo escribe GPT‑5.6 (OPENAI_SHARE_CAPTION_MODEL u OPENAI_MODEL) con un tono
@@ -23,7 +23,8 @@ import { madridCalendarDate } from '@/lib/share-track'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events'
+type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest'
+const KINDS: readonly Kind[] = ['track', 'set', 'top100', 'week', 'blog', 'events', 'digest']
 type Platform = 'instagram' | 'facebook'
 
 const KIND_ES: Record<Kind, string> = {
@@ -36,7 +37,7 @@ const KIND_ES: Record<Kind, string> = {
     '· sin releaseStatus: recomendación sin fecha; no hables de novedad ni de archivo.',
   ].join('\n'),
   set:
-    'Una sesión (DJ set) grabada en directo en un festival o evento. Transmite el directo: sitio, ambiente, quién la pinchó y si se puede descargar o escuchar entera.',
+    'Una sesión (DJ set) grabada en directo en un festival o evento. Transmite el directo con los datos que hay: festival o evento, ciudad, fecha, quién la pinchó y si se puede descargar gratis en MP3 (`freeDownload`) o escuchar entera. Si se descarga, dilo arriba: es lo que más se guarda.',
   top100:
     'El Top 100 de la comunidad Optimal Breaks: los temas que más han guardado los usuarios (el vídeo es una cuenta atrás del 10 al 1). Destaca el #1 y provoca debate sobre el ranking.',
   week:
@@ -45,6 +46,11 @@ const KIND_ES: Record<Kind, string> = {
     'Un artículo del blog de Optimal Breaks. Da ganas de leerlo con un gancho sobre el tema del artículo, sin contarlo todo.',
   events:
     'La agenda de breakbeat de los próximos 14 días. El vídeo abre con «te los vas a perder» y luego enseña el cartel, la fecha, la ciudad y el lineup de cada evento, cinco segundos por cita. Nombra varias con ciudad y día. Invita a decir a cuál van.',
+  digest: [
+    'El resumen de datos de una quincena o un trimestre de lanzamientos de breakbeat (sección Top Releases de Optimal Breaks). El vídeo dura 60 s y enseña, por escenas: cuántos temas, artistas y sellos salieron (y la diferencia con el periodo anterior), los 5 más escuchados en la web, los 5 más guardados con el «+», los artistas y sellos que más sacaron, las estrellas del Top 100 con música nueva, el BPM medio y las portadas.',
+    'Cuenta los datos reales del contexto: el #1 en escuchas y el #1 en guardados con su artista, el volumen y si sube o baja, el artista y el sello más activos, el BPM medio y la tonalidad más usada si están. Explica en una frase que las escuchas son solo las de optimalbreaks.com y que cada «+» es un voto. Si `period` es WEEK, son los temas que salen la semana que viene (adelantos): no hables de escuchas pasadas.',
+    'Cierra preguntando cuál fue su tema del periodo o si falta alguno.',
+  ].join('\n'),
 }
 const KIND_EN: Record<Kind, string> = {
   track: [
@@ -55,12 +61,17 @@ const KIND_EN: Record<Kind, string> = {
     '· archive_pick (ARCHIVE PICK): months or years old. An archive pick: why it still works today, the year it came out, ask whether people played or danced to it back then. Do not sell it as new.',
     '· no releaseStatus: a recommendation without a date; do not talk about new or archive.',
   ].join('\n'),
-  set: 'A DJ set recorded live at a festival or event. Convey the live vibe: venue, crowd, who played it, and whether it can be downloaded or streamed in full.',
+  set: 'A DJ set recorded live at a festival or event. Convey the live set with the facts you have: festival or event, city, date, who played it and whether it is a free MP3 download (`freeDownload`) or can be streamed in full. If it downloads, say so near the top: that is what gets saved most.',
   top100: 'The Optimal Breaks community Top 100: the tracks users saved the most (the video counts down from 10 to 1). Highlight the #1 and spark debate about the ranking.',
   week: "This week's new breakbeat releases (New Releases) curated by Optimal Breaks. Highlight the volume and a few names, and invite people to dig into the selection.",
   blog: 'An Optimal Breaks blog article. Make people want to read it with a hook about the topic, without giving everything away.',
   events:
     "The next 14 days of breakbeat events. The video opens with “you're gonna miss them”, then shows each night's poster, date, city and lineup, five seconds each. Name a few with city and day. Ask which one people are going to.",
+  digest: [
+    "The data recap of a fortnight or a quarter of breakbeat releases (Optimal Breaks Top Releases). The 60 s video shows, scene by scene: how many tracks, artists and labels came out (and the change vs the previous period), the 5 most played on the site, the 5 most saved with the «+», the artists and labels that released the most, community Top 100 stars with new music, the average BPM and the covers.",
+    'Tell the real facts from the context: the #1 by plays and the #1 by saves with their artist, the volume and whether it is up or down, the busiest artist and label, the average BPM and top key if present. Explain in one sentence that plays only count on optimalbreaks.com and every «+» is a vote. If `period` is WEEK, these are next week’s releases (previews): do not talk about past plays.',
+    'Close by asking what their track of the period was or what is missing.',
+  ].join('\n'),
 }
 
 const DEFAULT_TAGS: Record<Kind, string[]> = {
@@ -70,6 +81,7 @@ const DEFAULT_TAGS: Record<Kind, string[]> = {
   week: ['#breakbeat', '#newmusic', '#newreleases', '#breaks', '#electronicmusic'],
   blog: ['#breakbeat', '#breaks', '#electronicmusic', '#musicnews', '#dj'],
   events: ['#breakbeat', '#rave', '#electronicmusic', '#festival', '#dj'],
+  digest: ['#breakbeat', '#breaks', '#newreleases', '#newmusic', '#electronicmusic'],
 }
 
 function norm(s: string): string {
@@ -101,7 +113,7 @@ function bannedNames(ctx: Record<string, unknown>): string[] {
       add(o.label)
     }
   }
-  for (const k of ['artists', 'artist', 'label', 'labels', 'festival', 'edition', 'eventName', 'tracks', 'rows', 'highlights', 'events', 'lineup', 'place', 'names']) add(ctx[k])
+  for (const k of ['artists', 'artist', 'label', 'labels', 'festival', 'edition', 'eventName', 'tracks', 'rows', 'highlights', 'events', 'lineup', 'place', 'names', 'mostPlayed', 'mostSaved', 'topArtists', 'topLabels', 'communityStars', 'newToCatalogue']) add(ctx[k])
   return [...out]
 }
 
@@ -152,7 +164,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
   }
-  const kind = (['track', 'set', 'top100', 'week', 'blog', 'events'] as const).find((k) => k === body.kind)
+  const kind = KINDS.find((k) => k === body.kind)
   if (!kind) return NextResponse.json({ error: 'kind no válido' }, { status: 400 })
   if (auth.role !== 'admin' && kind !== 'track' && kind !== 'set') {
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
@@ -165,7 +177,15 @@ export async function POST(request: NextRequest) {
   const today = madridCalendarDate()
   // Un tema admite pie largo: Instagram indexa el texto para su buscador y un
   // pie con contexto retiene más. Tope de Instagram: 2.200 caracteres.
-  const long = kind === 'track'
+  const long = kind === 'track' || kind === 'digest'
+  const factsEs =
+    kind === 'digest'
+      ? 'las cifras del periodo, los #1 en escuchas y en guardados, quién y qué sello sacó más, y el BPM'
+      : 'artistas, sello, fecha, cuántos días faltan o lleva fuera'
+  const factsEn =
+    kind === 'digest'
+      ? 'the period figures, the #1 by plays and by saves, the busiest artist and label, and the BPM'
+      : 'artists, label, date, days to go or days out'
 
   const system = es
     ? [
@@ -176,8 +196,8 @@ export async function POST(request: NextRequest) {
         '- Español de España, natural y cercano, con criterio de DJ y amante del breakbeat. Nada de tono publicitario ni frases hechas vacías. No empieces por «Compartimos».',
         '- Primera línea: gancho de máximo 90 caracteres que se entienda sola (es lo único visible antes de «… más»). Puede empezar con 1 emoji.',
         long
-          ? '- Después, 3–4 párrafos cortos (1–3 frases cada uno, separados por una línea en blanco): los datos del contexto (artistas, sello, fecha, cuántos días faltan o lleva fuera), por qué escucharlo según su estado, y una línea para DJs con BPM y tonalidad si los hay. Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, nu skool, DJ set, rave, nuevo tema…). No inventes datos del tema que no estén en el contexto (ni remezclas, ni historia, ni premios); lo que digas del sonido, en términos generales del género.'
-          : '- Después 2–4 líneas cortas con datos concretos del contexto (fechas, BPM, ciudad, festival, número de temas, puestos…). No inventes nada que no esté en el contexto.',
+          ? `- Después, 3–4 párrafos cortos (1–3 frases cada uno, separados por una línea en blanco): los datos del contexto (${factsEs}), por qué escucharlo, y una línea para DJs con BPM y tonalidad si los hay. Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, nu skool, DJ set, rave, nuevo tema…). No inventes datos que no estén en el contexto (ni remezclas, ni historia, ni premios); lo que digas del sonido, en términos generales del género.`
+          : '- Después 2–3 párrafos cortos (separados por una línea en blanco) con datos concretos del contexto (fechas, BPM, ciudad, festival, número de temas, puestos, nombres…). Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, DJ set, rave, nuevos lanzamientos…). No inventes nada que no esté en el contexto (ni ambiente, ni público, ni anécdotas).',
         '- Una línea que invite a interactuar de forma concreta para esta publicación (una pregunta para comentar, guardar para el finde, etiquetar a alguien…).',
         platform === 'instagram'
           ? '- Enlace: una línea que diga que el enlace está en la bio. Sin URL (en Instagram no es clicable).'
@@ -186,7 +206,7 @@ export async function POST(request: NextRequest) {
         '- Última línea: como mucho 5 hashtags, en minúsculas, separados por espacios. PROHIBIDOS hashtags con nombres de artistas, sellos, festivales, eventos o de Optimal Breaks. Solo términos genéricos de gran difusión relacionados con el contenido (género, escena, formato): p. ej. #breakbeat #breaks #djset #newmusic #electronicmusic #ravemusic #vinyl… Elige los de más alcance que encajen.',
         long
           ? '- Entre 1.000 y 1.800 caracteres en total (nunca más de 2.000) y como mucho 6 emojis.'
-          : '- Máximo 900 caracteres en total y como mucho 4 emojis.',
+          : '- Entre 500 y 1.200 caracteres en total y como mucho 5 emojis.',
         'Responde SOLO JSON: {"caption": string}',
       ].join('\n')
     : [
@@ -197,8 +217,8 @@ export async function POST(request: NextRequest) {
         '- Natural English with a DJ’s taste. No ad-speak, no empty clichés. Do not start with “Sharing”.',
         '- First line: a hook of max 90 characters that works on its own (it is all people see before “… more”). May start with 1 emoji.',
         long
-          ? '- Then 3–4 short paragraphs (1–3 sentences each, separated by a blank line): the facts from the context (artists, label, date, days to go or days out), why to listen given its status, and a line for DJs with BPM and key if present. Work in naturally the words people search on Instagram (breakbeat, breaks, nu skool, DJ set, rave, new track…). Never invent track facts not in the context (no remixes, history or awards); describe the sound only in general genre terms.'
-          : '- Then 2–4 short lines with concrete facts from the context (dates, BPM, city, festival, number of tracks, positions…). Never invent anything not in the context.',
+          ? `- Then 3–4 short paragraphs (1–3 sentences each, separated by a blank line): the facts from the context (${factsEn}), why to listen, and a line for DJs with BPM and key if present. Work in naturally the words people search on Instagram (breakbeat, breaks, nu skool, DJ set, rave, new track…). Never invent facts not in the context (no remixes, history or awards); describe the sound only in general genre terms.`
+          : '- Then 2–3 short paragraphs (separated by a blank line) with concrete facts from the context (dates, BPM, city, festival, number of tracks, positions, names…). Work in naturally the words people search on Instagram (breakbeat, breaks, DJ set, rave, new releases…). Never invent anything not in the context (no vibe, crowd or anecdotes).',
         '- One line inviting interaction, specific to this post (a question to comment, save it for the weekend, tag someone…).',
         platform === 'instagram'
           ? '- Link: one line saying the link is in bio. No URL (not clickable on Instagram).'
@@ -207,7 +227,7 @@ export async function POST(request: NextRequest) {
         '- Last line: at most 5 lowercase hashtags separated by spaces. NEVER hashtags with artist, label, festival, event or Optimal Breaks names. Only generic high-reach terms related to the content (genre, scene, format): e.g. #breakbeat #breaks #djset #newmusic #electronicmusic #ravemusic #vinyl… Pick the highest-reach ones that fit.',
         long
           ? '- Between 1,000 and 1,800 characters in total (never over 2,000) and at most 6 emojis.'
-          : '- Max 900 characters in total and at most 4 emojis.',
+          : '- Between 500 and 1,200 characters in total and at most 5 emojis.',
         'Reply ONLY JSON: {"caption": string}',
       ].join('\n')
 

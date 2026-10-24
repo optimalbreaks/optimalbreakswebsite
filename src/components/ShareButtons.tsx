@@ -181,6 +181,53 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         },
       })
     }
+    if (pageReel?.fortnight) {
+      const f = pageReel.fortnight
+      const name = (t?: { title: string; artists: string }) => (t ? `${t.title} — ${t.artists}` : undefined)
+      return aiShareCaption({
+        kind: 'digest',
+        platform,
+        lang,
+        url: fullUrl,
+        fallback: buildPageVideoCaption(
+          'digest',
+          {
+            title: pageReel.title,
+            period: f.period,
+            weekLabel: `${f.from} — ${f.until}`,
+            count: f.totals.tracks,
+            artists: f.totals.artists,
+            labels: f.totals.labels,
+            topPlayed: name(f.played[0]),
+            topSaved: name(f.voted[0]),
+            bpm: f.bpm,
+          },
+          { lang, url: fullUrl, platform },
+        ),
+        context: {
+          title: pageReel.title,
+          period: f.period ?? 'FORTNIGHT',
+          from: f.from,
+          until: f.until,
+          tracks: f.totals.tracks,
+          releases: f.totals.releases,
+          artistCount: f.totals.artists,
+          labelCount: f.totals.labels,
+          previousPeriodTracks: f.totals.prev,
+          mostPlayed: f.played.slice(0, 5).map((t) => ({ title: t.title, artists: t.artists, plays: t.value })),
+          mostSaved: f.voted.slice(0, 5).map((t) => ({ title: t.title, artists: t.artists, saves: t.value })),
+          topArtists: f.artists.slice(0, 5),
+          topLabels: f.labels.slice(0, 5),
+          communityStars: f.stars.slice(0, 5).map((s) => ({ top100Rank: s.rank, name: s.name, track: s.track })),
+          avgBpm: f.bpm,
+          prevAvgBpm: f.prevBpm,
+          bpmRanges: f.bands,
+          topKey: f.key,
+          newToCatalogueCount: f.debutTotal,
+          newToCatalogue: f.debut.slice(0, 8),
+        },
+      })
+    }
     if (pageReel) {
       return aiShareCaption({
         kind: 'blog',

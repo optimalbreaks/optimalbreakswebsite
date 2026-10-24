@@ -10,7 +10,7 @@
 
 import type { Locale } from '@/lib/i18n-config'
 
-export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events'
+export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest'
 export type SharePlatform = 'instagram' | 'facebook'
 
 export async function aiShareCaption(opts: {
@@ -44,8 +44,21 @@ export async function aiShareCaption(opts: {
 
 /** Plantilla (sin IA) de los vídeos de página. Máx. 5 hashtags genéricos. */
 export function buildPageVideoCaption(
-  kind: 'top100' | 'week' | 'blog' | 'events',
-  d: { title?: string; count?: number; weekLabel?: string; first?: string; excerpt?: string },
+  kind: 'top100' | 'week' | 'blog' | 'events' | 'digest',
+  d: {
+    title?: string
+    count?: number
+    weekLabel?: string
+    first?: string
+    excerpt?: string
+    /** Resumen de /topreleases. */
+    period?: 'FORTNIGHT' | 'QUARTER' | 'WEEK'
+    artists?: number
+    labels?: number
+    topPlayed?: string
+    topSaved?: string
+    bpm?: number | null
+  },
   opts: { lang: Locale | string; url: string; platform: SharePlatform },
 ): string {
   const es = opts.lang !== 'en'
@@ -96,10 +109,35 @@ export function buildPageVideoCaption(
       .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
       .join('\n')
   }
+  if (kind === 'digest') {
+    const week = d.period === 'WEEK'
+    const p = es
+      ? d.period === 'QUARTER' ? 'trimestre' : week ? 'semana que viene' : 'quincena'
+      : d.period === 'QUARTER' ? 'quarter' : week ? 'next week' : 'fortnight'
+    return [
+      es ? `📊 El breakbeat de la ${p}, en datos.` : `📊 The ${p} in breakbeat, in numbers.`,
+      d.title || null,
+      '',
+      es
+        ? `${d.count ?? ''} temas nuevos de ${d.artists ?? ''} artistas y ${d.labels ?? ''} sellos${d.weekLabel ? ` (${d.weekLabel})` : ''}.`
+        : `${d.count ?? ''} new tracks from ${d.artists ?? ''} artists and ${d.labels ?? ''} labels${d.weekLabel ? ` (${d.weekLabel})` : ''}.`,
+      !week && d.topPlayed ? (es ? `🎧 El más escuchado en la web: ${d.topPlayed}.` : `🎧 Most played on the site: ${d.topPlayed}.`) : null,
+      !week && d.topSaved ? (es ? `➕ El más guardado: ${d.topSaved}.` : `➕ Most saved: ${d.topSaved}.`) : null,
+      d.bpm ? (es ? `BPM medio: ${d.bpm}.` : `Average BPM: ${d.bpm}.`) : null,
+      '',
+      es ? '¿Cuál ha sido tu tema? ¿Falta alguno? 👇' : 'What was your track? Anything missing? 👇',
+      '',
+      link,
+      '',
+      '#breakbeat #breaks #newreleases #newmusic #electronicmusic',
+    ]
+      .filter((l): l is string => l !== null)
+      .join('\n')
+  }
   return [
     `📰 ${d.title || ''}`,
     d.excerpt ? d.excerpt.slice(0, 220) : '',
-    es ? '¿Lo has escuchado ya? Cuéntanos 👇' : 'Have you heard it yet? Tell us 👇',
+    es ? '¿Qué te parece? Te leemos 👇' : 'What do you think? Tell us 👇',
     '',
     link,
     '',
