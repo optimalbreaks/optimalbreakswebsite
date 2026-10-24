@@ -83,6 +83,12 @@ const nextConfig = {
         destination: '/:lang/artists/aquasky-vs-masterblaster',
         permanent: true,
       },
+      /** José Rodríguez se publica como DJ Superbreak (24 oct 2026). */
+      {
+        source: '/:lang/artists/jose-rodriguez',
+        destination: '/:lang/artists/dj-superbreak',
+        permanent: true,
+      },
       /** RitMika x ARÁ: el chat leyó el adhesivo AKA de Instagram. Es RITMIKA XXL, 21 nov 2026. */
       {
         source: '/:lang/events/ritmika-x-ara',

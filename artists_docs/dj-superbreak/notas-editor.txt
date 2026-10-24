@@ -1,0 +1,42 @@
+Alta editorial — DJ Superbreak (24 oct 2026)
+=============================================
+
+No había ficha. DJ de breakbeat de Málaga. No se pone «Producer»
+en la cabecera.
+
+No confundir
+------------
+Ya existe Jose Rodríguez (Spain), slug jose-rodriguez-spain. Es otra
+ficha, la de Beatport. Esta no lleva beatport_id. En Soniquete
+(MBreaks & Jose Rodriguez Remix, sello 83, 2 sep 2026) el crédito
+«Jose Rodriguez» convive con «Jose Rodríguez (Spain)». No se usa ese
+remix como disco suyo.
+
+Identidad
+---------
+- name / name_display / slug: DJ Superbreak / DJ SUPERBREAK / dj-superbreak.
+  Narciso pidió ese nombre y esa URL (24 oct 2026). La ficha nació
+  un rato como jose-rodriguez: esa URL redirige.
+- real_name: José Javier Rodríguez Gómez. Sale en el SoundCloud
+  que pasó Narciso. No se escribe que los carteles digan José Rodríguez.
+- Cuentas: https://soundcloud.com/jose-javier-rodriguez-gomez-898505959
+  y https://www.instagram.com/dj_superbreak
+- country ES. category andalusian. Málaga se queda en la bio.
+- era vacía. La chapa «2000s-present» no corresponde. No se escribe
+  en la ficha el dato que Narciso pasó en privado.
+- styles: Breakbeat, Breaks. Solo breakbeat. Electro, drum & bass,
+  hip-hop y scratching no corresponden.
+- related_artists vacío. Tortu, Brainkiller, Yo Speed y Kuplay venían
+  del informe.
+- Retrato: la foto de ese SoundCloud (cabina, traje de Superman).
+
+Lo que no es él (24 oct 2026, el artista se lo dice a Narciso)
+--------------------------------------------------------------
+El primer texto mezcló a este DJ con otro José Rodríguez. No volver
+a poner: cabina desde 2000, scratching de competición, Marbella Dance,
+Pepsi DJ Competition, Gaultier Break Club, la trayectoria en Heat Pro,
+Wild Cuts, Cut2Cut, campeón de España, scratches para otros, BreakB
+y School Training.
+Los carteles de 2026 (Heat Closing, Bellota, RETRO Goats, Ritmika,
+Opening de Heat Pro) se quedan: no chocan con lo que él ha dicho.
+Lo que Narciso contó en privado no se escribe en la ficha.

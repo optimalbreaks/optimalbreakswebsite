@@ -510,7 +510,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
               {artist.country ? (
                 <CountryBadge country={artist.country} lang={lang} size="md" variant="cutout" />
               ) : null}
-              <span className="cutout outline">{artist.era}</span>
+              {artist.era ? <span className="cutout outline">{artist.era}</span> : null}
             </div>
             <div className="space-y-5">
               {bioBlocks.map((para, i) => (
