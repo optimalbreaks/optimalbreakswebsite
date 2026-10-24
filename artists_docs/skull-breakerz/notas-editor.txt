@@ -3,6 +3,8 @@ Revisión — SKULL BREAKERZ (24 oct 2026)
 
 La ficha vieja lo ponía en el Reino Unido y citaba el chart. Eso sale.
 Beatport id 1286718. SoundCloud user-534245292, sin ciudad ni nombre civil.
+Retrato: public/images/artists/skull_breakerz.webp (la foto que pasó
+Narciso, 24 oct 2026). No el retrato anterior de Storage.
 
 Lo que no cuadra del borrador
 -----------------------------
