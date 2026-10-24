@@ -152,7 +152,7 @@ const WEEK = {
     releasedLine: (list: string) => `Adelantos que ya se escuchan en la web, solo por escuchas. Abren la lista ${list}.`,
     played: 'Los adelantos más escuchados',
     voted: 'Lo más votado antes de salir',
-    live: (at: string) => `En directo: lo que ha recibido cada adelanto hasta ahora. Actualizado ${at}.`,
+    asOf: (at: string) => `Foto fija del ${at}: lo que había recibido cada adelanto al publicar el artículo. En Tracks los números siguen vivos.`,
     artistsTitle: 'Quién más publica',
     labelsTitle: 'Sellos de la semana',
     top100: 'Estrellas del top histórico con temas en camino',
@@ -169,7 +169,7 @@ const WEEK = {
     releasedLine: (list: string) => `Pre-releases already playing on the site, ranked by plays alone. Leading the list: ${list}.`,
     played: 'Most played pre-releases',
     voted: 'Most voted before release',
-    live: (at: string) => `Live: what each pre-release has received so far. Updated ${at}.`,
+    asOf: (at: string) => `Snapshot of ${at}: what each pre-release had received when the article was published. On Tracks the numbers stay live.`,
     artistsTitle: 'Who releases the most',
     labelsTitle: 'Labels of the week',
     top100: 'All-time top stars with music on the way',
@@ -651,29 +651,31 @@ export default function FortnightDigest({
   const { user } = useAuth()
   const lastWeek = (d.released ?? []).map((r) => r.week_date || '').sort().pop() || ''
   const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
+  // Semana: foto fija del generador (`as_of`); las frases salen de esos números igual que en directo.
+  const stampAt = liveAt ?? (week ? d.as_of ?? null : null)
   const liveLabel = (() => {
-    if (!liveAt) return ''
+    if (!stampAt) return ''
     const p = Object.fromEntries(
       new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-        .formatToParts(new Date(liveAt))
+        .formatToParts(new Date(stampAt))
         .map((x) => [x.type, x.value]),
     )
     return `${shortDate(`${p.year}-${p.month}-${p.day}`, lang)} · ${p.hour}:${p.minute}`
   })()
   const frozenNote = (
     <p className="mt-2 text-[11px] text-[var(--dim)]" style={mono}>
-      {liveAt ? t.live(liveLabel) : t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
+      {liveAt ? t.live(liveLabel) : stampAt ? WEEK[lang].asOf(liveLabel) : t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
       {liveAt && d.from < PLAYS_SINCE ? ` ${PLAYS_SINCE_NOTE[lang]}` : null}
     </p>
   )
   const heading = (h: string, list: FortnightDigestTrack[]) =>
-    liveAt && list[0] ? t.leads(h, list[0].title, list[0].artists) : h
+    stampAt && list[0] ? t.leads(h, list[0].title, list[0].artists) : h
   const names = (list: FortnightDigestTrack[]) => {
     const items = list.map((x) => (lang === 'es' ? `«${x.title}» (${x.artists})` : `“${x.title}” (${x.artists})`))
     return items.length > 1 ? `${items.slice(0, -1).join(', ')}${t.and}${items[items.length - 1]}` : items[0] || ''
   }
   const leadCopy = (list: FortnightDigestTrack[], one: string, many: string, stored: string) => {
-    if (!liveAt) return stored
+    if (!stampAt) return stored
     const [first, ...others] = list
     if (!first) return ''
     return t.leadLine(first.title, first.artists, first.value, first.value === 1 ? one : many, names(others.slice(0, 2)))
@@ -735,7 +737,7 @@ export default function FortnightDigest({
       )}
 
       {d.released?.length > 0 && (
-        <Section title={t.released} copy={liveAt ? t.releasedLine(names(d.released.slice(0, 3))) : copy.released}>
+        <Section title={t.released} copy={stampAt ? t.releasedLine(names(d.released.slice(0, 3))) : copy.released}>
           <CoverGrid tracks={d.released} spot="rel" lang={lang} showDate={week} />
           {week ? null : <Cta text={t.weekCta} label={t.weekBtn} href={lastWeek ? `/${lang}/charts?week=${lastWeek}` : `/${lang}/charts`} />}
           <Cta text={t.releasesCta} label={t.releasesBtn} href={`/${lang}/topreleases`} />

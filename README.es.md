@@ -942,11 +942,13 @@ Qué enseña cada lista (primer artículo, semana del 26 oct 2026: 46 temas, 29 
 | Bloque | Enseña | Origen |
 |---|---|---|
 | La selección de Optimal Breaks | todos los temas con el «+» de la casa (29), por orden de salida y con el día | congelado en `digest.picks` |
-| Lo que ya suena | hasta 20, por escuchas | en directo (`fortnight-live`, caché 5 min) |
-| Los adelantos más escuchados | hasta 10 | en directo |
-| Lo más votado antes de salir | hasta 10 | en directo (mismos saltos que el Top 100) |
+| Lo que ya suena | hasta 20, por escuchas | congelado |
+| Los adelantos más escuchados | hasta 10 | congelado |
+| Lo más votado antes de salir | hasta 10 | congelado (mismos saltos que el Top 100) |
 | Estrellas del top histórico con temas en camino | 8 artistas, hasta 6 temas cada uno | congelado |
-| Artistas más escuchados / Quién más publica / Sellos | 8 cada uno | en directo / congelado / congelado |
+| Artistas más escuchados / Quién más publica / Sellos | 8 cada uno | congelado |
+
+**Foto fija, no en directo (24 oct 2026, decisión de Narciso).** El título dice «a día de hoy», así que la ficha nunca recalcula. Quincena y trimestre siguen en directo porque ordenan temas ya salidos; este anuncia lo que viene. Escuchas (`track_play_events`, reproducciones en optimalbreaks.com) y votos («+», `saved_chart_tracks`) los cuenta el generador con el mismo `loadFortnightLive` de la ficha de la quincena y los guarda en el digest con `as_of`. El generador se relanza solo con `--import tsx` para cargar ese archivo TypeScript. La ficha pone «Foto fija del <fecha>». Ni Spotify ni Beatport: solo escuchas y votos de esta web.
 
 **▶ ESCUCHAR LA PRÓXIMA SEMANA** pone en cola los temas que salen en alguna lista, sin repetir y con audio (41 de 46 el 24 oct). Los que no están en ninguna lista solo están en `/charts?week=<lunes>` (botón amarillo del final). Son previews de Beatport (~2 min) salvo que la fila tenga `full_audio_url`. Decisión del 24 oct 2026: se queda así, sin lista «todos los temas» en el artículo. Las cifras de cabecera, la selección y los bloques congelados solo cambian al regenerar: `--semana --forzar --mantener-textos` (mismos textos, datos nuevos; por ejemplo el jueves antes del viernes fuerte).
 

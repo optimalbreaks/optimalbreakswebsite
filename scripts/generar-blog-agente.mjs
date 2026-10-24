@@ -518,6 +518,14 @@ async function editorPicks(sb, tracks) {
     .sort((x, y) => String(x.release_date).localeCompare(String(y.release_date)) || x.title.localeCompare(y.title))
 }
 
+/** Mismo recuento que la ficha de la quincena (src/lib/fortnight-live.ts). Requiere `--import tsx`. */
+async function loadLiveRanking(from, until, topN) {
+  const mod = await import('../src/lib/fortnight-live.ts')
+  const fn = mod.loadFortnightLive || mod.default?.loadFortnightLive
+  if (typeof fn !== 'function') throw new Error('No se pudo cargar src/lib/fortnight-live.ts')
+  return fn(from, until, topN)
+}
+
 async function computeQuincena(untilArg, trimestre = null, semana = null) {
   const creds = supabaseApiCredentials()
   if (!creds) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY')
@@ -884,6 +892,20 @@ Devuelve SOLO este JSON:
     },
     debut: debutantes.slice(0, 24).map((n) => ({ name: n, slug: slugOf(n) })),
     debut_total: debutantes.length,
+  }
+
+  // «A día de hoy»: la ficha de la semana no recalcula. Se congela el recuento de la página.
+  if (semana) {
+    const live = await loadLiveRanking(from, until, TOP)
+    Object.assign(digest, {
+      released: live.released,
+      played: live.played,
+      voted: live.voted,
+      votes_total: live.votes_total,
+      voters_total: live.voters_total,
+      played_artists: live.played_artists,
+      as_of: live.updated_at,
+    })
   }
 
   return {
@@ -1407,6 +1429,15 @@ async function mainAgenda(args) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
+  // --semana congela el recuento con src/lib/fortnight-live.ts (TypeScript): se relanza con tsx.
+  if (args.semana && !process.env.OB_BLOG_TSX) {
+    const r = spawnSync(process.execPath, ['--import', 'tsx', fileURLToPath(import.meta.url), ...process.argv.slice(2)], {
+      cwd: ROOT,
+      stdio: 'inherit',
+      env: { ...process.env, OB_BLOG_TSX: '1' },
+    })
+    process.exit(r.status ?? 1)
+  }
   if (args.agenda) return mainAgenda(args)
   if (args.quincena || args.trimestre || args.semana) return mainQuincena(args)
   if (!args.slug || (!args.titleHint && !args.fromJson)) {

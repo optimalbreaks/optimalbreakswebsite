@@ -59,11 +59,13 @@ What each list shows (first article, week of 26 Oct 2026: 46 tracks, 29 with the
 | Block | Shows | Source |
 |---|---|---|
 | The Optimal Breaks selection | every track with the house «+» (29), in release order, with the day | frozen in `digest.picks` |
-| Already playing | up to 20, by plays | live (`fortnight-live`, 5 min cache) |
-| Most played pre-releases | up to 10 | live |
-| Most voted before release | up to 10 | live (same skips as the Top 100) |
+| Already playing | up to 20, by plays | frozen |
+| Most played pre-releases | up to 10 | frozen |
+| Most voted before release | up to 10 | frozen (same skips as the Top 100) |
 | All-time top stars with music on the way | 8 artists, up to 6 tracks each | frozen |
-| Most played artists / Who releases the most / Labels | 8 each | live / frozen / frozen |
+| Most played artists / Who releases the most / Labels | 8 each | frozen |
+
+**Snapshot, not live (24 Oct 2026, Narciso's call).** The title says «as of today», so the page never recalculates. Fortnight and quarter articles stay live because they rank tracks already out; this one announces what is coming. Plays (`track_play_events`, plays on optimalbreaks.com) and votes («+», `saved_chart_tracks`) are counted by the generator with the same `loadFortnightLive` the fortnight page uses, and stored in the digest with `as_of`. The generator re-launches itself with `--import tsx` to load that TypeScript file. The page prints «Snapshot of <date>». No Spotify or Beatport figures: only plays and votes on this site.
 
 **▶ PLAY NEXT WEEK** queues every track that appears in some list, without repeats and with audio (41 of 46 on 24 Oct). Tracks in no list are only on `/charts?week=<monday>` (yellow button at the end). They are Beatport previews (~2 min) unless the row has `full_audio_url`. The decision of 24 Oct 2026 was to keep it like this: no «all tracks» list in the article. Header figures, the selection and the frozen blocks only change when regenerated: `--semana --forzar --mantener-textos` (same texts, fresh data; e.g. on Thursday before the big Friday).
 

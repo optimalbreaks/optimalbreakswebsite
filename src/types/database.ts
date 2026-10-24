@@ -1256,8 +1256,12 @@ export interface FortnightDigestCopy {
 export interface FortnightDigest {
   /** Ausente = quincena. `semana` = lo que sale la semana que viene (adelantos). */
   kind?: 'quincena' | 'trimestre' | 'semana'
-  /** Solo `semana`: temas con el «+» de la cuenta editorial, en el orden en que se guardaron. */
+  /** Solo `semana`: temas con el «+» de la cuenta editorial, por orden de salida. */
   picks?: FortnightDigestTrack[]
+  /** Solo `semana`: foto fija. Momento del recuento; la ficha no lo recalcula. */
+  as_of?: string
+  /** Solo `semana`: artistas por escuchas, congelados con el resto. */
+  played_artists?: { name: string; plays: number; tracks: number }[]
   from: string
   until: string
   totals: { tracks: number; artists: number; labels: number; releases: number; prev_tracks: number }
