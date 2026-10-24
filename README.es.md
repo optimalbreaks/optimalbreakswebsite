@@ -937,6 +937,19 @@ Cada dos semanas: `node scripts/generar-blog-agente.mjs --quincena [YYYY-MM-DD �
 
 **Lanzamientos de la próxima semana (24 oct 2026).** «A día de hoy: los lanzamientos de breakbeat que se esperan del … al …». `node scripts/generar-blog-agente.mjs --semana [YYYY-MM-DD]` (cualquier día de la semana ISO; por defecto, el lunes que viene en Madrid). Mismo digest y ficha que la quincena (`FortnightDigest`) con `digest.kind = 'semana'`, slug `proxima-semana-breakbeat-<lunes>-<domingo>`, categoría `article`. Vive en `/blog`, no en `/topreleases`, y no alimenta la lista Temazos 2026 (los temas aún no están en Spotify). Bloque propio **«La selección de Optimal Breaks»** (`digest.picks`): los temas de esa semana con «+» de `contacto@eskaladigital.com`, congelados al generar. Escuchas y votos desde siempre, porque un adelanto se oye y se vota antes de salir. Sin comparación con la semana en curso: la que viene se sigue llenando con cada anuncio de Beatport.
 
+Qué enseña cada lista (primer artículo, semana del 26 oct 2026: 46 temas, 29 con el «+» de la casa):
+
+| Bloque | Enseña | Origen |
+|---|---|---|
+| La selección de Optimal Breaks | todos los temas con el «+» de la casa (29), por orden de salida y con el día | congelado en `digest.picks` |
+| Lo que ya suena | hasta 20, por escuchas | en directo (`fortnight-live`, caché 5 min) |
+| Los adelantos más escuchados | hasta 10 | en directo |
+| Lo más votado antes de salir | hasta 10 | en directo (mismos saltos que el Top 100) |
+| Estrellas del top histórico con temas en camino | 8 artistas, hasta 6 temas cada uno | congelado |
+| Artistas más escuchados / Quién más publica / Sellos | 8 cada uno | en directo / congelado / congelado |
+
+**▶ ESCUCHAR LA PRÓXIMA SEMANA** pone en cola los temas que salen en alguna lista, sin repetir y con audio (41 de 46 el 24 oct). Los que no están en ninguna lista solo están en `/charts?week=<lunes>` (botón amarillo del final). Son previews de Beatport (~2 min) salvo que la fila tenga `full_audio_url`. Decisión del 24 oct 2026: se queda así, sin lista «todos los temas» en el artículo. Las cifras de cabecera, la selección y los bloques congelados solo cambian al regenerar: `--semana --forzar --mantener-textos` (mismos textos, datos nuevos; por ejemplo el jueves antes del viernes fuerte).
+
 ### País de un evento (canónico, 28 sep 2026)
 
 `events.country` es el **nombre en inglés** (`Spain`, `United Kingdom`, `United States`…). `normalizeEventCountry` (`src/lib/event-country.ts`) se aplica al escribir (chat admin, que metía `ES` por defecto, y los formularios `/administrator/events`) y al leer el filtro «País» de `/events`. Un valor desconocido pasa tal cual, solo recortado. En producción se unificaron 11 grafías a 5 países (Spain 75, United States 34, United Kingdom 15, Australia 5, Hungary 1) y los sufijos de `location` (`, ES` / `, España` / `, UK` / `, US`…) al mismo nombre.

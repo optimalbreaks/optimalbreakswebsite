@@ -54,6 +54,19 @@ The **Blog** is reserved for pieces that are more interpretive, essayistic, comp
 
 **Next-week releases article (24 Oct 2026).** «As of today: the breakbeat releases expected from … to …». `node scripts/generar-blog-agente.mjs --semana [YYYY-MM-DD]` (any day of the ISO week; default: next Monday in Madrid). Same digest and page as the fortnight (`FortnightDigest`) with `digest.kind = 'semana'`, slug `proxima-semana-breakbeat-<monday>-<sunday>`, category `article`. It lives on `/blog`, not on `/topreleases`, and does not feed the Temazos 2026 playlist (the tracks are not on Spotify yet). Extra block **«The Optimal Breaks selection»** (`digest.picks`): tracks of that week saved with «+» by `contacto@eskaladigital.com`, frozen when generated. Plays and votes are counted from the start, because a pre-release is played and voted before it is out. No comparison with the current week: next week keeps filling up as Beatport announces tracks.
 
+What each list shows (first article, week of 26 Oct 2026: 46 tracks, 29 with the house «+»):
+
+| Block | Shows | Source |
+|---|---|---|
+| The Optimal Breaks selection | every track with the house «+» (29), in release order, with the day | frozen in `digest.picks` |
+| Already playing | up to 20, by plays | live (`fortnight-live`, 5 min cache) |
+| Most played pre-releases | up to 10 | live |
+| Most voted before release | up to 10 | live (same skips as the Top 100) |
+| All-time top stars with music on the way | 8 artists, up to 6 tracks each | frozen |
+| Most played artists / Who releases the most / Labels | 8 each | live / frozen / frozen |
+
+**▶ PLAY NEXT WEEK** queues every track that appears in some list, without repeats and with audio (41 of 46 on 24 Oct). Tracks in no list are only on `/charts?week=<monday>` (yellow button at the end). They are Beatport previews (~2 min) unless the row has `full_audio_url`. The decision of 24 Oct 2026 was to keep it like this: no «all tracks» list in the article. Header figures, the selection and the frozen blocks only change when regenerated: `--semana --forzar --mantener-textos` (same texts, fresh data; e.g. on Thursday before the big Friday).
+
 ### Editorial rule of thumb
 
 If a topic answers **"what is this, who belongs here, where did it happen, when did it happen?"**, it should usually live in the structural sections.
