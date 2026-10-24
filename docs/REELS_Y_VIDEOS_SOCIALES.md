@@ -5,8 +5,8 @@ Herramienta de promo para **admins** y para **artistas con ficha reclamada** (`a
 | Botón | Qué genera | Formato | Qué hace al terminar |
 |---|---|---|---|
 | **IG** | Story de **Instagram** | Con preview: MP4 **1080×1920** del fotograma de la Story + audio. Sin preview: PNG con el aviso del sticker | Móvil: compartir (o **↗** si el render caducó el gesto). Escritorio: descarga. |
-| **R** | Reel para **Instagram** | MP4 vertical **1080×1920**, 15 s, 30 fps, **con el fragmento de audio** si hay preview; mudo si no | Móvil: el botón pasa a **↗**; un segundo toque abre el menú de compartir (Instagram, Guardar vídeo…). Escritorio: descarga el MP4. |
-| **F** | Vídeo para **Facebook** | MP4 horizontal **1920×1080**, 15 s, 30 fps, **el mismo fragmento**; mudo si no hay preview | Siempre **descarga** el MP4 (también en móvil; sin menú de compartir). |
+| **R** | Reel para **Instagram** | MP4 vertical **1080×1920**, 30 s, 30 fps, **con el fragmento de audio** si hay preview; mudo si no | Móvil: el botón pasa a **↗**; un segundo toque abre el menú de compartir (Instagram, Guardar vídeo…). Escritorio: descarga el MP4. |
+| **F** | Vídeo para **Facebook** | MP4 horizontal **1920×1080**, 30 s, 30 fps, **el mismo fragmento**; mudo si no hay preview | Siempre **descarga** el MP4 (también en móvil; sin menú de compartir). |
 
 Los dos **copian el texto del post** al portapapeles (tema, artistas, sello, fecha, BPM). El de Facebook incluye el enlace del tema; el del reel dice «enlace en la bio».
 
@@ -14,7 +14,7 @@ Los dos **copian el texto del post** al portapapeles (tema, artistas, sello, fec
 
 ## Audio del fragmento (23 oct 2026)
 
-Si el tema tiene preview de Beatport o Bandcamp, o un audio completo alojado (`full_audio_url`), **IG**, **R** y **F** abren `AudioSegmentPicker`: onda del preview, ventana de 15 s arrastrable y arranque sugerido (el tramo con más energía). Ese arranque se recuerda por tema. El MP4 lleva ese fragmento en AAC (`src/lib/share-audio.ts`, `encodeCanvasVideo`). La Story con audio usa `/api/og/story?audio=1` (mismo diseño, sin el aviso de que el sticker no es el tema).
+Si el tema tiene preview de Beatport o Bandcamp, o un audio completo alojado (`full_audio_url`), **IG**, **R** y **F** abren `AudioSegmentPicker`: onda del preview, ventana de 30 s arrastrable y arranque sugerido (el tramo con más energía). Hasta el 24 oct 2026 eran 15 s. Instagram admite reels de hasta 3 minutos; 60 s se descartó porque en iPhone la grabación es en tiempo real (y se repite si sale muda) y porque un minuto de un tema ajeno se acerca a la grabación comercial y es más fácil que Instagram lo silencie. `SHARE_SEGMENT_SEC` (`share-audio.ts`) marca la duración de la Story con audio, del reel y del vídeo de Facebook; sesiones y páginas (mudos) siguen en 15 s. Ese arranque se recuerda por tema. El MP4 lleva ese fragmento en AAC (`src/lib/share-audio.ts`, `encodeCanvasVideo`). La Story con audio usa `/api/og/story?audio=1` (mismo diseño, sin el aviso de que el sticker no es el tema).
 
 YouTube y SoundCloud no dan archivo: esos vídeos siguen **mudos** y la Story sigue siendo PNG con el aviso. Si el MP4 se abre y la pista está en silencio, se vuelve a grabar en tiempo real; si el navegador no sabe abrir el vídeo, se queda el archivo (no poder decodificarlo no cuenta como mudo). El aviso de «sale mudo» no sale antes del menú de compartir: en el móvil el botón pasa a **↗** y el cuadro aparece en ese momento.
 
@@ -61,7 +61,7 @@ Texto del post (`buildMixVideoCaption`, se copia solo):
 
 Mismos colores que la Story IG (`#e8dcc8` papel, `#1a1a1a` tinta, `#d62828` rojo, `#f4c430` amarillo) y fuentes del sitio (**Unbounded 900** y **Courier Prime**). Todo el texto del vídeo está **siempre en inglés** (público internacional), sea cual sea el idioma de la web.
 
-Elementos y animación (15 s):
+Elementos y animación (30 s en los temas; el tramo central con el beat se alarga y el cierre sigue siendo los últimos 3,6 s):
 
 | Tiempo | Qué pasa |
 |---|---|
@@ -91,7 +91,7 @@ Funda + vinilo + sello BPM a la izquierda; cabecera, título, artistas, metadato
 | Pieza | Archivo | Qué hace |
 |---|---|---|
 | Datos del tema | `src/app/api/og/story/route.tsx` | Con **`format=json`** devuelve `{ title, artists, meta, kicker, artwork, bpm, releaseDate, label, musicKey, year, lang, audio }` usando la misma lógica que la imagen de Story (incluido `from=artists|labels/<slug>` y el snapshot `storyMeta` para Beatport Top 10). `artwork` es un **data URL** (sharp, 900 px, ya recortado) → sin problemas de CORS en el canvas. `audio` es una URL del mismo origen (audio alojado, `/api/bandcamp-preview` o `/api/audio-proxy` del sample de Beatport) o `null`. Añade `bpm` y `release_date` a las consultas de `chart_tracks` / `chart_featured_tracks` y al Top 10 de Beatport (los vinilos no tienen BPM). `Cache-Control: private, no-store`. `?audio=1` quita el aviso del sticker en la PNG, que entonces es el fotograma del MP4. |
-| Render | `src/lib/reel-renderer.ts` | `renderReel(data, { format: 'vertical' \| 'horizontal', audio })` y `renderStillVideo` (Story fija). Canvas 2D dibuja cada fotograma (`drawReelFrame`) y **WebCodecs `VideoEncoder` (H.264)** + **`AudioEncoder` AAC** + **`mp4-muxer`** lo empaquetan más rápido que tiempo real. Si no hay H.264 prueba VP9 en MP4; si no hay WebCodecs (o no hay AAC), cae a **`MediaRecorder`** (tiempo real, 15 s; puede salir WebM). El fondo se **pre-hornea** una vez (carátula desenfocada + semitono + viñeta) para que cada fotograma sea barato en móvil. Dos layouts (`VERTICAL`, `HORIZONTAL`) con todas las posiciones; el lienzo `W/H` lo fija `renderReel`. |
+| Render | `src/lib/reel-renderer.ts` | `renderReel(data, { format: 'vertical' \| 'horizontal', audio })` y `renderStillVideo` (Story fija). Canvas 2D dibuja cada fotograma (`drawReelFrame`) y **WebCodecs `VideoEncoder` (H.264)** + **`AudioEncoder` AAC** + **`mp4-muxer`** lo empaquetan más rápido que tiempo real. Si no hay H.264 prueba VP9 en MP4; si no hay WebCodecs (o no hay AAC), cae a **`MediaRecorder`** (tiempo real, lo que dure el vídeo; puede salir WebM). El fondo se **pre-hornea** una vez (carátula desenfocada + semitono + viñeta) para que cada fotograma sea barato en móvil. Dos layouts (`VERTICAL`, `HORIZONTAL`) con todas las posiciones; el lienzo `W/H` lo fija `renderReel`. |
 | Audio | `src/lib/share-audio.ts`, `src/components/AudioSegmentPicker.tsx` | Descarga y decodifica el preview una vez, propone el tramo con más energía y recuerda el arranque (`localStorage`, clave `play=`). Al pulsar ▶ Escuchar reclama el slot `ob-share-segment` del coordinador (para el resto de la web). |
 | Botones | `src/components/TrackShareButton.tsx` | **IG**, **R** (`onReelClick`) y **F** (`onFacebookClick`), si `isAdmin` o `isClaimedArtist` y hay `play=` resoluble (`chart:` / `featured:` / `vinyl:` / `beatport:`). El renderer se importa **dinámicamente** al pulsar (no pesa en la carga de la página). **Un render cada vez**: mientras uno trabaja, los otros quedan desactivados. |
 | Dependencia | `package.json` | **`mp4-muxer` 5.2.1** (exacta). Su autor la marca como sustituida por **Mediabunny**; funciona, pero conviene migrar algún día. |

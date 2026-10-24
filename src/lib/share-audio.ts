@@ -9,7 +9,7 @@
 // ============================================
 
 /** Duración del fragmento que se elige en el selector (y de los vídeos). */
-export const SHARE_SEGMENT_SEC = 15
+export const SHARE_SEGMENT_SEC = 30
 
 /** Frecuencia a la que se decodifica (y se codifica en AAC). */
 export const SHARE_AUDIO_RATE = 44100
@@ -150,7 +150,7 @@ export function suggestSegmentStart(buffer: AudioBuffer, dur = SHARE_SEGMENT_SEC
 
 /**
  * Muestras estéreo del fragmento, de `durationSec` (la duración del VÍDEO:
- * si es más largo que 15 s, el audio llega hasta el final). Si no cabe desde
+ * si es más largo que el fragmento, el audio llega hasta el final). Si no cabe desde
  * `start`, el arranque retrocede; si el audio entero es más corto, el resto
  * va en silencio. Fundido corto de entrada y de salida.
  */

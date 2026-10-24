@@ -1,7 +1,7 @@
 // ============================================
 // OPTIMAL BREAKS — Selector del fragmento de audio (IG / R / F)
 //
-// Antes de generar un vídeo con audio, el admin elige qué 15 s del tema
+// Antes de generar un vídeo con audio, el admin elige qué 30 s del tema
 // suenan, como en Instagram: onda del preview, ventana arrastrable con el
 // dedo, escucha previa y arranque sugerido (tramo con más energía). El
 // arranque elegido se guarda por tema (`share-audio.ts`): la Story, el reel y

@@ -1,7 +1,7 @@
 // ============================================
 // OPTIMAL BREAKS — Reel de Instagram por canción (render en el navegador)
 //
-// Genera un MP4 (~15 s) para los botones de `TrackShareButton` (admins y
+// Genera un MP4 (30 s) para los botones de `TrackShareButton` (admins y
 // artistas con ficha): «R» → reel vertical 1080×1920 para Instagram; «F» →
 // vídeo horizontal 1920×1080 para Facebook; «IG» → Story (imagen fija + audio,
 // `renderStillVideo`). Si el tema tiene preview, el vídeo lleva incrustado el
@@ -12,7 +12,8 @@
 // Todo ocurre en el cliente: Canvas 2D dibuja cada fotograma y WebCodecs
 // (VideoEncoder H.264) + `mp4-muxer` lo empaquetan, más rápido que tiempo
 // real y sin coste de servidor (Vercel no tiene ffmpeg). Si el navegador no
-// tiene WebCodecs, cae a MediaRecorder (tiempo real, 15 s).
+// tiene WebCodecs, cae a MediaRecorder (tiempo real). Sesiones y páginas, sin
+// audio, siguen en 15 s (valor por defecto de `durationSec`).
 //
 // Los datos (título, artistas, carátula ya recortada como data URL) los da
 // `/api/og/story?…&format=json`, la misma lógica que la imagen de Story.
@@ -1344,7 +1345,7 @@ async function encodeOnce(
   canvas.height = H
   const ctx = canvas.getContext('2d', { alpha: false })!
 
-  // El audio cubre SIEMPRE la duración del vídeo (si dura más de 15 s, también).
+  // El audio cubre SIEMPRE la duración del vídeo.
   const pcm = audio ? segmentChannels(audio.buffer, audio.start, durationSec) : null
   const sampleRate = audio?.buffer.sampleRate ?? 44100
   const cfg = forceRecorder ? null : await pickEncoderConfig(fps, W, H)

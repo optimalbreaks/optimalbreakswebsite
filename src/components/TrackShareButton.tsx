@@ -16,7 +16,7 @@
 // Admins y artistas con ficha reclamada ven además «IG» (Story), «R» (reel
 // vertical MP4 para Instagram) y «F» (vídeo horizontal 16:9 para Facebook,
 // solo descarga). Si el tema tiene preview, los tres llevan su audio: antes
-// de generar se elige el fragmento de 15 s en `AudioSegmentPicker` (el mismo
+// de generar se elige el fragmento de 30 s en `AudioSegmentPicker` (el mismo
 // para los tres). Sin preview: Story en imagen con aviso y vídeos mudos.
 // Los vídeos se renderizan en el navegador con `src/lib/reel-renderer.ts`.
 // ============================================
@@ -27,7 +27,7 @@ import { aiShareCaption } from '@/lib/share-caption'
 import { useRef, useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import AudioSegmentPicker from '@/components/AudioSegmentPicker'
-import type { ShareAudioSegment } from '@/lib/share-audio'
+import { SHARE_SEGMENT_SEC, type ShareAudioSegment } from '@/lib/share-audio'
 import type { Locale } from '@/lib/i18n-config'
 import {
   appendTrackStoryMeta,
@@ -310,6 +310,7 @@ export default function TrackShareButton(props: Props) {
         const image = await createImageBitmap(png)
         const { renderStillVideo } = await import('@/lib/reel-renderer')
         const video = await renderStillVideo(image, 1080, 1920, {
+          durationSec: SHARE_SEGMENT_SEC,
           audio: segment,
           onProgress: (r) => setStoryPct(Math.min(99, Math.round(r * 100))),
         })
@@ -343,7 +344,7 @@ export default function TrackShareButton(props: Props) {
   }
 
   /**
-   * Botón "R": reel 1080×1920 (~15 s). Pide los datos del tema a
+   * Botón "R": reel 1080×1920 (30 s). Pide los datos del tema a
    * `/api/og/story?format=json`; si hay audio, primero el selector de
    * fragmento. Dibuja y codifica el MP4 en el navegador (WebCodecs; el módulo
    * se carga solo al pulsar) con ese audio y lo comparte/descarga. Copia el
@@ -388,6 +389,7 @@ export default function TrackShareButton(props: Props) {
       const { renderReel } = await import('@/lib/reel-renderer')
       const reel = await renderReel(data, {
         format: 'vertical',
+        durationSec: SHARE_SEGMENT_SEC,
         audio: segment,
         onProgress: (r) => setReelPct(Math.min(99, Math.round(r * 100))),
       })
@@ -451,6 +453,7 @@ export default function TrackShareButton(props: Props) {
       const { renderReel } = await import('@/lib/reel-renderer')
       const video = await renderReel(data, {
         format: 'horizontal',
+        durationSec: SHARE_SEGMENT_SEC,
         audio: segment,
         onProgress: (r) => setFbPct(Math.min(99, Math.round(r * 100))),
       })
