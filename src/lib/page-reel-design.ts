@@ -911,11 +911,15 @@ export type FortnightAnim = {
   debutTotal: number
   debut: string[]
 }
-export const FORTNIGHT_DUR = 28
+/** Cada escena dura ~7 s: da tiempo a leer el titular, los datos y el recuadro «WHAT YOU SEE». */
+export const FORTNIGHT_DUR = 60
+/** Las entradas del contenido (filas, barras, carátulas) van a este ritmo más lento que el titular. */
+const FN_PACE = 1.8
 
 type FnScene = 'intro' | 'played' | 'voted' | 'artists' | 'stars' | 'labels' | 'sound' | 'outro'
 type Box = { x: number; y: number; w: number; h: number }
-type FnLayout = { V: boolean; hx: number; kY: number; hY: number; hW: number; S: Box; foot: Box }
+/** `note`: recuadro «WHAT YOU SEE» que explica la escena. */
+type FnLayout = { V: boolean; hx: number; kY: number; hY: number; hW: number; S: Box; note?: Box; foot: Box }
 
 function fnScenes(d: FortnightAnim): { k: FnScene; a: number; b: number }[] {
   const all: [FnScene, number, boolean][] = [
@@ -988,7 +992,8 @@ function fnRanking(ctx: C, S: Box, rows: FortnightTrackAnim[], lt: number, t: nu
   const max = Math.max(1, ...rows.slice(0, n).map((r) => r.value))
   rows.slice(0, n).forEach((r, i) => {
     const y = S.y + i * (rh + gap)
-    const at = 0.35 + (n - 1 - i) * 0.2
+    // Cuenta atrás: entra el 5.º y el n.º 1 el último.
+    const at = 0.35 + (n - 1 - i) * 0.35
     slide(ctx, ph(lt, at, 0.4), 180, 0, () => {
       const top = i === 0
       box(ctx, S.x, y, S.w, rh, top ? YELLOW : '#fff', INK, 8, 4)
@@ -1118,12 +1123,72 @@ function fnCoverRow(ctx: C, imgs: (Img | null)[], x: number, y: number, w: numbe
   ctx.restore()
 }
 
+/** Qué enseña cada escena, en una frase llana (inglés, como el resto del vídeo). */
+function fnNoteText(k: FnScene, d: FortnightAnim, P: string): string {
+  const p = P.toLowerCase()
+  const delta = d.totals.tracks - d.totals.prev
+  switch (k) {
+    case 'intro':
+      return P === 'WEEK'
+        ? `Everything due out next week on Optimal Breaks (${d.range}): ${d.totals.tracks} tracks by ${d.totals.artists} artists on ${d.totals.labels} labels.`
+        : `Every breakbeat track added to Optimal Breaks from ${d.range}: ${d.totals.tracks} tracks by ${d.totals.artists} artists, ${d.totals.releases} releases on ${d.totals.labels} labels. That is ${Math.abs(delta)} ${delta >= 0 ? 'more' : 'fewer'} than the previous ${p}.`
+    case 'played':
+      return `The five tracks people played the most this ${p}. Only plays on optimalbreaks.com count: no Spotify, no Beatport, no other platform.`
+    case 'voted':
+      return `The five tracks our users saved the most with the «+» button. Every save is one vote.`
+    case 'artists':
+      return `The artists with the most new tracks this ${p}. The bar is the number of tracks; the note says in how many releases they came out.`
+    case 'stars':
+      return `Artists from our community Top 100 who released new music this ${p}. The red tag is their position on that board, under it the track.`
+    case 'labels':
+      return `The labels that put out the most tracks this ${p}. The longest bar is the busiest label.`
+    case 'sound':
+      return `The tempo of the ${p}: the average BPM of all its tracks, and below, how many tracks fall in each BPM range. Red marks the busiest range.${d.key ? ` The most common key was ${d.key}.` : ''}`
+    default:
+      return `A wall of this ${p}'s covers. Every track is in the article with its preview: play them all on Optimal Breaks.`
+  }
+}
+
+/** Recuadro «WHAT YOU SEE»: la frase entra a máquina, al ritmo de lectura. */
+function fnNote(ctx: C, L: FnLayout, lt: number, text: string) {
+  const N = L.note
+  if (!N) return
+  const fs = L.V ? 26 : 25
+  const lh = fs * 1.32
+  slide(ctx, ph(lt, 0.6, 0.45), 0, 40, () => {
+    box(ctx, N.x, N.y, N.w, N.h, '#fff', INK, 8, 4)
+    chip(ctx, N.x + 24, N.y - 18, 'WHAT YOU SEE', INK, YELLOW, L.V ? 20 : 18)
+    ctx.font = MONO(fs)
+    const lines = wrap(ctx, text, N.w - 56).slice(0, Math.max(1, Math.floor((N.h - 44) / lh)))
+    const total = lines.join(' ').length
+    let left = Math.floor(total * ph(lt, 0.9, Math.max(1.2, total * 0.022)))
+    ctx.fillStyle = INK
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    lines.forEach((ln, i) => {
+      if (left <= 0) return
+      ctx.fillText(ln.slice(0, left), N.x + 28, N.y + 34 + fs + i * lh)
+      left -= ln.length + 1
+    })
+  })
+}
+
 export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t: number) {
   const V = H > W
   const P = d.period ?? 'FORTNIGHT'
   const L: FnLayout = V
-    ? { V, hx: 70, kY: 180, hY: 340, hW: 940, S: { x: 70, y: 590, w: 940, h: 980 }, foot: { x: 70, y: 1650, w: 940, h: 18 } }
-    : { V, hx: 90, kY: 160, hY: 310, hW: 760, S: { x: 940, y: 130, w: 890, h: 850 }, foot: { x: 90, y: 880, w: 760, h: 16 } }
+    ? {
+        V, hx: 70, kY: 180, hY: 340, hW: 940,
+        S: { x: 70, y: 590, w: 940, h: 820 },
+        note: { x: 70, y: 1436, w: 940, h: 200 },
+        foot: { x: 70, y: 1660, w: 940, h: 18 },
+      }
+    : {
+        V, hx: 90, kY: 160, hY: 310, hW: 760,
+        S: { x: 940, y: 130, w: 890, h: 850 },
+        note: { x: 90, y: 610, w: 760, h: 230 },
+        foot: { x: 90, y: 880, w: 760, h: 16 },
+      }
   const S = L.S
   paper(ctx, W, H, '#ece2cf')
 
@@ -1162,6 +1227,8 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   const lt = t - sc.a
   const dur = sc.b - sc.a
   const last = si === scenes.length - 1
+  // Reloj del contenido: entra más despacio que el titular para que dé tiempo a leerlo.
+  const ct = lt / FN_PACE
 
   ctx.save()
   if (!last) {
@@ -1169,6 +1236,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     ctx.translate(-W * 0.35 * ex, 0)
     ctx.globalAlpha = 1 - ex
   }
+  fnNote(ctx, L, lt, fnNoteText(sc.k, d, P))
 
   if (sc.k === 'intro') {
     const sub = P === 'WEEK'
@@ -1177,7 +1245,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     fnHeader(ctx, L, lt, P === 'WEEK' ? 'BREAKBEAT NEXT WEEK' : `BREAKBEAT ${P}`, d.range.replace(' — ', ' —\n'), sub, RED)
     const gap = 22
     const cw = (S.w - gap) / 2
-    const ch = V ? 250 : 220
+    const ch = V ? 210 : 220
     const stats: [string, number, string][] = [
       ['TRACKS', d.totals.tracks, RED],
       ['ARTISTS', d.totals.artists, INK],
@@ -1188,23 +1256,23 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
       const x = S.x + (i % 2) * (cw + gap)
       const y = S.y + Math.floor(i / 2) * (ch + gap)
       const at = 0.3 + i * 0.18
-      pop(ctx, ph(lt, at, 0.45), x + cw / 2, y + ch / 2, () => {
+      pop(ctx, ph(ct, at, 0.45), x + cw / 2, y + ch / 2, () => {
         box(ctx, x, y, cw, ch, i === 0 ? YELLOW : '#fff', INK, 10, 5)
         ctx.fillStyle = col
         ctx.font = HEAD(ch * 0.5)
         ctx.textAlign = 'left'
         ctx.textBaseline = 'alphabetic'
-        ctx.fillText(String(Math.round(val * ease(ph(lt, at, 1.1)))), x + 28, y + ch * 0.62)
+        ctx.fillText(String(Math.round(val * ease(ph(ct, at, 1.1)))), x + 28, y + ch * 0.62)
         ctx.fillStyle = INK
         ctx.font = MONO(ch * 0.11)
         spaced(ctx, label, x + 30, y + ch * 0.84, 5)
       }, (hash(i, 5) - 0.5) * 0.4)
     })
-    const ry = S.y + ch * 2 + gap + 50
-    const cs = V ? 200 : 170
-    slide(ctx, ph(lt, 1.2, 0.5), 0, 80, () => {
-      fnCoverRow(ctx, d.covers, S.x, ry, S.w, cs, 120, t)
-      fnCoverRow(ctx, [...d.covers].reverse(), S.x, ry + cs + 22, S.w, cs, -120, t)
+    const ry = S.y + ch * 2 + gap + 44
+    const cs = V ? 150 : 170
+    slide(ctx, ph(ct, 1.2, 0.5), 0, 80, () => {
+      fnCoverRow(ctx, d.covers, S.x, ry, S.w, cs, 70, t)
+      fnCoverRow(ctx, [...d.covers].reverse(), S.x, ry + cs + 22, S.w, cs, -70, t)
     })
   } else if (sc.k === 'played' || sc.k === 'voted') {
     const rows = sc.k === 'played' ? d.played : d.voted
@@ -1217,28 +1285,31 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
       `«${r0.title}» · ${r0.value} ${unit}`,
       sc.k === 'played' ? RED : UV,
     )
-    fnRanking(ctx, S, rows, lt, t, unit, sc.k === 'played' ? RED : UV)
+    fnRanking(ctx, S, rows, ct, t, unit, sc.k === 'played' ? RED : UV)
   } else if (sc.k === 'artists') {
     const a0 = d.artists[0]
     fnHeader(ctx, L, lt, 'WHO RELEASED THE MOST', `${a0.name} LEADS`, `${a0.tracks} TRACKS IN ${a0.releases} RELEASE${a0.releases === 1 ? '' : 'S'}`, INK)
-    fnBars(ctx, S, d.artists.map((a) => ({ name: a.name, value: a.tracks, note: `${a.tracks} TRACKS · ${a.releases} REL.` })), lt, t)
+    fnBars(ctx, S, d.artists.map((a) => ({ name: a.name, value: a.tracks, note: `${a.tracks} TRACKS · ${a.releases} REL.` })), ct, t)
   } else if (sc.k === 'stars') {
     const s0 = d.stars[0]
     fnHeader(ctx, L, lt, 'TOP 100 STARS · NEW MUSIC', `${d.stars.length} TOP 100 STARS DROPPED`, `#${s0.rank} ${s0.name.toUpperCase()} WITH «${s0.track}»`, ACID)
     const cols = 3
     const gap = 20
-    const cw = (S.w - gap * (cols - 1)) / cols
-    const cellH = cw + (V ? 130 : 110)
+    const extra = V ? 130 : 110
+    // Dos filas siempre dentro de S (en vertical S deja sitio al recuadro de abajo).
+    const cw = Math.min((S.w - gap * (cols - 1)) / cols, (S.h - gap - extra * 2) / 2)
+    const cellH = cw + extra
+    const x0 = S.x + (S.w - (cw * cols + gap * (cols - 1))) / 2
     d.stars.slice(0, 6).forEach((s, i) => {
-      const x = S.x + (i % cols) * (cw + gap)
+      const x = x0 + (i % cols) * (cw + gap)
       const y = S.y + Math.floor(i / cols) * (cellH + gap)
-      pop(ctx, ph(lt, 0.3 + i * 0.16, 0.45), x + cw / 2, y + cw / 2, () => {
+      pop(ctx, ph(ct, 0.3 + i * 0.3, 0.45), x + cw / 2, y + cw / 2, () => {
         box(ctx, x, y, cw, cellH, '#fff', INK, 8, 4)
         ctx.save()
         ctx.beginPath()
         ctx.rect(x + 4, y + 4, cw - 8, cw - 8)
         ctx.clip()
-        const z = 1 + 0.06 * ph(lt, 0.3 + i * 0.16, 3)
+        const z = 1 + 0.06 * ph(ct, 0.3 + i * 0.3, 3)
         ctx.translate(x + cw / 2, y + cw / 2)
         ctx.scale(z, z)
         if (s.img) ctx.drawImage(s.img, -cw / 2, -cw / 2, cw, cw)
@@ -1268,18 +1339,18 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   } else if (sc.k === 'labels') {
     const l0 = d.labels[0]
     fnHeader(ctx, L, lt, `LABELS OF THE ${P}`, l0.name, `TOP LABEL · ${l0.tracks} TRACKS`, UV)
-    fnBars(ctx, S, d.labels.map((l) => ({ name: l.name, value: l.tracks, note: `${l.tracks} TRACKS` })), lt, t)
+    fnBars(ctx, S, d.labels.map((l) => ({ name: l.name, value: l.tracks, note: `${l.tracks} TRACKS` })), ct, t)
   } else if (sc.k === 'sound') {
     const top = [...d.bands].sort((a, b) => b.count - a.count)[0]
     fnHeader(ctx, L, lt, 'SOUND CHECK', `${top.band} BPM RULES`, [d.key ? `${d.key.toUpperCase()} IS THE TOP KEY` : '', d.prevBpm ? `PREVIOUS AVG ${Math.round(d.prevBpm)} BPM` : ''].filter(Boolean).join(' · '), RED)
     const bh = S.h * 0.36
-    pop(ctx, ph(lt, 0.3, 0.5), S.x + S.w / 2, S.y + bh / 2, () => {
+    pop(ctx, ph(ct, 0.3, 0.5), S.x + S.w / 2, S.y + bh / 2, () => {
       box(ctx, S.x, S.y, S.w, bh, YELLOW, INK, 12, 5)
       ctx.fillStyle = INK
       ctx.font = HEAD(bh * 0.55)
       ctx.textAlign = 'left'
       ctx.textBaseline = 'alphabetic'
-      const n = Math.round((d.bpm || 0) * ease(ph(lt, 0.3, 1)))
+      const n = Math.round((d.bpm || 0) * ease(ph(ct, 0.3, 1)))
       ctx.fillText(String(n), S.x + 36, S.y + bh * 0.7)
       ctx.font = MONO(bh * 0.1)
       spaced(ctx, 'AVERAGE BPM', S.x + 40, S.y + bh * 0.88, 5)
@@ -1290,9 +1361,9 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     const bands = d.bands
     const max = Math.max(1, ...bands.map((b) => b.count))
     const bw = S.w / bands.length
-    slide(ctx, ph(lt, 0.6, 0.4), 0, 60, () => box(ctx, S.x, hy, S.w, hh, '#fff', INK, 10, 4))
+    slide(ctx, ph(ct, 0.6, 0.4), 0, 60, () => box(ctx, S.x, hy, S.w, hh, '#fff', INK, 10, 4))
     bands.forEach((b, i) => {
-      const g = ease(ph(lt, 0.8 + i * 0.05, 0.6))
+      const g = ease(ph(ct, 0.8 + i * 0.08, 0.6))
       const h = (hh - 110) * (b.count / max) * g
       const x = S.x + i * bw + 8
       const isTop = b.band === top.band
@@ -1312,11 +1383,13 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     fnHeader(ctx, L, lt, `OUT THIS ${P}`, `${d.totals.releases} RELEASES`, `${d.totals.tracks} TRACKS · ${d.totals.artists} ARTISTS`, ACID)
     const cols = 4
     const gap = 14
-    const cs = (S.w - gap * (cols - 1)) / cols
+    // Tres filas + botón dentro de S (en vertical S deja sitio al recuadro de abajo).
+    const cs = Math.min((S.w - gap * (cols - 1)) / cols, (S.h - 150 - gap * 2) / 3)
+    const x0 = S.x + (S.w - (cs * cols + gap * (cols - 1))) / 2
     d.covers.filter(Boolean).slice(0, 12).forEach((im, i) => {
-      const x = S.x + (i % cols) * (cs + gap)
+      const x = x0 + (i % cols) * (cs + gap)
       const y = S.y + Math.floor(i / cols) * (cs + gap)
-      pop(ctx, ph(lt, 0.2 + i * 0.07, 0.4), x + cs / 2, y + cs / 2, () => {
+      pop(ctx, ph(ct, 0.2 + i * 0.1, 0.4), x + cs / 2, y + cs / 2, () => {
         ctx.save()
         const s = 1 + 0.03 * beatPulse(t + i * 0.1)
         ctx.translate(x + cs / 2, y + cs / 2)
@@ -1327,7 +1400,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
       }, (hash(i, 4) - 0.5) * 0.7)
     })
     const by = S.y + 3 * (cs + gap) + 30
-    pop(ctx, ph(lt, 1.2, 0.5), S.x + S.w / 2, by + 60, () => {
+    pop(ctx, ph(ct, 1.6, 0.5), S.x + S.w / 2, by + 60, () => {
       const s = 1 + 0.05 * beatPulse(t)
       ctx.save()
       ctx.translate(S.x + S.w / 2, by + 60)

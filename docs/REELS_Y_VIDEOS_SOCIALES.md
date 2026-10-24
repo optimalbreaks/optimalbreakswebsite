@@ -137,6 +137,7 @@ Botones **R** (vertical 1080×1920) y **F** (horizontal 1920×1080), solo admins
 - `/top100`: barra superior de la lista. Cuenta atrás del 10 al 2 con reproductor y el #1 al final.
 - `/charts`: cabecera de cada semana de New Releases. Estantería de portadas 3×3 que se van «reproduciendo», sello con el nº de temas.
 - `/blog/<slug>`: fila de compartir de arriba. Título con subrayado, funda con vinilo girando y reproductor que recorre los temas del álbum (sin álbum: extracto).
+- Artículos de quincena, trimestre y semana (los de `/topreleases`, con `digest`): vídeo de datos `animFortnight`, **60 s** (28 s hasta el 24 oct 2026, iba precipitado). Escenas de ~7 s: intro con cifras, más escuchados, más votados, quién sacó más, estrellas del Top 100, sellos, BPM y muro de portadas. Las entradas del contenido van a `FN_PACE` (1,8× más lentas que el titular; el ranking entra del 5 al 1). Cada escena lleva un recuadro **WHAT YOU SEE** que explica en una frase qué se ve (`fnNoteText`; p. ej. que solo cuentan las escuchas de optimalbreaks.com). En vertical ocupa el hueco bajo los datos (S de 820 px de alto); en horizontal, la columna izquierda bajo el titular.
 
 Piezas:
 
