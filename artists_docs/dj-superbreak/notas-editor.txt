@@ -1,8 +1,8 @@
 Alta editorial — DJ Superbreak (24 oct 2026)
 =============================================
 
-No había ficha. DJ de breakbeat de Málaga. No se pone «Producer»
-en la cabecera.
+No había ficha. DJ de breakbeat. No se pone «Producer» en la cabecera.
+No es el José Rodríguez de Heat Pro.
 
 No confundir
 ------------
@@ -18,10 +18,11 @@ Identidad
   Narciso pidió ese nombre y esa URL (24 oct 2026). La ficha nació
   un rato como jose-rodriguez: esa URL redirige.
 - real_name: José Javier Rodríguez Gómez. Sale en el SoundCloud
-  que pasó Narciso. No se escribe que los carteles digan José Rodríguez.
+  que pasó Narciso. No es el José Rodríguez de Heat Pro.
 - Cuentas: https://soundcloud.com/jose-javier-rodriguez-gomez-898505959
   y https://www.instagram.com/dj_superbreak
-- country ES. category andalusian. Málaga se queda en la bio.
+- country ES. category andalusian. Sin «de Málaga»: esa ciudad era
+  la del dossier de Heat Pro.
 - era vacía. La chapa «2000s-present» no corresponde. No se escribe
   en la ficha el dato que Narciso pasó en privado.
 - styles: Breakbeat, Breaks. Solo breakbeat. Electro, drum & bass,
@@ -29,14 +30,29 @@ Identidad
 - related_artists vacío. Tortu, Brainkiller, Yo Speed y Kuplay venían
   del informe.
 - Retrato: la foto de ese SoundCloud (cabina, traje de Superman).
+- Sesiones en /mixes: data/mixes/dj-superbreak-soundcloud.json.
+  Diez, de más de 15 minutos. Fuera, por ser temas: Solo Escucho
+  (3 min), Frequency Acid (3 min) y Haze (3 min).
 
-Lo que no es él (24 oct 2026, el artista se lo dice a Narciso)
+Lo que él pide en la ficha (24 oct 2026, 13:33)
+---------------------------------------------------
+Superhéroe de los ritmos rotos. Poco tiempo en la escena. Aun así,
+cartel con algunos de los mejores DJs nacionales, y citar los
+últimos festivales. No se escribe el móvil.
+
+Sus carteles (el nombre en el lineup, no el de José Rodríguez)
 --------------------------------------------------------------
-El primer texto mezcló a este DJ con otro José Rodríguez. No volver
-a poner: cabina desde 2000, scratching de competición, Marbella Dance,
-Pepsi DJ Competition, Gaultier Break Club, la trayectoria en Heat Pro,
-Wild Cuts, Cut2Cut, campeón de España, scratches para otros, BreakB
-y School Training.
-Los carteles de 2026 (Heat Closing, Bellota, RETRO Goats, Ritmika,
-Opening de Heat Pro) se quedan: no chocan con lo que él ha dicho.
-Lo que Narciso contó en privado no se escribe en la ficha.
+- 18 abr 2026. Cyber Bass, Sala Maruja Limón, Alhaurín de la Torre.
+  En el cartel: Superbreak.
+- 18 jul 2026. Coast Breakbeat, Sala Teranga, Torrox.
+  En el cartel: Super Break.
+- 10 oct 2026. Amazonica, Complejo Jarata, Montilla.
+  En el cartel: Superbreak. José Rodríguez va en la misma noche
+  y es otra persona.
+
+No es él
+--------
+José Rodríguez es quien lleva Heat Pro. No volver a colgarle
+Heat Closing, Bellota, RETRO Goats, Ritmika ni el Opening de Heat.
+Tampoco la cabina desde 2000, los concursos, el scratching de
+competición, BreakB ni School Training.
