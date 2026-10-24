@@ -37,6 +37,7 @@ import {
   copyShareLink,
   extractBeatportTrackId,
   parsePlayParam,
+  releaseBadge,
   storyFromSharePath,
   type TrackStoryMeta,
 } from '@/lib/share-track'
@@ -214,6 +215,7 @@ export default function TrackShareButton(props: Props) {
 
   /** Texto del post: GPT‑5.6 (`/api/admin/share-caption`) con la plantilla de respaldo. */
   function videoCaption(data: VideoData, platform: 'instagram' | 'facebook') {
+    const status = releaseBadge(data.releaseDate, data.year)
     return aiShareCaption({
       kind: 'track',
       platform,
@@ -228,6 +230,12 @@ export default function TrackShareButton(props: Props) {
         year: data.year,
         bpm: data.bpm,
         key: data.musicKey,
+        section: data.kicker,
+        releaseStatus: status
+          ? { soon: 'coming_soon', new: 'new_release', archive: 'archive_pick' }[status.tone]
+          : null,
+        daysSinceRelease: status?.days ?? null,
+        videoSticker: status ? `${status.word} · ${status.sub}` : null,
       },
     })
   }

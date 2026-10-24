@@ -551,7 +551,9 @@ export async function GET(request: NextRequest) {
     kind === 'vinyl'
       ? 'RETRO VINYL PICKS'
       : kind === 'featured'
-        ? 'NEW RELEASES'
+        ? (Number((row.release_date || '').slice(0, 4)) || year || 9999) < 2026
+          ? 'ARCHIVE PICKS'
+          : 'NEW RELEASES'
         : kind === 'beatport'
           ? 'BEATPORT TOP 10'
           : '40 BREAKS VITALES'

@@ -510,6 +510,49 @@ export function isAdvanceRelease(
   return d > today
 }
 
+/** Días desde el lanzamiento a partir de los cuales el tema deja de ser novedad (~5 meses). */
+const NEW_RELEASE_DAYS = 150
+
+/**
+ * Estado del tema para los vídeos R/F y su texto: por salir, novedad o archivo.
+ * `days`: días desde el lanzamiento (negativo = faltan); null con solo el año.
+ */
+export type ReleaseBadge = {
+  word: string
+  sub: string
+  tone: 'soon' | 'new' | 'archive'
+  days: number | null
+}
+
+/**
+ * Estado según la fecha de lanzamiento (calendario de Madrid, como los
+ * adelantos de /charts): por salir, novedad (≤ 150 días) o de archivo.
+ * Con solo el año, únicamente un año anterior al actual es «de archivo».
+ */
+export function releaseBadge(
+  iso: string | null | undefined,
+  year?: number | null,
+  today = madridCalendarDate(),
+): ReleaseBadge | null {
+  const d = (iso || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const days = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${d}T00:00:00Z`)) / 86_400_000)
+    if (!Number.isFinite(days)) return null
+    if (days < 0) {
+      const left = -days
+      return { word: 'COMING SOON', sub: left === 1 ? 'OUT TOMORROW' : `OUT IN ${left} DAYS`, tone: 'soon', days }
+    }
+    if (days <= NEW_RELEASE_DAYS) {
+      return { word: 'NEW RELEASE', sub: days === 0 ? 'OUT TODAY' : 'OUT NOW', tone: 'new', days }
+    }
+    return { word: 'ARCHIVE PICK', sub: `FROM ${d.slice(0, 4)}`, tone: 'archive', days }
+  }
+  if (year && year > 1900 && year < Number(today.slice(0, 4))) {
+    return { word: 'ARCHIVE PICK', sub: `FROM ${year}`, tone: 'archive', days: null }
+  }
+  return null
+}
+
 /** Día del adelanto para el banner, p. ej. «12 oct 2026». */
 export function formatAdvanceReleaseDay(releaseDate: string, lang: 'en' | 'es'): string {
   const d = releaseDate.trim().slice(0, 10)
@@ -682,10 +725,11 @@ function captionDate(iso: string, lang: Locale): { text: string; future: boolean
 }
 
 /**
- * «🔥 Compartimos este temazo: «Título» de Artista, del sello X, lanzado el 12 de
- * septiembre de 2026.» + BPM/tonalidad + dónde buscarlo + hashtags.
- * `platform` decide el enlace: Instagram (no clicable en reels) → «enlace en la bio»;
- * Facebook → la URL del tema.
+ * Plantilla (sin IA) del texto del vídeo de un tema, en párrafos cortos:
+ * gancho según el estado (por salir / novedad / archivo, mismo cálculo que el
+ * adhesivo del vídeo), datos, por qué escucharlo, línea para DJs, pregunta,
+ * enlace y 5 hashtags. `platform` decide el enlace: Instagram (no clicable en
+ * reels) → «enlace en la bio»; Facebook → la URL del tema.
  */
 export function buildVideoCaption(
   d: VideoCaptionData,
@@ -696,30 +740,103 @@ export function buildVideoCaption(
   const artists = d.artists.trim()
   const label = (d.label || '').trim()
   const date = d.releaseDate ? captionDate(d.releaseDate, opts.lang) : null
+  const status = releaseBadge(d.releaseDate, d.year)
+  const tone = status?.tone ?? null
+  const q = es ? `«${title}»` : `“${title}”`
+  const who = artists ? (es ? ` de ${artists}` : ` by ${artists}`) : ''
 
-  let first = es
-    ? `🔥 Compartimos este temazo: «${title}»${artists ? ` de ${artists}` : ''}`
-    : `🔥 Sharing this banger: “${title}”${artists ? ` by ${artists}` : ''}`
-  if (label) first += es ? `, del sello ${label}` : `, on ${label}`
-  if (date) first += es ? `, ${date.future ? 'sale el' : 'lanzado el'} ${date.text}` : `, ${date.future ? 'out on' : 'released'} ${date.text}`
-  else if (d.year) first += es ? ` (${d.year})` : ` (${d.year})`
-  first += '.'
+  const hook =
+    tone === 'soon'
+      ? es
+        ? `⏳ Aún no ha salido y ya lo tenemos en el radar: ${q}${who}.`
+        : `⏳ Not out yet and already on our radar: ${q}${who}.`
+      : tone === 'new'
+        ? es
+          ? `🔥 Recién salido del horno: ${q}${who}.`
+          : `🔥 Fresh out: ${q}${who}.`
+        : tone === 'archive'
+          ? es
+            ? `📼 Rescatado del archivo: ${q}${who}.`
+            : `📼 Pulled from the archive: ${q}${who}.`
+          : es
+            ? `🔥 Temazo para tu próxima sesión: ${q}${who}.`
+            : `🔥 A banger for your next set: ${q}${who}.`
+
+  let facts = ''
+  if (date) {
+    facts = es
+      ? `${date.future ? 'Sale el' : 'Salió el'} ${date.text}${label ? ` en ${label}` : ''}.`
+      : `${date.future ? 'Out on' : 'Released on'} ${date.text}${label ? ` via ${label}` : ''}.`
+  } else if (d.year) {
+    facts = es ? `Del año ${d.year}${label ? `, en ${label}` : ''}.` : `From ${d.year}${label ? `, on ${label}` : ''}.`
+  } else if (label) {
+    facts = es ? `En ${label}.` : `On ${label}.`
+  }
+  if (status?.tone === 'soon' && status.days != null) {
+    const left = -status.days
+    facts += es
+      ? left === 1 ? ' Mañana ya está en la calle.' : ` Quedan ${left} días.`
+      : left === 1 ? ' It drops tomorrow.' : ` ${left} days to go.`
+  } else if (status?.tone === 'new' && status.days != null) {
+    const n = status.days
+    facts += es
+      ? n <= 1 ? ' Acaba de salir.' : n <= 13 ? ` Lleva ${n} días en la calle.` : ` Lleva ${Math.round(n / 7)} semanas en la calle.`
+      : n <= 1 ? ' Just landed.' : n <= 13 ? ` Out for ${n} days.` : ` Out for ${Math.round(n / 7)} weeks.`
+  }
+
+  const why =
+    tone === 'soon'
+      ? es
+        ? 'Apunta la fecha: el día que salga lo tendrás en Optimal Breaks con su preview y los enlaces a las tiendas y plataformas. Guarda este reel para que no se te pase.'
+        : 'Mark the date: the day it drops you will find it on Optimal Breaks with its preview and links to stores and streaming. Save this reel so you do not miss it.'
+      : tone === 'new'
+        ? es
+          ? 'Ya está en nuestras New Releases, la selección semanal de breakbeat que hacemos tema a tema. Escúchalo, guárdalo en Mis Tracks y súmale un voto en el Top 100 de la comunidad.'
+          : 'It is already in our New Releases, the weekly breakbeat selection we curate track by track. Give it a listen, save it to My Tracks and push it up the community Top 100.'
+        : tone === 'archive'
+          ? es
+            ? 'No todo lo bueno es nuevo. Lo sacamos del archivo porque sigue funcionando en pista como el primer día: breaks de los que no caducan.'
+            : 'Not everything good is new. We pulled it from the archive because it still works on the floor like day one: breaks that never expire.'
+          : es
+            ? 'Seleccionado por Optimal Breaks, la web del breakbeat: escúchalo, guárdalo y compártelo con quien tenga que oírlo.'
+            : 'Picked by Optimal Breaks, the home of breakbeat: listen, save it and send it to whoever needs to hear it.'
 
   const tech = [d.bpm ? `${Math.round(d.bpm)} BPM` : '', (d.musicKey || '').trim()].filter(Boolean).join(' · ')
+  const djs = tech ? (es ? `🎛️ Para DJs: ${tech}.` : `🎛️ For DJs: ${tech}.`) : ''
+
+  const ask =
+    tone === 'soon'
+      ? es
+        ? '¿Lo meterás en tu set en cuanto salga? Cuéntanoslo 👇'
+        : 'Will it go straight into your set? Tell us 👇'
+      : tone === 'archive'
+        ? es
+          ? '¿Lo pinchabas o lo bailabas en su día? Te leemos 👇'
+          : 'Did you play it or dance to it back then? Tell us 👇'
+        : es
+          ? '¿Qué te parece? Etiqueta a quien tiene que escucharlo 👇'
+          : 'What do you think? Tag someone who needs to hear it 👇'
+
   const listen =
     opts.platform === 'instagram'
       ? es
-        ? '🎧 Busca el tema en Optimal Breaks: enlace en la bio.'
-        : '🎧 Search the track on Optimal Breaks: link in bio.'
+        ? '🎧 Escúchalo en Optimal Breaks: enlace en la bio.'
+        : '🎧 Listen on Optimal Breaks: link in bio.'
       : es
-        ? `🎧 Busca el tema en Optimal Breaks: ${opts.url}`
-        : `🎧 Search the track on Optimal Breaks: ${opts.url}`
+        ? `🎧 Escúchalo en Optimal Breaks: ${opts.url}`
+        : `🎧 Listen on Optimal Breaks: ${opts.url}`
 
   // Instagram: máx. 5 hashtags y nunca de artistas ni sellos (los etiqueta el admin).
-  const tags = ['#breakbeat', '#breaks', '#newmusic', '#electronicmusic', '#dj']
+  const tags =
+    tone === 'soon'
+      ? ['#breakbeat', '#breaks', '#comingsoon', '#newmusic', '#dj']
+      : tone === 'archive'
+        ? ['#breakbeat', '#breaks', '#throwback', '#electronicmusic', '#dj']
+        : ['#breakbeat', '#breaks', '#newmusic', '#newrelease', '#dj']
 
-  return [first, tech ? `🎛️ ${tech}` : '', '', listen, '', tags.join(' ')]
-    .filter((l, i, arr) => !(l === '' && arr[i - 1] === ''))
+  return [hook, facts.trim(), '', why, djs ? '' : null, djs, '', ask, '', listen, '', tags.join(' ')]
+    .filter((l): l is string => l != null)
+    .filter((l, i, arr) => !(l === '' && (i === 0 || arr[i - 1] === '')))
     .join('\n')
     .trim()
 }

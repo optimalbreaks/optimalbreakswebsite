@@ -22,6 +22,7 @@
 
 import { bakeSetBackground, dominantColor, drawSetFrame, type SetAssets } from './set-reel-design'
 import { segmentChannels, videoHasAudibleAudio, type ShareAudioSegment } from './share-audio'
+import { madridCalendarDate, releaseBadge, type ReleaseBadge } from './share-track'
 
 export type ReelData = {
   title: string
@@ -35,6 +36,8 @@ export type ReelData = {
   bpm?: number
   /** Fecha de release (YYYY-MM-DD): sello de tinta sobre la funda + cinta superior. */
   releaseDate?: string | null
+  /** Año del tema cuando no hay fecha completa (vinilos): basta para «ARCHIVE PICK». */
+  year?: number | null
   /** Etiqueta del sello de fecha en lugar de RELEASED / OUT ON (sesiones: «LIVE ON»). */
   stampLabel?: string | null
   /**
@@ -225,6 +228,9 @@ type Layout = {
   /** Sello final «LISTEN NOW» y la URL debajo. */
   STAMP_Y: number
   URL_Y: number
+  /** Centro del adhesivo de estado (COMING SOON / NEW RELEASE / ARCHIVE PICK), al pie de la funda. */
+  BADGE_X: number
+  BADGE_Y: number
 }
 
 /**
@@ -265,6 +271,8 @@ const VERTICAL: Layout = {
   LINK_BIG: 'LINK IN BIO',
   STAMP_Y: 1215,
   URL_Y: 1335,
+  BADGE_X: 560,
+  BADGE_Y: 970,
 }
 
 /**
@@ -302,6 +310,8 @@ const HORIZONTAL: Layout = {
   LINK_BIG: 'LINK IN POST',
   STAMP_Y: 540,
   URL_Y: 650,
+  BADGE_X: 590,
+  BADGE_Y: 802,
 }
 
 let L: Layout = VERTICAL
@@ -316,11 +326,42 @@ export function releaseStamp(iso: string | null | undefined): { label: string; d
   const mo = Number(m[2])
   const d = Number(m[3])
   if (y < 1950 || mo < 1 || mo > 12 || d < 1 || d > 31) return null
-  const today = new Date().toISOString().slice(0, 10)
   return {
-    label: m[0] > today ? 'OUT ON' : 'RELEASED',
+    label: m[0] > madridCalendarDate() ? 'OUT ON' : 'RELEASED',
     date: `${d} ${MONTHS_EN[mo - 1]} ${y}`,
   }
+}
+
+/** Adhesivo de estado: cartela inclinada con palabra grande y línea de máquina debajo. */
+function drawReleaseBadge(ctx: CanvasRenderingContext2D, badge: ReleaseBadge, p: number) {
+  const [bg, fg, shadow] =
+    badge.tone === 'soon' ? [YELLOW, INK, RED] : badge.tone === 'new' ? [RED, PAPER, INK] : [INK, YELLOW, RED]
+  ctx.save()
+  ctx.font = font(HEAD, 56)
+  const ww = ctx.measureText(badge.word).width
+  ctx.font = font(MONO, 26, 700)
+  const sw = ctx.measureText(badge.sub).width + badge.sub.length * 5
+  const w = Math.max(ww, sw) + 80
+  const h = 124
+  const s = 1 + 0.8 * (1 - easeOut(p))
+  ctx.globalAlpha = Math.min(1, p * 1.6)
+  ctx.scale(s, s)
+  ctx.fillStyle = shadow
+  ctx.fillRect(-w / 2 + 12, -h / 2 + 12, w, h)
+  ctx.fillStyle = bg
+  ctx.fillRect(-w / 2, -h / 2, w, h)
+  ctx.strokeStyle = fg
+  ctx.lineWidth = 4
+  ctx.strokeRect(-w / 2 + 9, -h / 2 + 9, w - 18, h - 18)
+  ctx.fillStyle = fg
+  ctx.textBaseline = 'middle'
+  ctx.textAlign = 'center'
+  ctx.font = font(HEAD, 56)
+  ctx.fillText(badge.word, 0, -14)
+  ctx.textAlign = 'left' // spacedText coloca cada letra desde su borde izquierdo
+  ctx.font = font(MONO, 26, 700)
+  spacedText(ctx, badge.sub, 0, 34, 5)
+  ctx.restore()
 }
 
 /** Sello de tinta roja (fecha de release) con bordes dobles y tinta irregular. */
@@ -540,6 +581,7 @@ export function drawReelFrame(
   const endT = durationSec - 3.6
   const baseStamp = releaseStamp(data.releaseDate)
   const stamp = baseStamp && data.stampLabel ? { ...baseStamp, label: data.stampLabel } : baseStamp
+  const badge = releaseBadge(data.releaseDate, data.year)
   const {
     SAFE_SCALE,
     SAFE_SHIFT_Y,
@@ -662,9 +704,15 @@ export function drawReelFrame(
     ctx,
     TICKER_TOP_Y,
     L.TICKER_TOP_ROT,
-    stamp
-      ? `OPTIMAL BREAKS  •  ${data.kicker}  •  ${stamp.label} ${stamp.date}  •  BREAKBEAT`
-      : `OPTIMAL BREAKS  •  ${data.kicker}  •  BREAKBEAT`,
+    [
+      'OPTIMAL BREAKS',
+      data.kicker,
+      badge && badge.word,
+      stamp && `${stamp.label} ${stamp.date}`,
+      'BREAKBEAT',
+    ]
+      .filter(Boolean)
+      .join('  •  '),
     YELLOW,
     INK,
     t * 160,
@@ -787,6 +835,20 @@ export function drawReelFrame(
     if (armP > 0) {
       const ang = 0.9 - 0.62 * easeOut(armP) + (pulsing ? Math.sin(t * 2.4) * 0.008 : 0)
       drawTonearm(ctx, SCX + L.ARM_DX, SCY + L.ARM_DY + dropY, ang)
+    }
+
+    // Adhesivo de estado al pie de la funda (por salir / novedad / archivo)
+    if (badge) {
+      const bp = prog(t, 2.45, 2.7)
+      if (bp > 0) {
+        const s = 1 + 0.025 * kick
+        ctx.save()
+        ctx.translate(L.BADGE_X, L.BADGE_Y + dropY)
+        ctx.rotate(-0.06)
+        ctx.scale(s, s)
+        drawReleaseBadge(ctx, badge, bp)
+        ctx.restore()
+      }
     }
   }
 
