@@ -6,11 +6,15 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { staticPageMetadata } from '@/lib/seo'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import InstallPwaButton from '@/components/InstallPwaButton'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/install', 'install')
+  return staticPageMetadata(lang, '/install', 'install', {
+    ogImagePath: sectionOgImagePath('install', lang),
+    ogImageAlt: sectionOgImageAlt('install', lang),
+  })
 }
 
 const mono = { fontFamily: "'Courier Prime', monospace" }

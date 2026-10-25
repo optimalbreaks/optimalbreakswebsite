@@ -23,6 +23,7 @@ export const SECTION_OG_KEYS = [
   'charts',
   'top100',
   'about',
+  'install',
 ] as const
 
 export type SectionOgKey = (typeof SECTION_OG_KEYS)[number]
@@ -42,6 +43,7 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   charts: 'charts-catalog.png',
   top100: 'top100.png',
   about: 'about-og-alternate.png',
+  install: 'install.png',
 }
 
 /**
@@ -56,6 +58,7 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
 const SECTION_OG_LANG_OVERRIDES: Partial<Record<SectionOgKey, true>> = {
   charts: true,
   top100: true,
+  install: true,
 }
 
 /** Dimensiones reales del PNG servido (Meta og:image width/height). */
@@ -69,6 +72,7 @@ export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: nu
   charts: { width: 1200, height: 630 },
   top100: { width: 1200, height: 630 },
   about: { width: 1764, height: 1264 },
+  install: { width: 1200, height: 630 },
 }
 
 const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
@@ -107,6 +111,10 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
   about: {
     es: 'Optimal Breaks — Sobre el proyecto',
     en: 'Optimal Breaks — About the project',
+  },
+  install: {
+    es: 'Optimal Breaks — Instala la app en tu móvil: Android e iPhone',
+    en: 'Optimal Breaks — Install the app on your phone: Android and iPhone',
   },
 }
 

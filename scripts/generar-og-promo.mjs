@@ -46,6 +46,8 @@ const FB_OG_HEIGHT = 1000
 /** Secciones que deben salir en ratio OG clásico de Meta (1200×630 ≈ 1.91:1). */
 const SECTION_OUTPUT_SIZE = {
   top100: { width: 1200, height: 630, cropBias: 0.5, framePadding: 0.03 },
+  // contain: el arte entero sobre crema (con cover se cortaban la etiqueta de arriba y la placa).
+  install: { width: 1200, height: 630, framePadding: 0.02, contain: true },
 }
 const MAX_PROMPT_LEN = 4000
 
@@ -104,6 +106,17 @@ async function toFacebookOgPng(buf, output = sectionOutputSize('charts')) {
   const targetW = output.width
   const targetH = output.height
   const sharp = await getSharp()
+  if (output.contain) {
+    const pad = output.framePadding ?? 0
+    const inner = await sharp(buf)
+      .resize(Math.floor(targetW * (1 - 2 * pad)), Math.floor(targetH * (1 - 2 * pad)), { fit: 'inside' })
+      .png()
+      .toBuffer()
+    return sharp({ create: { width: targetW, height: targetH, channels: 3, background: '#e8dcc8' } })
+      .composite([{ input: inner, gravity: 'centre' }])
+      .png({ palette: true, quality: 85, compressionLevel: 9 })
+      .toBuffer()
+  }
   const rawBias = output.cropBias ?? process.env.OG_PROMO_CROP_BIAS?.trim()
   const bias = rawBias !== undefined && rawBias !== '' ? Number(rawBias) : 0.41
   const t = Number.isFinite(bias) ? Math.min(1, Math.max(0, bias)) : 0.41
@@ -243,6 +256,26 @@ SAFE REGION: keep glyphs and key icons within 8%–92% W and 8%–92% H. The out
 // ============================================================
 
 const SECTIONS = {
+  install: {
+    es: {
+      kicker: 'PWA · ANDROID · IPHONE',
+      mainHeadline: 'INSTALA LA APP',
+      sub: 'EN TU MÓVIL EN UN MINUTO',
+      plaqueTop: 'SIN TIENDA · GRATIS · PANTALLA COMPLETA',
+      plaqueBottom: 'LA MÚSICA SIGUE CON EL MÓVIL BLOQUEADO',
+      motifs:
+        'two generic smartphone silhouettes drawn as bold black flat graphics, slightly tilted toward each other (no brand logos, no Apple or Android marks, no notch details beyond a simple pill), each screen showing a home-screen grid of grey rounded squares with ONE red rounded-square app icon highlighted by a hand-drawn red circle, a big bold downward arrow ⬇ pointing into one phone, a hand-drawn pointing finger tapping the red icon, a rubber stamp shape labelled "INSTALL" in red ink slightly rotated, a small vinyl record peeking behind the phones, halftone dot bursts, scattered ink splatters',
+    },
+    en: {
+      kicker: 'PWA · ANDROID · IPHONE',
+      mainHeadline: 'INSTALL THE APP',
+      sub: 'ON YOUR PHONE IN ONE MINUTE',
+      plaqueTop: 'NO STORE · FREE · FULL SCREEN',
+      plaqueBottom: 'THE MUSIC KEEPS PLAYING WITH THE SCREEN LOCKED',
+      motifs:
+        'two generic smartphone silhouettes drawn as bold black flat graphics, slightly tilted toward each other (no brand logos, no Apple or Android marks, no notch details beyond a simple pill), each screen showing a home-screen grid of grey rounded squares with ONE red rounded-square app icon highlighted by a hand-drawn red circle, a big bold downward arrow ⬇ pointing into one phone, a hand-drawn pointing finger tapping the red icon, a rubber stamp shape labelled "INSTALL" in red ink slightly rotated, a small vinyl record peeking behind the phones, halftone dot bursts, scattered ink splatters',
+    },
+  },
   top100: {
     es: {
       kicker: 'ALL-TIME · COMUNIDAD · SIN FILTROS',
