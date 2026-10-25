@@ -963,6 +963,8 @@ The shared `<audio>` elements and the single `AudioContext` live at **module sco
 
 **Locked iOS path (works — do not touch).** On iPhone/iPad a track change is: network URL as `src` (never `blob:`), assigned with no `pause()` and no `load()` before it, `play()` in the same tick, next track warmed up by the hidden muted `<audio preload="auto">` from `play().then()`, no `src` re-assign on `visibilitychange`. Android fixes go behind `blobPrefetchSupported()` / `!isIosDevice()`, never in the shared path. Any change to `loadAndPlayPreviewAt`, `preloadNextPreview` or the preview `<audio>` listeners that reaches iOS needs QA **I14** (`docs/QA_REPRODUCTOR.md`) on a real iPhone. Before testing, swipe the PWA away and reopen it: a live PWA keeps the bundle it started with.
 
+**Temporary player diagnostics (25 Oct 2026, all devices).** To find where a list dies in the background on specific phones (Samsung S23 + Chrome tab), every preview-queue step is logged anonymously by `src/lib/player-diag.ts` → `sendBeacon` → `/api/player-diag` → table `player_diagnostics` (migration 096, service role only, 30-day pg_cron retention). No account, no stored IP, no cookies; random per-tab `session_id`. Disclosed in `/privacy` §7. Remove it all (calls, lib, route, privacy sentence, table + cron job) once the case is closed.
+
 **Do not** use the blob path on iOS / Safari (see the platform split above), do not go back to the hidden preload `<audio>` on Android (mobile Chrome downgrades `preload=auto` to `metadata`), do not start the Android prefetch from `play().then()` (it competed with the current track's initial buffering), and do not reintroduce `pause()` before the src change on iOS.
 
 ### Range-aware audio proxy (`src/lib/audio-upstream.ts`)

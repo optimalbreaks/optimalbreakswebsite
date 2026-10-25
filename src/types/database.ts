@@ -435,6 +435,12 @@ export interface Database {
         Update: never
         Relationships: DbRelationship[]
       }
+      player_diagnostics: {
+        Row: PlayerDiagnosticRow
+        Insert: Omit<PlayerDiagnosticRow, 'id' | 'received_at'>
+        Update: never
+        Relationships: DbRelationship[]
+      }
       admin_chat_threads: {
         Row: AdminChatThreadRow
         Insert: Omit<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'>
@@ -633,6 +639,21 @@ export interface TrackPlayEventRow extends Record<string, unknown> {
   canonical_key: string
   user_id: string | null
   created_at: string
+}
+
+/** Diagnóstico temporal del reproductor (migración 096). Anónimo. */
+export interface PlayerDiagnosticRow extends Record<string, unknown> {
+  id: number
+  received_at: string
+  session_id: string
+  seq: number
+  client_ts: string
+  event: string
+  platform: 'ios' | 'android' | 'desktop' | 'other'
+  standalone: boolean
+  hidden: boolean
+  ua: string | null
+  data: Record<string, string | number | boolean | null>
 }
 
 export interface FavoriteEventRow extends Record<string, unknown> {

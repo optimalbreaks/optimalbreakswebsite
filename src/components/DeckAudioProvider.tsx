@@ -37,6 +37,7 @@ import {
   setPrefetchReadyListener,
   takePrefetchedPreview,
 } from '@/lib/audio-unlock'
+import { audioDiag, playerDiag } from '@/lib/player-diag'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
@@ -1368,6 +1369,8 @@ export function DeckAudioProvider({
   // pista (⏭, error → avance). El listener de `pause` lo consume y así ese
   // `pause` no se toma por «otra app nos ha quitado el altavoz».
   const previewSwitchingRef = useRef(false)
+  // Diagnóstico temporal (lib/player-diag): cuándo se pidió la pista actual.
+  const previewLoadAtRef = useRef(0)
   // Watchdog de arranque de pista: si tras el auto-avance el audio no
   // empieza a sonar (red parada en background), reintenta unas veces y,
   // si no hay manera, salta a la siguiente.
@@ -1954,6 +1957,7 @@ export function DeckAudioProvider({
     }
     cancelAnimationFrame(previewRafRef.current)
     const a = previewAudioRef.current
+    if (a && a.getAttribute('src')) playerDiag('stop', { idx: previewIndexRef.current, n: previewQueueRef.current.length })
     if (a) {
       a.pause()
       const attr = a.getAttribute('src')
@@ -2038,6 +2042,7 @@ export function DeckAudioProvider({
     if (typeof document !== 'undefined' && document.hidden) {
       while (next < q.length && previewItemSoundCloudUrl(q[next])) next += 1
     }
+    playerDiag('advance', { from: cur, to: next, n: q.length, skipped: next - cur - 1 })
     if (next >= q.length) {
       stopPreviewInternal()
       return
@@ -2105,8 +2110,15 @@ export function DeckAudioProvider({
         const a = previewAudioRef.current
         if (!a || !a.getAttribute('src')) return
         if (alreadyPlaying(a)) return // ya suena
+        playerDiag('watchdog', {
+          idx,
+          attempt: previewStartAttemptsRef.current,
+          ms: Date.now() - previewLoadAtRef.current,
+          ...audioDiag(a),
+        })
         if (a.ended) { advanceFromCurrentTrack(); return }
         if (previewStartAttemptsRef.current >= 3) {
+          playerDiag('watchdog_give_up', { idx, skip: !!a.error })
           // Tras varios intentos sin arrancar hay que distinguir la causa:
           //  - `a.error` presente → la URL/medios están caídos (proxy muerto,
           //    formato no soportado): saltamos a la siguiente pista.
@@ -2140,6 +2152,7 @@ export function DeckAudioProvider({
     previewSystemPausedRef.current = false
     previewInterruptedRef.current = false
     previewStartAttemptsRef.current = 0
+    previewLoadAtRef.current = Date.now()
     if (previewStartWatchdogRef.current) {
       clearTimeout(previewStartWatchdogRef.current)
       previewStartWatchdogRef.current = null
@@ -2147,6 +2160,7 @@ export function DeckAudioProvider({
 
     const scUrl = previewItemSoundCloudUrl(queue[idx])
     if (scUrl) {
+      playerDiag('load_sc', { idx, n: queue.length })
       previewSoundCloudRef.current = true
       if (!previewAudioRef.current) previewAudioRef.current = getSharedPreviewAudio()
       const audio = previewAudioRef.current
@@ -2225,14 +2239,22 @@ export function DeckAudioProvider({
       // página. Por eso usamos el atributo directo.
       const hasRealSrc = () => !!a.getAttribute('src')
       a.addEventListener('ended', () => {
+        playerDiag('ended', { idx: previewIndexRef.current, ...audioDiag(a) })
         if (hasRealSrc()) advanceFromCurrentTrack()
       })
+      for (const ev of ['waiting', 'stalled', 'suspend', 'emptied', 'abort'] as const) {
+        a.addEventListener(ev, () => {
+          if (!hasRealSrc()) return
+          playerDiag(ev, { idx: previewIndexRef.current, ms: Date.now() - previewLoadAtRef.current, ...audioDiag(a) })
+        })
+      }
       // Si la URL falla (proxy caído, stream cortado, formato no
       // soportado tras un sleep largo del SO), antes el reproductor se
       // quedaba pillado a 0:00 sin avanzar nunca. Ahora salta al
       // siguiente como si hubiera terminado.
       a.addEventListener('error', () => {
         if (!hasRealSrc()) return
+        playerDiag('error', { idx: previewIndexRef.current, ...audioDiag(a) })
         // Sonaba desde el blob del prefetch y no se pudo decodificar
         // (respuesta rara del proxy): una vuelta a la URL de red antes
         // de dar la pista por perdida.
@@ -2290,6 +2312,13 @@ export function DeckAudioProvider({
       // el usuario lo pidiera, lo marcamos para que el keeper/visibility
       // puedan reanudar la lista.
       a.addEventListener('pause', () => {
+        playerDiag('pause', {
+          idx: previewIndexRef.current,
+          switching: previewSwitchingRef.current,
+          user: previewUserPausedRef.current,
+          hiddenMs: previewHiddenAtRef.current > 0 ? Date.now() - previewHiddenAtRef.current : 0,
+          ...audioDiag(a),
+        })
         // Pausa nuestra, justo antes de cambiar de pista: no es del SO.
         if (previewSwitchingRef.current) {
           previewSwitchingRef.current = false
@@ -2305,6 +2334,7 @@ export function DeckAudioProvider({
         if (hiddenAt === 0) previewHiddenAtRef.current = Date.now()
 
         const markInterrupted = () => {
+          playerDiag('interrupted', { idx: previewIndexRef.current, hiddenMs: hiddenForMs })
           previewInterruptedRef.current = true
           try {
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
@@ -2358,6 +2388,12 @@ export function DeckAudioProvider({
         refreshNowPlaying()
       })
       a.addEventListener('playing', () => {
+        playerDiag('playing', {
+          idx: previewIndexRef.current,
+          ms: Date.now() - previewLoadAtRef.current,
+          blob: (a.getAttribute('src') || '').startsWith('blob:'),
+          t: a.currentTime,
+        })
         markPlayingState()
         refreshNowPlaying()
       })
@@ -2376,6 +2412,7 @@ export function DeckAudioProvider({
         const blobUrl = takePrefetchedPreview(src)
         if (!blobUrl) return
         const wasPlaying = !a.paused
+        playerDiag('blob_swap', { idx: previewIndexRef.current, wasPlaying, ms: Date.now() - previewLoadAtRef.current })
         a.src = blobUrl
         previewStartAttemptsRef.current = 0
         if (wasPlaying) void a.play().catch(() => { /* el watchdog lo cubre */ })
@@ -2420,8 +2457,12 @@ export function DeckAudioProvider({
       const blobUrl = takePrefetchedPreview(targetSrc)
       audio.src = blobUrl ?? targetSrc
       releasePreviewBlob(prevAttr)
-    } else if (audio.ended) {
-      try { audio.currentTime = 0 } catch { /* no-op */ }
+      playerDiag('load', { idx, n: queue.length, blob: !!blobUrl, paused: audio.paused })
+    } else {
+      playerDiag('load_same', { idx, n: queue.length, ended: audio.ended, paused: audio.paused })
+      if (audio.ended) {
+        try { audio.currentTime = 0 } catch { /* no-op */ }
+      }
     }
     if (Number.isFinite(audio.duration) && audio.duration > 0) setPreviewDuration(audio.duration)
     const resumeAt = pendingRestoreTimeRef.current
@@ -2437,6 +2478,7 @@ export function DeckAudioProvider({
     }
     audio.play()
       .then(() => {
+        playerDiag('play_ok', { idx, ms: Date.now() - previewLoadAtRef.current, rs: audio.readyState })
         setPreviewPlaying(true)
         setPreviewBlocked(false)
         const playKey = queue[idx].save ? canonicalKeyFromTrackPlaySave(queue[idx].save!) : null
@@ -2454,6 +2496,7 @@ export function DeckAudioProvider({
         // abierto en pestaña nueva, sin gesto previo). Mantenemos la cola
         // cargada y pedimos al usuario un tap en el overlay para arrancar.
         const name = (err && typeof err === 'object' && 'name' in err) ? (err as { name?: string }).name : ''
+        playerDiag('play_err', { idx, name: name || 'unknown', ms: Date.now() - previewLoadAtRef.current, ...audioDiag(audio) })
         setPreviewBlocked(name === 'NotAllowedError')
       })
     // Watchdog de arranque: reintenta/salta si la pista no llega a sonar
@@ -2842,8 +2885,9 @@ export function DeckAudioProvider({
       if (previewInterruptedRef.current) return
       const a = previewAudioRef.current
       if (!a || !a.getAttribute('src')) return
-      if (a.ended) { advanceFromCurrentTrack(); return }
+      if (a.ended) { playerDiag('keeper_advance', audioDiag(a)); advanceFromCurrentTrack(); return }
       if (a.paused && previewSystemPausedRef.current) {
+        playerDiag('keeper_play', audioDiag(a))
         void a.play().catch(() => {
           // El foco es de otra app: back-off (deja de pelear en cada tick).
           previewInterruptedRef.current = true
@@ -2864,6 +2908,14 @@ export function DeckAudioProvider({
       }
       previewHiddenAtRef.current = 0
       if (previewQueueRef.current.length === 0) return
+      playerDiag('visible_state', {
+        idx: previewIndexRef.current,
+        user: previewUserPausedRef.current,
+        blocked: previewBlockedRef.current,
+        interrupted: previewInterruptedRef.current,
+        attempts: previewStartAttemptsRef.current,
+        ...audioDiag(previewAudioRef.current),
+      })
       if (previewUserPausedRef.current || previewBlockedRef.current) return
       // Un embed activo (YouTube/SoundCloud) tiene prioridad: no auto-reanudar
       // el preview encima al volver del background.
@@ -2893,6 +2945,7 @@ export function DeckAudioProvider({
         const attr = a.getAttribute('src')
         if (!attr) return
         previewStartAttemptsRef.current = 0
+        playerDiag('nudge', { idx: previewIndexRef.current })
         try { a.src = attr } catch { /* no-op */ }
         void a.play().catch(() => { /* no-op */ })
         armPreviewStartWatchdog(previewIndexRef.current)
@@ -2913,10 +2966,10 @@ export function DeckAudioProvider({
   useEffect(() => {
     if (previewQueue.length === 0) return
     if (!('mediaSession' in navigator)) return
-    navigator.mediaSession.setActionHandler('play', () => resumePreview())
-    navigator.mediaSession.setActionHandler('pause', () => pausePreview())
-    navigator.mediaSession.setActionHandler('previoustrack', () => previewPrev())
-    navigator.mediaSession.setActionHandler('nexttrack', () => previewNext())
+    navigator.mediaSession.setActionHandler('play', () => { playerDiag('ms_play'); resumePreview() })
+    navigator.mediaSession.setActionHandler('pause', () => { playerDiag('ms_pause'); pausePreview() })
+    navigator.mediaSession.setActionHandler('previoustrack', () => { playerDiag('ms_prev'); previewPrev() })
+    navigator.mediaSession.setActionHandler('nexttrack', () => { playerDiag('ms_next'); previewNext() })
     try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch { /* no-op */ }
     try { navigator.mediaSession.setActionHandler('seekforward', null) } catch { /* no-op */ }
     // `seekto` sí lo dejamos activo: permite al usuario arrastrar la

@@ -16,6 +16,7 @@
 // ============================================
 
 import { DECK_TRACKS } from '@/lib/deck-tracks'
+import { playerDiag } from '@/lib/player-diag'
 
 type DeckSide = 'A' | 'B'
 
@@ -220,6 +221,8 @@ export function prefetchPreviewTrack(src: string | null | undefined): void {
 
   const ctl = new AbortController()
   inflight = { src, ctl }
+  const startedAt = Date.now()
+  playerDiag('prefetch_start', { attempt: (fail?.attempts ?? 0) + 1 })
   void (async () => {
     try {
       const res = await fetch(src, { signal: ctl.signal, credentials: 'same-origin' })
@@ -238,9 +241,14 @@ export function prefetchPreviewTrack(src: string | null | undefined): void {
       blobOrigin.set(url, src)
       prefetched = { src, url }
       prefetchFailures.delete(src)
+      playerDiag('prefetch_ok', { kb: Math.round(blob.size / 1024), ms: Date.now() - startedAt })
       try { onPrefetchReady?.(src, url) } catch { /* no-op */ }
-    } catch {
+    } catch (err) {
       if (ctl.signal.aborted) return
+      playerDiag('prefetch_fail', {
+        ms: Date.now() - startedAt,
+        why: err instanceof Error ? err.message.slice(0, 80) : 'error',
+      })
       const prev = prefetchFailures.get(src)
       prefetchFailures.set(src, {
         attempts: (prev?.attempts ?? 0) + 1,
