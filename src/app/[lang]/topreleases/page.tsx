@@ -90,6 +90,7 @@ type Rank = 'plays' | 'votes'
 
 type PostRow = {
   slug: string
+  published_at: string | null
   title_es: string
   title_en: string
   excerpt_es: string | null
@@ -186,7 +187,7 @@ export default async function TopReleasesPage({
       supabase
         .from('blog_posts')
         .select(
-          'slug, title_es, title_en, excerpt_es, excerpt_en, kind:digest->>kind, from:digest->>from, until:digest->>until, intro_es:digest->copy->es->>intro, intro_en:digest->copy->en->>intro, played:digest->played->0, voted:digest->voted->0, released:digest->released->0',
+          'slug, published_at, title_es, title_en, excerpt_es, excerpt_en, kind:digest->>kind, from:digest->>from, until:digest->>until, intro_es:digest->copy->es->>intro, intro_en:digest->copy->en->>intro, played:digest->played->0, voted:digest->voted->0, released:digest->released->0',
         )
         .eq('is_published', true)
         .not('digest', 'is', null)
@@ -217,7 +218,7 @@ export default async function TopReleasesPage({
 
   const liveTargets = [...(hero ? [hero] : []), ...visible.flatMap((s) => (s.post ? [s.post] : []))]
   const liveRows = await Promise.all(
-    liveTargets.map((p) => getFortnightLive(p.from, p.until, p.season ? 20 : 10)),
+    liveTargets.map((p) => getFortnightLive(p.from, p.until, p.season ? 20 : 10, { slug: p.slug, publishedAt: p.published_at })),
   )
   const live = new Map(liveTargets.map((p, i) => [p.slug, liveRows[i]]))
   const today = todayMadrid()

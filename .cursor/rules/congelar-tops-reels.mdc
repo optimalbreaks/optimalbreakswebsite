@@ -1,0 +1,42 @@
+---
+description: «Congela los tops» / «descongela el top» y las 72 h de cada artículo de novedades (reels de Instagram)
+alwaysApply: true
+---
+
+# Congelar los tops para los reels (25 oct 2026)
+
+Godino graba un reel sobre un artículo o sobre el Top 100 y se sube a Instagram al día siguiente. Quien entra desde el vídeo tiene que ver lo mismo que se dice en él. Migración **097** (`top_freezes`, `public_freeze_snapshots`), código **`src/lib/public-freeze.ts`**.
+
+## Artículo de quincena o trimestre: solo, sin hacer nada
+
+72 h desde `published_at` el artículo enseña una foto (la hace el primer render tras publicar). La comparten el artículo, su tarjeta en `/topreleases` y la tarjeta de quincena de la home. Luego vuelve a directo. **No** hay que lanzar ningún script al publicar.
+
+## «Congela los tops» → congelar
+
+```powershell
+$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; node scripts/top-freeze.mjs freeze --note="<motivo, p. ej. reel Top 100 artistas>"
+```
+
+- 72 h por defecto (`--hours=N` si Narciso pide otra cifra). El script espera 65 s, pide las páginas para que la foto se haga ya y enseña `status`.
+- Congela, con números y orden de la misma foto: Top 100 de temas, artistas y países (`/topalltimes`, con franja amarilla), Top 10 y quincena de la home, tarjetas de `/topreleases` y los «N saves · M fans · K temas» de las fichas de artista.
+- Si ya hay una abierta, no abre otra. Para rehacer la foto: `unfreeze` y luego `freeze`.
+- Contestar a Narciso con la hora de congelar y la de descongelar (las imprime el script).
+
+## «Descongela el top» → descongelar
+
+```powershell
+$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; node scripts/top-freeze.mjs unfreeze
+```
+
+Vuelve a directo en ≤ 1 min (≤ 5 min el Top 10 de la home, por la CDN), con todo lo votado y escuchado durante la congelación. Si no se lanza, se descongela sola a las 72 h. `unfreeze` **no** toca las 72 h de un artículo: esas no se pueden quitar con este script.
+
+¿Está congelado? `node scripts/top-freeze.mjs status`. Guía: `node scripts/guia-base-datos.mjs run top-freeze …` (con `OB_NO_SYSTEM_CA=1` en Node 22.14).
+
+## Invariantes
+
+- Durante la congelación se siguen guardando votos y escuchas. **Prohibido** borrar saves o pausar `track_play_events` para «congelar».
+- Números y orden vienen de la **misma foto**. No mezclar el orden congelado con recuentos en vivo.
+- `?since=&until=` de `community-monthly` (el generador de artículos), Mis Tracks, `/charts`, la lista Temazos 2026 y el admin siguen siempre en directo.
+- Si la foto falla, la página tira de directo; no romper la página por eso.
+
+README (EN): *Freezes for the Instagram reels*. README (ES): *Congelación para los reels de Instagram*.

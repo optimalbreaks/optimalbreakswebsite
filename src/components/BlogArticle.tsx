@@ -159,7 +159,9 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   const quarter = storedDigest?.kind === 'trimestre'
   const week = storedDigest?.kind === 'semana'
   // La próxima semana es «a día de hoy»: foto fija del generador, no se recalcula.
-  const live = storedDigest && !week ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10) : null
+  const live = storedDigest && !week
+    ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10, { slug: post.slug, publishedAt: post.published_at })
+    : null
   const digest = storedDigest && live
     ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
     : storedDigest
@@ -468,7 +470,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
         </div>
       )}
 
-      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} heroFocus={heroFocus} playedArtists={live?.played_artists ?? digest.played_artists} />}
+      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} frozenUntil={live?.frozen_until ?? null} heroFocus={heroFocus} playedArtists={live?.played_artists ?? digest.played_artists} />}
 
       {agendaStored && <AgendaDigestView digest={agendaStored} nights={agendaNights} lang={safeLang} />}
 

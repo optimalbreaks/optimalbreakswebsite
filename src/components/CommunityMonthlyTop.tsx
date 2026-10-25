@@ -125,6 +125,18 @@ interface ApiResponse {
   top_tracks: CommunityTopTrack[]
   top_artists?: CommunityTopArtist[]
   top_countries?: CommunityTopCountry[]
+  /** Tops congelados (`top_freezes`): foto de `at`, vuelve a moverse en `until`. */
+  frozen?: { at: string; until: string }
+}
+
+function freezeStamp(iso: string, lang: Locale): string {
+  return new Date(iso).toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB', {
+    timeZone: 'Europe/Madrid',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 interface Props {
@@ -868,6 +880,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
 
   return (
     <>
+      {data?.frozen ? (
+        <p
+          className="mx-2 sm:mx-0 mb-8 border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 py-2 text-[12px] sm:text-[13px] font-bold text-[var(--ink)]"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          {lang === 'es'
+            ? `Ranking congelado el ${freezeStamp(data.frozen.at, lang)}: no se mueve hasta el ${freezeStamp(data.frozen.until, lang)}. Los votos de estos días se guardan y se suman entonces.`
+            : `Ranking frozen on ${freezeStamp(data.frozen.at, lang)}: it stays put until ${freezeStamp(data.frozen.until, lang)}. Votes from these days are saved and added then.`}
+        </p>
+      ) : null}
+
       {artistsBlock}
 
       {countriesBlock}

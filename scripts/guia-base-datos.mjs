@@ -705,6 +705,14 @@ const ACTIONS = [
       'Añade a la lista de Spotify «Temazos 2026» el mismo corte que /topreleases, en directo (votos si el periodo cierra antes del 6 oct 2026; los 20 más escuchados si no). No repite ni borra. La primera vez: --auth, con http://127.0.0.1:8888/callback en las Redirect URIs de la app, sesión en la cuenta dueña de la lista. El redactor de quincena/trimestre lo lanza al publicar.',
   },
   {
+    id: 'top-freeze',
+    run: 'node scripts/guia-base-datos.mjs run top-freeze status | freeze [--hours=72] [--note=…] [--no-warm] | unfreeze',
+    npm: 'npm run db:top:freeze -- status|freeze|unfreeze',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      '«Congela los tops» / «descongela el top» (migración 097). freeze: 72 h de foto fija en Top 100 de temas, artistas y países, Top 10 y quincena de la home, /topreleases y números de las fichas de artista; los votos se siguen guardando y salen al descongelar. unfreeze: vuelve a directo ya. Sin unfreeze, se descongela sola. Las 72 h de cada artículo de quincena/trimestre van solas.',
+  },
+  {
     id: 'purge-featured-week-dates',
     run: 'node scripts/guia-base-datos.mjs run purge-featured-week-dates YYYY-MM-DD […] [--dry-run] [--keep-empty-editions]',
     npm: '—',
@@ -1468,6 +1476,9 @@ function main() {
       process.exit(r.status === null ? 1 : r.status)
       break
     }
+    case 'top-freeze':
+      runNode('top-freeze.mjs', rest)
+      break
     case 'chart-propose':
       runNode('chart-40-breaks.mjs', ['--dry-run', ...rest])
       break

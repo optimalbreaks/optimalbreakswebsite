@@ -47,6 +47,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
 import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import {
   buildFullArtistSlugMap,
@@ -403,18 +404,63 @@ function beatportShareOriginFromSavedRow(s: SavedRow): BeatportShareOrigin | nul
   return beatportShareOriginFromSnapshot((s.snapshot || {}) as Record<string, unknown>)
 }
 
+function topParams(url: URL) {
+  return {
+    limit: Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 40)),
+    // `view=artists` (Top 10 de la home): mismo ranking de créditos, sin la lista
+    // de temas. `cached=1` lo guarda en CDN. El Top 100 no pasa ninguno de los dos.
+    artistsOnly: url.searchParams.get('view') === 'artists',
+    // `artists=100`: el generador de la agenda cruza carteles con el Top 100 de artistas.
+    artistsLimit: Math.min(
+      150,
+      Math.max(TOP_ARTISTS_LIMIT, Number(url.searchParams.get('artists')) || TOP_ARTISTS_LIMIT),
+    ),
+    cdnCache: url.searchParams.get('cached') === '1',
+  }
+}
+
+const CDN_CACHE_HEADERS = { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=900' }
+
+type FrozenTop = {
+  scope: string
+  totals: { saves: number; unique_tracks: number; unique_users: number }
+  top_tracks: unknown[]
+  top_artists: unknown[]
+  top_countries: unknown[]
+}
+
+/**
+ * Tops congelados (`top_freezes`, migración 097): una foto con el máximo
+ * (100 temas, 150 artistas) y cada petición se queda con su trozo. Orden y
+ * números salen de la misma foto. `since`/`until` (artículos) siempre en vivo.
+ */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
-  const limit = Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 40))
-  // `view=artists` (Top 10 de la home): mismo ranking de créditos, sin la lista
-  // de temas. `cached=1` lo guarda en CDN. El Top 100 no pasa ninguno de los dos.
-  const artistsOnly = url.searchParams.get('view') === 'artists'
-  // `artists=100`: el generador de la agenda cruza carteles con el Top 100 de artistas.
-  const artistsLimit = Math.min(
-    150,
-    Math.max(TOP_ARTISTS_LIMIT, Number(url.searchParams.get('artists')) || TOP_ARTISTS_LIMIT),
-  )
-  const cdnCache = url.searchParams.get('cached') === '1'
+  const windowed = url.searchParams.has('since') || url.searchParams.has('until')
+  const freeze = windowed ? null : await getActivePageFreeze()
+  if (freeze) {
+    try {
+      const snap = await frozenSnapshot(freeze, 'community-top', async () => {
+        const res = await computeCommunityTop(new URL(`${url.origin}${url.pathname}?limit=100&artists=150`))
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return (await res.json()) as FrozenTop
+      })
+      const { limit, artistsOnly, artistsLimit, cdnCache } = topParams(url)
+      const top = snap.data
+      const frozen = { at: snap.capturedAt, until: freeze.until }
+      const body = artistsOnly
+        ? { scope: top.scope, totals: { saves: 0, unique_tracks: 0, unique_users: 0 }, top_tracks: [], top_artists: top.top_artists.slice(0, 10), top_countries: [], frozen }
+        : { ...top, top_tracks: top.top_tracks.slice(0, limit), top_artists: top.top_artists.slice(0, artistsLimit), frozen }
+      return NextResponse.json(body, cdnCache ? { headers: CDN_CACHE_HEADERS } : undefined)
+    } catch (err) {
+      console.warn('[community-monthly] foto', err instanceof Error ? err.message : err)
+    }
+  }
+  return computeCommunityTop(url)
+}
+
+async function computeCommunityTop(url: URL): Promise<NextResponse> {
+  const { limit, artistsOnly, artistsLimit, cdnCache } = topParams(url)
   const ymdParam = (name: string) => {
     const v = (url.searchParams.get(name) || '').trim()
     return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null
@@ -431,9 +477,7 @@ export async function GET(request: NextRequest) {
   const respond = (body: unknown) =>
     NextResponse.json(
       body,
-      cdnCache
-        ? { headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=900' } }
-        : undefined,
+      cdnCache ? { headers: CDN_CACHE_HEADERS } : undefined,
     )
 
   let sb: ReturnType<typeof createServiceSupabase>

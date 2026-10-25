@@ -441,6 +441,18 @@ export interface Database {
         Update: never
         Relationships: DbRelationship[]
       }
+      top_freezes: {
+        Row: TopFreezeRow
+        Insert: Pick<TopFreezeRow, 'until'> & Partial<Pick<TopFreezeRow, 'frozen_at' | 'note'>>
+        Update: Partial<Pick<TopFreezeRow, 'until' | 'ended_at' | 'note'>>
+        Relationships: DbRelationship[]
+      }
+      public_freeze_snapshots: {
+        Row: PublicFreezeSnapshotRow
+        Insert: Omit<PublicFreezeSnapshotRow, 'captured_at'>
+        Update: never
+        Relationships: DbRelationship[]
+      }
       admin_chat_threads: {
         Row: AdminChatThreadRow
         Insert: Omit<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'>
@@ -654,6 +666,25 @@ export interface PlayerDiagnosticRow extends Record<string, unknown> {
   hidden: boolean
   ua: string | null
   data: Record<string, string | number | boolean | null>
+}
+
+/** «Congela los tops» (migración 097). Activa = `ended_at` null y ahora < `until`. */
+export interface TopFreezeRow extends Record<string, unknown> {
+  id: number
+  frozen_at: string
+  until: string
+  ended_at: string | null
+  note: string | null
+}
+
+export type FreezeJson = string | number | boolean | null | FreezeJson[] | { [key: string]: FreezeJson }
+
+/** Foto fija de un ranking: `page:<id>` (congelación) o `article:<slug>` (72 h del artículo). */
+export interface PublicFreezeSnapshotRow extends Record<string, unknown> {
+  freeze_key: string
+  item_key: string
+  data: FreezeJson
+  captured_at: string
 }
 
 export interface FavoriteEventRow extends Record<string, unknown> {

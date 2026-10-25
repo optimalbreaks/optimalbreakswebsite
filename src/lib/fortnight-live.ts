@@ -11,6 +11,7 @@ import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self-credit'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
+import { articleFreeze, frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
 import type { FortnightDigestTrack } from '@/types/database'
 
 /** Cabecera del artículo: los temas más escuchados. Sin mezclar votos. */
@@ -47,6 +48,8 @@ export type FortnightLive = {
   votes_total: number
   voters_total: number
   updated_at: string
+  /** Solo en una foto congelada: hasta cuándo no se mueve. */
+  frozen_until?: string | null
 }
 
 function artistsLine(a: unknown): string {
@@ -220,9 +223,27 @@ export async function loadFortnightLive(from: string, until: string, topN: numbe
   }
 }
 
-/** null si la BD falla: la página cae al recuento guardado en el digest. */
-export async function getFortnightLive(from: string, until: string, topN = 10): Promise<FortnightLive | null> {
+/**
+ * null si la BD falla: la página cae al recuento guardado en el digest.
+ * Con `article`, sus 72 h primeras enseñan la foto del primer render tras publicar.
+ * Con los tops congelados, también la foto. `frozen_until` dice hasta cuándo.
+ */
+export async function getFortnightLive(
+  from: string,
+  until: string,
+  topN = 10,
+  article?: { slug: string; publishedAt: string | null },
+): Promise<FortnightLive | null> {
   try {
+    const freeze = (article ? articleFreeze(article.slug, article.publishedAt) : null) ?? (await getActivePageFreeze())
+    if (freeze) {
+      try {
+        const snap = await frozenSnapshot(freeze, `fortnight:${from}:${until}:${topN}`, () => loadFortnightLive(from, until, topN))
+        return { ...snap.data, frozen_until: freeze.until }
+      } catch (err) {
+        console.warn('[fortnight-live] foto', err instanceof Error ? err.message : err)
+      }
+    }
     return await unstable_cache(() => loadFortnightLive(from, until, topN), ['fortnight-live', from, until, String(topN)], {
       revalidate: 300,
       tags: [PUBLIC_CATALOG_CACHE_TAG],

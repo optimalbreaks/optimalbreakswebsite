@@ -294,6 +294,7 @@ const MUSIC_COPY = {
 
 type HomeDigestPost = {
   slug: string
+  published_at?: string | null
   title_es: string
   title_en: string
   from: string | null
@@ -427,7 +428,7 @@ export default async function HomePage({
   const [{ data: fortnightRows }, { data: weekRows }] = await Promise.all([
     supabase
       .from('blog_posts')
-      .select('slug, title_es, title_en, from:digest->>from, until:digest->>until')
+      .select('slug, published_at, title_es, title_en, from:digest->>from, until:digest->>until')
       .eq('is_published', true)
       .like('slug', 'quincena-breakbeat-%')
       .order('slug', { ascending: false })
@@ -445,7 +446,9 @@ export default async function HomePage({
   const fortnightPost = ((fortnightRows || []) as unknown as HomeDigestPost[]).find((p) => p.from && p.until) ?? null
   const weekCandidate = ((weekRows || []) as unknown as HomeWeekPost[])[0] ?? null
   const weekPost = weekCandidate?.from && weekCandidate.until && weekCandidate.until >= todayHome ? weekCandidate : null
-  const fortnightLive = fortnightPost ? await getFortnightLive(fortnightPost.from!, fortnightPost.until!, 10) : null
+  const fortnightLive = fortnightPost
+    ? await getFortnightLive(fortnightPost.from!, fortnightPost.until!, 10, { slug: fortnightPost.slug, publishedAt: fortnightPost.published_at ?? null })
+    : null
   const fortnightTracks = fortnightLive?.released?.length ? fortnightLive.released : fortnightLive?.played ?? []
   const weekTracks = weekPost ? weekQueue(weekPost) : []
   const showFortnight = !!fortnightPost && fortnightTracks.length > 0

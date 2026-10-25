@@ -17,6 +17,7 @@ import {
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
+import { frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
 
 type ServiceClient = ReturnType<typeof createServiceSupabase>
 
@@ -319,8 +320,17 @@ async function loadCommunityArtistBoard(sb: ServiceClient): Promise<Record<strin
   return out
 }
 
+/** Con los tops congelados (`top_freezes`), la foto del momento de congelar. */
 export async function getCommunityArtistBoard(): Promise<Record<string, CommunityArtistCounts>> {
   try {
+    const freeze = await getActivePageFreeze()
+    if (freeze) {
+      try {
+        return (await frozenSnapshot(freeze, 'artist-board', () => loadCommunityArtistBoard(createServiceSupabase()))).data
+      } catch (err) {
+        console.warn('[community-artist-board] foto', err instanceof Error ? err.message : err)
+      }
+    }
     return await unstable_cache(
       () => loadCommunityArtistBoard(createServiceSupabase()),
       ['community-artist-board'],

@@ -47,6 +47,7 @@ const T = {
     voteOne: 'voto',
     frozen: (from: string, until: string) => `Recuento del ${from} al ${until}, cerrado al publicar el artículo. En Tracks y en el top histórico los números siguen vivos.`,
     live: (at: string) => `En directo: lo que ha recibido cada tema desde que salió. Actualizado ${at}.`,
+    held: (at: string, until: string) => `Foto fija del ${at}: estas cifras no se mueven hasta el ${until}. Los votos y escuchas de estos días se suman entonces.`,
     leads: (h: string, title: string, artists: string) => `${h}: «${title}», de ${artists}`,
     leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
       `«${title}», de ${artists}, va primero con ${n} ${unit}${rest ? `. Le siguen ${rest}` : ''}.`,
@@ -95,6 +96,7 @@ const T = {
     voteOne: 'vote',
     frozen: (from: string, until: string) => `Count from ${from} to ${until}, closed when the article was published. On Tracks and the all-time top the numbers stay live.`,
     live: (at: string) => `Live: what each track has received since release. Updated ${at}.`,
+    held: (at: string, until: string) => `Snapshot of ${at}: these figures stay put until ${until}. Votes and plays from these days are added then.`,
     leads: (h: string, title: string, artists: string) => `${h}: “${title}” by ${artists}`,
     leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
       `“${title}” by ${artists} leads with ${n} ${unit}${rest ? `, ahead of ${rest}` : ''}.`,
@@ -592,7 +594,7 @@ export function DigestTrackStrip({
 }
 
 export default function FortnightDigest({
-  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, heroFocus, playedArtists = [],
+  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, frozenUntil = null, heroFocus, playedArtists = [],
 }: {
   digest: Digest
   lang: Locale
@@ -600,6 +602,8 @@ export default function FortnightDigest({
   labelSlugMap?: Record<string, string>
   /** Rankings recalculados en el servidor (fortnight-live): títulos y textos salen de los datos. */
   liveAt?: string | null
+  /** `liveAt` es una foto congelada (72 h del artículo o tops congelados) hasta esta hora. */
+  frozenUntil?: string | null
   /** `object-position` de cada tercio. El motivo de una carátula blanca cae en su lado. */
   heroFocus?: { x: number; y: number }[]
   /** Artistas ordenados por escuchas de los temas del periodo. */
@@ -659,18 +663,21 @@ export default function FortnightDigest({
   const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
   // Semana: foto fija del generador (`as_of`); las frases salen de esos números igual que en directo.
   const stampAt = liveAt ?? (week ? d.as_of ?? null : null)
-  const liveLabel = (() => {
-    if (!stampAt) return ''
+  const stampLabel = (iso: string | null) => {
+    if (!iso) return ''
     const p = Object.fromEntries(
       new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-        .formatToParts(new Date(stampAt))
+        .formatToParts(new Date(iso))
         .map((x) => [x.type, x.value]),
     )
     return `${shortDate(`${p.year}-${p.month}-${p.day}`, lang)} · ${p.hour}:${p.minute}`
-  })()
+  }
+  const liveLabel = stampLabel(stampAt)
   const frozenNote = (
     <p className="mt-2 text-[11px] text-[var(--dim)]" style={mono}>
-      {liveAt ? t.live(liveLabel) : stampAt ? WEEK[lang].asOf(liveLabel) : t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
+      {liveAt && frozenUntil
+        ? T[lang].held(liveLabel, stampLabel(frozenUntil))
+        : liveAt ? t.live(liveLabel) : stampAt ? WEEK[lang].asOf(liveLabel) : t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
       {liveAt && d.from < PLAYS_SINCE ? ` ${PLAYS_SINCE_NOTE[lang]}` : null}
     </p>
   )
