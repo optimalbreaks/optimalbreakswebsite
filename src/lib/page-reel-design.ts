@@ -910,6 +910,8 @@ export type FortnightAnim = {
   key: string | null
   debutTotal: number
   debut: string[]
+  /** Tema que suena en el vídeo: reproductor abajo a la izquierda. `env` = volumen por fotograma (30 fps). */
+  playing?: { title: string; artists: string; img: Img | null; env: Float32Array | null } | null
 }
 /** Cada escena dura ~7 s: da tiempo a leer el titular, los datos y el recuadro «WHAT YOU SEE». */
 export const FORTNIGHT_DUR = 60
@@ -1491,12 +1493,88 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     ctx.strokeStyle = INK
     ctx.strokeRect(x, F.y, sw, F.h)
   })
-  obHeader(ctx, F.x, F.y + (V ? 110 : 80), V ? 46 : 38)
-  ctx.font = MONO(V ? 22 : 19)
+  const logo = V ? 46 : 38
+  if (!d.playing) {
+    obHeader(ctx, F.x, F.y + (V ? 110 : 80), logo)
+    ctx.font = MONO(V ? 22 : 19)
+    ctx.fillStyle = MUTED
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    spaced(ctx, `THE BREAKBEAT ${P}`, F.x, F.y + (V ? 156 : 116), 4)
+    return
+  }
+  // Con audio: reproductor a la izquierda y la marca, más pequeña, a la derecha.
+  const small = V ? 32 : 26
+  ctx.font = HEAD(small)
+  const logoW = ctx.measureText('OPTIMAL ').width + 3 + ctx.measureText('BREAKS').width
+  const tag = `THE BREAKBEAT ${P}`
+  ctx.font = MONO(V ? 20 : 16)
+  const tagW = [...tag].reduce((a, c) => a + ctx.measureText(c).width, 0) + 3 * (tag.length - 1)
+  const lx = F.x + F.w - logoW
+  const blockX = F.x + F.w - Math.max(logoW, tagW)
+  const py = F.y + F.h + (V ? 26 : 18)
+  const pH = V ? 128 : 112
+  obHeader(ctx, lx, py + pH * 0.5, small)
+  ctx.font = MONO(V ? 20 : 16)
   ctx.fillStyle = MUTED
+  ctx.textBaseline = 'alphabetic'
+  spaced(ctx, tag, F.x + F.w, py + pH * 0.5 + (V ? 38 : 30), 3, 'right')
+  fnPlayer(ctx, F.x, py, Math.min(V ? 640 : 470, blockX - F.x - 28), pH, d.playing, t, V)
+}
+
+/** Reproductor del pie: carátula, «SUENA · NOW PLAYING», tema, ecualizador con el audio real y progreso. */
+function fnPlayer(ctx: C, x: number, y: number, w: number, h: number, p: NonNullable<FortnightAnim['playing']>, t: number, V: boolean) {
+  ctx.save()
+  ctx.globalAlpha = clamp(t / 0.6)
+  box(ctx, x, y, w, h, INK, RED, 6, 3)
+  const pad = 12
+  const s = h - pad * 2
+  cover(ctx, p.img, x + pad, y + pad, s, 2)
+  // Ecualizador: 5 barras con el volumen real del fragmento.
+  const bars = 5
+  const bw = V ? 9 : 8
+  const gap = V ? 6 : 5
+  const eqW = bars * bw + (bars - 1) * gap
+  const ex = x + w - pad - eqW
+  const eh = s * 0.62
+  const ey = y + pad + 8 + eh
+  const f = Math.floor(t * 30)
+  ctx.fillStyle = YELLOW
+  for (let i = 0; i < bars; i++) {
+    const v = p.env ? p.env[Math.max(0, Math.min(p.env.length - 1, f - i * 2))] : 0.5
+    const wob = 0.55 + 0.45 * Math.abs(Math.sin(i * 1.7 + t * 9))
+    const bh = Math.max(4, eh * Math.min(1, v * wob * 1.15))
+    ctx.fillRect(ex + i * (bw + gap), ey - bh, bw, bh)
+  }
+  // Textos
+  const tx = x + pad + s + 16
+  const tw = ex - 14 - tx
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-  spaced(ctx, `THE BREAKBEAT ${P}`, F.x, F.y + (V ? 156 : 116), 4)
+  ctx.fillStyle = RED
+  ctx.beginPath()
+  const ty = y + pad + (V ? 18 : 15)
+  const tri = V ? 13 : 11
+  ctx.moveTo(tx, ty - tri)
+  ctx.lineTo(tx + tri * 0.9, ty - tri / 2)
+  ctx.lineTo(tx, ty)
+  ctx.closePath()
+  ctx.fill()
+  ctx.font = MONO(V ? 17 : 15)
+  ctx.fillStyle = YELLOW
+  spaced(ctx, 'SUENA · NOW PLAYING', tx + tri + 8, ty, 3)
+  ctx.fillStyle = '#fff'
+  ctx.fillText(fit(ctx, p.title.toUpperCase(), HEAD, tw, V ? 28 : 23, 14), tx, ty + (V ? 38 : 32))
+  ctx.fillStyle = 'rgba(255,255,255,0.7)'
+  ctx.fillText(fit(ctx, p.artists, (z) => MONO(z), tw, V ? 21 : 18, 12), tx, ty + (V ? 66 : 56))
+  // Progreso del vídeo
+  const by = y + h - pad - 6
+  const bwid = x + w - pad - tx
+  ctx.fillStyle = 'rgba(255,255,255,0.22)'
+  ctx.fillRect(tx, by, bwid, 6)
+  ctx.fillStyle = RED
+  ctx.fillRect(tx, by, bwid * clamp(t / FORTNIGHT_DUR), 6)
+  ctx.restore()
 }
 
 // ===================== EVENTOS (próximos 14 días) =====================

@@ -86,7 +86,31 @@ export type FortnightReelInput = {
   debutTotal: number
   debut: string[]
   /** Audio del n.º 1 de la lista (mismo origen) para el selector de fragmento de R/F. */
-  audio?: { src: string; key: string; label: string; seconds: number } | null
+  audio?: { src: string; key: string; label: string; seconds: number; title: string; artists: string; artwork: string | null } | null
+}
+
+/** Volumen del fragmento por fotograma (0..1): mueve el ecualizador del reproductor. */
+function audioEnvelope(seg: ShareAudioSegment, dur: number, fps: number): Float32Array {
+  const b = seg.buffer
+  const sr = b.sampleRate
+  const from = Math.max(0, Math.min(seg.start, b.duration - dur))
+  const data = b.getChannelData(0)
+  const out = new Float32Array(Math.round(dur * fps))
+  const win = Math.round(sr / fps)
+  let max = 0
+  for (let k = 0; k < out.length; k++) {
+    const s0 = Math.round((from + k / fps) * sr)
+    let sum = 0
+    let n = 0
+    for (let j = s0; j < Math.min(data.length, s0 + win); j += 4) {
+      sum += data[j] * data[j]
+      n++
+    }
+    out[k] = n ? Math.sqrt(sum / n) : 0
+    if (out[k] > max) max = out[k]
+  }
+  if (max > 0) for (let k = 0; k < out.length; k++) out[k] /= max
+  return out
 }
 
 const imageCache = new Map<string, Promise<Img | null>>()
@@ -183,6 +207,7 @@ export async function renderPageReel(
       ...f.played.map((r) => r.artwork),
       ...f.voted.map((r) => r.artwork),
       ...f.stars.map((s) => s.image),
+      audio && f.audio ? f.audio.artwork : null,
     ]
     const imgs = await loadArtworks(urls)
     let k = 0
@@ -192,8 +217,13 @@ export async function renderPageReel(
     const played = f.played.map(track)
     const voted = f.voted.map(track)
     const stars = f.stars.map((s) => ({ rank: s.rank, name: s.name, track: s.track, img: next() }))
+    // Reproductor del pie: solo si el vídeo lleva audio.
+    const playing =
+      audio && f.audio
+        ? { title: f.audio.title, artists: f.audio.artists, img: next(), env: audioEnvelope(audio, FORTNIGHT_DUR, 30) }
+        : null
     const short = (iso: string) => reelDateLabel(iso).replace(/ \d{4}$/, '').toUpperCase()
-    const data = { ...f, range: `${short(f.from)} — ${short(f.until)}`, covers, played, voted, stars }
+    const data = { ...f, range: `${short(f.from)} — ${short(f.until)}`, covers, played, voted, stars, playing }
     const draw = (c: CanvasRenderingContext2D, t: number) => animFortnight(c, W, H, data, t)
     return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress, audio)
   } else if (input.agenda) {

@@ -374,6 +374,9 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
               key: t.featured_id ? `featured:${t.featured_id}` : `digest:${t.title}|${t.artists}`,
               label: `${t.title} — ${t.artists}`,
               seconds: FORTNIGHT_DUR,
+              title: t.title,
+              artists: t.artists,
+              artwork: t.artwork_url?.startsWith('/') ? `${SITE_URL}${t.artwork_url}` : t.artwork_url || null,
             }
           })(),
         }
