@@ -19,14 +19,19 @@ import { DeckAudioContext, DeckAudioProgressContext } from '@/components/deck-au
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import { AUDIO_SESSION_KEY, clearPreviewSession, readPreviewSession, writePreviewSession } from '@/lib/audio-engine-pending'
 import {
-  assignAudioSrc,
+  clearPreviewPrefetch,
   connectDeckAudio,
   getInitialDeckIndexes,
   getSharedAudioContext,
   getSharedDeckAudio,
   getSharedMixAudio,
   getSharedPreviewAudio,
+  isPrefetchedBlobSrc,
   pauseSharedPlayback,
+  prefetchPreviewTrack,
+  previewSrcOrigin,
+  releasePreviewBlob,
+  takePrefetchedPreview,
 } from '@/lib/audio-unlock'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
@@ -395,9 +400,11 @@ export function claimAudio(source: AudioClaimSource) {
   window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
 }
 
-/** Misma URL de preview aunque una venga relativa y el `<audio>` la haya absolutizado. */
+/** Misma URL de preview aunque una venga relativa y el `<audio>` la haya
+ *  absolutizado, o aunque suene desde el `blob:` del prefetch (se compara
+ *  con la URL original de la cola). */
 function previewSrcEquals(audio: HTMLAudioElement, targetSrc: string): boolean {
-  const attr = audio.getAttribute('src')
+  const attr = previewSrcOrigin(audio.getAttribute('src'))
   if (!attr) return false
   if (attr === targetSrc) return true
   try {
@@ -1342,11 +1349,12 @@ export function DeckAudioProvider({
   // Espejo de `previewBlocked` para los watchdogs (no pelear contra la
   // política de autoplay: ahí hace falta un gesto, no un reintento).
   const previewBlockedRef = useRef(false)
-  // <audio> oculto que precarga la SIGUIENTE pista de la cola mientras
-  // suena la actual. Así, al llegar el auto-avance con la pantalla
-  // bloqueada, los datos ya están en la caché HTTP y el play() arranca
-  // sin depender de una red throttleada por el SO.
-  const previewPreloadRef = useRef<HTMLAudioElement | null>(null)
+  // La SIGUIENTE pista de la cola se baja entera a memoria (Blob) mientras
+  // suena la actual (`prefetchPreviewTrack`, lib/audio-unlock). Al llegar el
+  // auto-avance con la pantalla bloqueada el `src` pasa a ser `blob:` y el
+  // play() no toca la red (Android la congela en cuanto el audio se para).
+  // Si el blob no se puede decodificar, se vuelve a la URL UNA vez.
+  const previewBlobRetriedRef = useRef(false)
   // Watchdog de arranque de pista: si tras el auto-avance el audio no
   // empieza a sonar (red parada en background), reintenta unas veces y,
   // si no hay manera, salta a la siguiente.
@@ -1933,9 +1941,14 @@ export function DeckAudioProvider({
     }
     cancelAnimationFrame(previewRafRef.current)
     const a = previewAudioRef.current
-    if (a) { a.pause(); a.removeAttribute('src'); a.load() }
-    const pre = previewPreloadRef.current
-    if (pre) { pre.removeAttribute('src'); try { pre.load() } catch { /* no-op */ } }
+    if (a) {
+      a.pause()
+      const attr = a.getAttribute('src')
+      a.removeAttribute('src')
+      a.load()
+      releasePreviewBlob(attr)
+    }
+    clearPreviewPrefetch()
     setPreviewPlaying(false)
     setPreviewQueue([])
     setPreviewIndex(0)
@@ -2010,21 +2023,16 @@ export function DeckAudioProvider({
     if (fn) fn(q, next)
   }, [stopPreviewInternal])
 
-  // Precarga la siguiente pista de audio de la cola en un <audio> oculto.
-  // El proxy de samples responde con Cache-Control público, así que esta
-  // descarga deja los datos en la caché HTTP y el auto-avance con la
-  // pantalla bloqueada no depende de la red (que el SO throttlea).
+  // Baja la siguiente pista de la cola ENTERA a memoria (Blob) mientras
+  // suena la actual. Así el auto-avance con la pantalla bloqueada no
+  // depende de la red: Android la congela en cuanto el <audio> se para y
+  // el `play()` del siguiente tema se quedaba esperando bytes (la lista
+  // «no enganchaba» hasta desbloquear). Idempotente: se puede llamar en
+  // cada `timeupdate`. SoundCloud va por iframe: no aplica.
   const preloadNextPreview = useCallback((queue: PreviewTrack[], idx: number) => {
     const next = queue[idx + 1]
-    if (!next || !next.src) return
-    let pre = previewPreloadRef.current
-    if (!pre) {
-      pre = new Audio()
-      pre.preload = 'auto'
-      pre.muted = true
-      previewPreloadRef.current = pre
-    }
-    assignAudioSrc(pre, next.src)
+    if (!next || !next.src || previewItemSoundCloudUrl(next)) return
+    prefetchPreviewTrack(next.src)
   }, [])
 
   // Watchdog de arranque: si tras (auto-)avanzar la pista el <audio> no
@@ -2101,8 +2109,10 @@ export function DeckAudioProvider({
       if (!previewAudioRef.current) previewAudioRef.current = getSharedPreviewAudio()
       const audio = previewAudioRef.current
       try { audio.pause() } catch { /* no-op */ }
+      const prevAttr = audio.getAttribute('src')
       audio.removeAttribute('src')
       try { audio.load() } catch { /* no-op */ }
+      releasePreviewBlob(prevAttr)
       setPreviewProgress(0)
       setPreviewDuration(0)
       setPreviewPlaying(false)
@@ -2180,7 +2190,22 @@ export function DeckAudioProvider({
       // quedaba pillado a 0:00 sin avanzar nunca. Ahora salta al
       // siguiente como si hubiera terminado.
       a.addEventListener('error', () => {
-        if (hasRealSrc()) advanceFromCurrentTrack()
+        if (!hasRealSrc()) return
+        // Sonaba desde el blob del prefetch y no se pudo decodificar
+        // (respuesta rara del proxy): una vuelta a la URL de red antes
+        // de dar la pista por perdida.
+        const attr = a.getAttribute('src')
+        if (isPrefetchedBlobSrc(attr) && !previewBlobRetriedRef.current) {
+          previewBlobRetriedRef.current = true
+          const origin = previewSrcOrigin(attr)
+          releasePreviewBlob(attr)
+          if (origin) {
+            a.src = origin
+            void a.play().catch(() => { /* el watchdog / error siguiente lo cubren */ })
+            return
+          }
+        }
+        advanceFromCurrentTrack()
       })
       // Watchdog de fin de pista. En iOS PWA en background, a veces el
       // evento `ended` no se dispara aunque el flag `audio.ended` se
@@ -2194,6 +2219,13 @@ export function DeckAudioProvider({
       let lastPosStateFlush = 0
       a.addEventListener('timeupdate', () => {
         if (a.ended && hasRealSrc()) advanceFromCurrentTrack()
+        // Con la pista ya fluyendo (≥ 1,5 s) baja la siguiente a memoria.
+        // Event-driven a propósito: los timers se throttlean en background,
+        // `timeupdate` no mientras hay audio. Idempotente, y reintenta solo
+        // si un intento anterior falló (back-off en `prefetchPreviewTrack`).
+        if (!a.paused && a.currentTime >= 1.5 && hasRealSrc()) {
+          preloadNextPreview(previewQueueRef.current, previewIndexRef.current)
+        }
         // Refresca la posición en la lockscreen (~1.5 s). El rAF de la UI
         // no corre en background, así que sin esto la barra del SO se
         // quedaba congelada en 0:00 con la pantalla bloqueada.
@@ -2258,15 +2290,27 @@ export function DeckAudioProvider({
           })
         }, 1500)
       })
+      // El SO debe ver «playing» cuando el audio arranca de verdad. El
+      // `pause` que dispara `pause()` justo antes de cambiar de src (⏭ en la
+      // lockscreen, `error` → avance) llega DESPUÉS del `play()` síncrono y
+      // dejaba `playbackState = 'paused'` con la música sonando: en Android
+      // la notificación enseñaba ▶ y el usuario tenía que pulsarlo dos veces.
+      const markPlayingState = () => {
+        if ('mediaSession' in navigator) {
+          try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+        }
+      }
       a.addEventListener('play', () => {
         // Cualquier arranque real limpia el estado de interrupción: el foco de
         // audio ha vuelto a ser nuestro.
         previewSystemPausedRef.current = false
         previewInterruptedRef.current = false
+        markPlayingState()
         // iOS solo pinta MediaMetadata de forma fiable tras el evento play.
         refreshNowPlaying()
       })
       a.addEventListener('playing', () => {
+        markPlayingState()
         refreshNowPlaying()
       })
     }
@@ -2281,9 +2325,16 @@ export function DeckAudioProvider({
     // Si el src ya es el pedido (arrancado en el gesto), no se toca: así no
     // se corta ni se reinicia lo que ya está sonando.
     const targetSrc = queue[idx].src
+    previewBlobRetriedRef.current = false
     if (!previewSrcEquals(audio, targetSrc)) {
       try { audio.pause() } catch { /* no-op */ }
-      audio.src = targetSrc
+      const prevAttr = audio.getAttribute('src')
+      // Si la pista ya está en memoria (bajada mientras sonaba la anterior)
+      // suena desde el blob: cero red en el cambio de tema con la pantalla
+      // bloqueada. Si no llegó, la URL de siempre.
+      const blobUrl = takePrefetchedPreview(targetSrc)
+      audio.src = blobUrl ?? targetSrc
+      releasePreviewBlob(prevAttr)
     } else if (audio.ended) {
       try { audio.currentTime = 0 } catch { /* no-op */ }
     }
@@ -2306,9 +2357,8 @@ export function DeckAudioProvider({
         const playKey = queue[idx].save ? canonicalKeyFromTrackPlaySave(queue[idx].save!) : null
         if (playKey && !skipNextPlayLogRef.current) logTrackPlay(playKey)
         skipNextPlayLogRef.current = false
-        // Con la pista ya sonando, calienta la caché con la siguiente para
-        // que el auto-avance funcione aunque el SO tenga la red dormida.
-        preloadNextPreview(queue, idx)
+        // La siguiente pista se baja a memoria desde `timeupdate` (≥ 1,5 s),
+        // no aquí: así la actual tiene la red para ella al arrancar.
       })
       .catch((err: unknown) => {
         skipNextPlayLogRef.current = false
@@ -2739,11 +2789,29 @@ export function DeckAudioProvider({
       // reanudamos las pausas benignas del SO (throttling / lock sin que
       // otra fuente sonara), que nunca marcan `previewInterruptedRef`.
       if (previewInterruptedRef.current) return
-      if (a.paused) void a.play().catch(() => { /* no-op */ })
+      if (a.paused) { void a.play().catch(() => { /* no-op */ }); return }
+      // «Suena» según el elemento pero no ha llegado ni un byte: el SO cortó
+      // la red al cambiar de pista con la pantalla bloqueada (la siguiente no
+      // estaba aún en memoria) y el socket murió sin `error`. Antes el usuario
+      // tenía que dar pause + play. Reasignar el src relanza la carga y, como
+      // el elemento ya sonó en un gesto, el `play()` está permitido.
+      if (
+        previewStartAttemptsRef.current >= 1 &&
+        a.readyState < 2 &&
+        a.currentTime < 0.5 &&
+        !a.error
+      ) {
+        const attr = a.getAttribute('src')
+        if (!attr) return
+        previewStartAttemptsRef.current = 0
+        try { a.src = attr } catch { /* no-op */ }
+        void a.play().catch(() => { /* no-op */ })
+        armPreviewStartWatchdog(previewIndexRef.current)
+      }
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [advanceFromCurrentTrack])
+  }, [advanceFromCurrentTrack, armPreviewStartWatchdog])
 
   // Media Session handlers específicos de preview.
   //

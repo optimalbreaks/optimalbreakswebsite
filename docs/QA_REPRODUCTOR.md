@@ -36,6 +36,7 @@ El reproductor es una de las piezas más críticas de la web: debe funcionar **i
 - **I10b** Primer visita, cookie `ob_consent` borrada, viewport **375×667**: el botón de play del aterrizaje se ve y recibe el toque por encima del banner de cookies. El diálogo se porta a `document.body` (`z-[205]`); el `<main class="relative z-[1]">` no debe volver a atraparlo.
 - **I11** Miniaturas de YouTube vía proxy propio (no en negro con adblockers). **Verificar en producción.**
 - **I12** Formatos: sample mp3, Bandcamp, SoundCloud, YouTube, sample Beatport.
+- **I13** **Pantalla bloqueada (Android, 25 oct 2026).** Lista de ≥ 5 temas, bloquear el móvil con datos móviles (no wifi) y dejarlo quieto: deben encadenarse al menos 4 cambios de pista sin tocar nada, y la notificación debe enseñar ❚❚ (no ▶) mientras suena. Mecanismo: la siguiente pista se baja entera a memoria (`prefetchPreviewTrack`) y el cambio no toca la red. Repetir con una exclusiva (`full_audio_url`, 6–8 MB) y con un tema de Bandcamp. Al desbloquear tras un fallo de red real, el tema debe arrancar solo (sin pause + play).
 
 ## Matriz por superficie (marcar en cada navegador/plataforma)
 

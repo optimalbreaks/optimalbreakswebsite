@@ -940,6 +940,21 @@ The shared `<audio>` elements and the single `AudioContext` live at **module sco
 
 **Do not** create a second `<audio>` or `AudioContext` for preview, mix or deck, and **do not** move the `play()` / `resume()` back to after the dynamic import.
 
+### Next track in memory — lock-screen playback on Android (25 Oct 2026)
+
+**Symptom** (several Android users, milder on iPhone): start a list, lock the phone, and after one or two songs the player "doesn't catch" the next one; unlocking the screen (sometimes pause + play) brings it back. **Cause:** while the `<audio>` is playing, Chrome holds a foreground media service and the process keeps its network. The moment the track **ends** that service is released and Android (Doze, Samsung/Xiaomi/Huawei battery savers) **freezes the network** of the Chrome process. The engine's `audio.src = next; play()` starts but waits for bytes that never arrive; the start watchdog retried three times, saw no `error`, and stayed put. The previous warm-up (a hidden `<audio muted preload="auto">`) did nothing: mobile Chrome downgrades `preload=auto` to `metadata` on cellular, and the HTTP cache doesn't serve partial 206s to the media element.
+
+**Fix (`prefetchPreviewTrack` and friends in `src/lib/audio-unlock.ts`, wired in `DeckAudioProvider`):**
+
+- While track N plays (from its `timeupdate`, once `currentTime ≥ 1.5 s` so the current track has the network to itself at start), the **whole** track N+1 is downloaded with `fetch()` and kept as a **`Blob`**. All preview URLs are same-origin (`/api/audio-proxy`, `/api/bandcamp-preview`, `/api/audio/<slug>.mp3`, `/api/parkineo-audio/<id>` → Supabase Storage with CORS), so `fetch` can read them. Cap 24 MB; three attempts with 20 s back-off; one "next" at a time (a new next aborts/revokes the old one).
+- On `ended`, `loadAndPlayPreviewAt` calls `takePrefetchedPreview(src)`: if the blob is ready, `audio.src = blob:` and `play()` needs **zero network**. If it isn't, the URL is used exactly as before. The previous blob is revoked after the switch; `stopPreviewInternal` clears everything.
+- `previewSrcEquals` (and `primePreviewInGesture`) compare through `previewSrcOrigin()` so a track playing from its `blob:` is still recognised as "the same track" (re-tap, shared-link queue extension, session restore).
+- If the blob fails to decode (`error` with a `blob:` src) the engine falls back to the network URL **once** (`previewBlobRetriedRef`) before skipping the track.
+- `play` / `playing` now force `mediaSession.playbackState = 'playing'`: the `pause` event fired by the `pause()` right before a src change arrived **after** the synchronous `play()` and left the lock-screen notification showing ▶ while music played (two taps needed on Android).
+- On `visibilitychange → visible`, if the element claims to be playing but has `readyState < 2`, `currentTime < 0.5`, no `error` and the watchdog already fired (the socket died while the network was frozen), the engine re-assigns the same `src` and calls `play()` (the element already played inside a gesture, so it is allowed) and re-arms the watchdog — this replaces the manual pause + play.
+
+**Do not** go back to a hidden preload `<audio>` or rely on the HTTP cache for the track boundary, and do not start the prefetch from `play().then()` (it competed with the current track's initial buffering).
+
 ### Range-aware audio proxy (`src/lib/audio-upstream.ts`)
 
 `/api/audio-proxy` (Beatport samples) and `/api/bandcamp-preview` forward the upstream through **`streamAudioUpstream`**. iOS Safari requests audio in chunks (`Range: bytes=0-1`, then more) and expects **206 + `Content-Range`**. Returning a full **200** while advertising `Accept-Ranges` made playback or seek fail, and the player's `error` listener then skipped tracks in a chain. The abort timer covers **headers only** (10 s): aborting the body mid-stream cut 2–5 MB samples on 4G (`failed to pipe response`). Full responses over 20 MB are rejected (413).
