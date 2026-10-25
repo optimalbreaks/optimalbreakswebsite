@@ -37,6 +37,7 @@ El reproductor es una de las piezas más críticas de la web: debe funcionar **i
 - **I11** Miniaturas de YouTube vía proxy propio (no en negro con adblockers). **Verificar en producción.**
 - **I12** Formatos: sample mp3, Bandcamp, SoundCloud, YouTube, sample Beatport.
 - **I13** **Pantalla bloqueada (Android, 25 oct 2026).** Lista larga (una semana entera o Mis Tracks), bloquear el móvil con datos móviles (no wifi) y dejarlo quieto: la lista debe sonar **entera** sin tocar nada (el umbral mínimo para dar la prueba por buena son 4 cambios seguidos; el objetivo es la lista completa), y la notificación debe enseñar ❚❚ (no ▶) mientras suena. Mecanismo: la siguiente pista se baja entera a memoria (`prefetchPreviewTrack`) y el cambio no toca la red. Repetir con una exclusiva (`full_audio_url`, 6–8 MB) y con un tema de Bandcamp. Al desbloquear tras un fallo de red real, el tema debe arrancar solo (sin pause + play).
+- **I14** **Pantalla bloqueada (iPhone PWA, 25 oct 2026).** Cerrar la PWA del todo (deslizarla fuera) y reabrirla antes de probar: una PWA viva sigue con el JavaScript con el que arrancó. Lista → bloquear → (a) dejar que acabe un tema: pasa solo al siguiente; (b) ⏭ y ⏮ en la lockscreen: el tema nuevo **suena** sin tocar el móvil. Carátula nueva + contador corriendo sin sonido = fallo (el contador lo extrapola iOS, no es sonido). Mecanismo: en iOS el `src` va por URL (nunca `blob:`) y se cambia **sin** `pause()` previo. Verificado por Narciso el 25 oct 2026 (`c46a99b5`).
 
 ## Matriz por superficie (marcar en cada navegador/plataforma)
 

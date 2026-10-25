@@ -2408,6 +2408,7 @@ export function DeckAudioProvider({
       // `play()` entra por la vía corta sin tocar la sesión de audio.
       // En Android/Chromium se conserva el `pause()` previo: algunos ignoran
       // el cambio de src si el elemento sigue «playing» por dentro.
+      // Camino iOS verificado en iPhone: tocarlo exige repetir la QA I14.
       if (!isIosDevice() && !audio.paused) {
         previewSwitchingRef.current = true
         try { audio.pause() } catch { previewSwitchingRef.current = false }
