@@ -286,6 +286,64 @@ export function clearPreviewPrefetch(): void {
   prefetchFailures.clear()
 }
 
+// ── Puente de silencio entre pistas (SOLO Android/Chromium, 25 oct 2026) ──
+// Cuando un <audio> llega al final, Chrome da la sesión de medios por
+// acabada: quita la notificación y para su servicio en primer plano. Desde
+// Android 12 una app en segundo plano no puede volver a arrancar ese
+// servicio, así que el tema siguiente suena sin notificación y, al acabar,
+// Samsung congela Chrome (S23: «la segunda desaparece de la barra y se corta
+// al acabar»). Un segundo <audio> con silencio, sonando desde ~1,5 s antes del
+// final hasta que el siguiente tema dice `playing`, mantiene la sesión viva
+// todo el cambio. No mudo: Chrome no cuenta los reproductores mudos. Nunca en
+// iOS (`blobPrefetchSupported()`): allí el camino verificado no se toca.
+
+const BRIDGE_MAX_MS = 20_000
+let bridgeEl: HTMLAudioElement | null = null
+let bridgeUrl: string | null = null
+let bridgeTimer: ReturnType<typeof setTimeout> | null = null
+
+/** 8 s de PCM a 8 kHz con un vaivén de ±1 LSB (−90 dB): inaudible, pero no «vacío». */
+function silentWavUrl(): string {
+  const rate = 8000
+  const samples = rate * 8
+  const buf = new ArrayBuffer(44 + samples * 2)
+  const v = new DataView(buf)
+  const str = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) }
+  str(0, 'RIFF'); v.setUint32(4, 36 + samples * 2, true); str(8, 'WAVE')
+  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true)
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true)
+  str(36, 'data'); v.setUint32(40, samples * 2, true)
+  for (let i = 0; i < samples; i++) v.setInt16(44 + i * 2, i % 2 ? 1 : -1, true)
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))
+}
+
+export function startTrackBridge(reason: string): void {
+  if (!canUseAudio() || !blobPrefetchSupported()) return
+  try {
+    if (!bridgeEl) {
+      bridgeEl = new Audio()
+      bridgeEl.loop = true
+      bridgeEl.preload = 'auto'
+    }
+    if (!bridgeUrl) bridgeUrl = silentWavUrl()
+    if (bridgeEl.getAttribute('src') !== bridgeUrl) bridgeEl.src = bridgeUrl
+    if (bridgeTimer) clearTimeout(bridgeTimer)
+    bridgeTimer = setTimeout(() => stopTrackBridge('timeout'), BRIDGE_MAX_MS)
+    if (!bridgeEl.paused) return
+    playerDiag('bridge_on', { reason })
+    void bridgeEl.play().catch((err: unknown) => {
+      playerDiag('bridge_err', { name: err instanceof Error ? err.name : 'error' })
+    })
+  } catch { /* el puente nunca rompe el reproductor */ }
+}
+
+export function stopTrackBridge(reason: string): void {
+  if (bridgeTimer) { clearTimeout(bridgeTimer); bridgeTimer = null }
+  if (!bridgeEl || bridgeEl.paused) return
+  playerDiag('bridge_off', { reason })
+  try { bridgeEl.pause() } catch { /* no-op */ }
+}
+
 /**
  * Camino de iOS / Safari (sin blob): `<audio>` oculto que precalienta la
  * caché HTTP con la siguiente pista. Asigna `src` solo si cambia. Vive fuera

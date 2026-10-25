@@ -35,6 +35,8 @@ import {
   previewSrcOrigin,
   releasePreviewBlob,
   setPrefetchReadyListener,
+  startTrackBridge,
+  stopTrackBridge,
   takePrefetchedPreview,
 } from '@/lib/audio-unlock'
 import { audioDiag, playerDiag } from '@/lib/player-diag'
@@ -1958,6 +1960,7 @@ export function DeckAudioProvider({
     cancelAnimationFrame(previewRafRef.current)
     const a = previewAudioRef.current
     if (a && a.getAttribute('src')) playerDiag('stop', { idx: previewIndexRef.current, n: previewQueueRef.current.length })
+    stopTrackBridge('stop')
     if (a) {
       a.pause()
       const attr = a.getAttribute('src')
@@ -2289,6 +2292,15 @@ export function DeckAudioProvider({
         // si un intento anterior falló (back-off en `prefetchPreviewTrack`).
         if (blobPrefetchSupported() && !a.paused && a.currentTime >= 1.5 && hasRealSrc()) {
           preloadNextPreview(previewQueueRef.current, previewIndexRef.current)
+          // Android: el puente de silencio entra antes del final para que
+          // Chrome nunca vea la sesión terminada (lib/audio-unlock).
+          if (
+            Number.isFinite(a.duration) &&
+            a.duration - a.currentTime <= 1.5 &&
+            previewIndexRef.current + 1 < previewQueueRef.current.length
+          ) {
+            startTrackBridge('near_end')
+          }
         }
         // Refresca la posición en la lockscreen (~1.5 s). El rAF de la UI
         // no corre en background, así que sin esto la barra del SO se
@@ -2324,6 +2336,7 @@ export function DeckAudioProvider({
           previewSwitchingRef.current = false
           return
         }
+        if (previewUserPausedRef.current) stopTrackBridge('user_pause')
         if (previewUserPausedRef.current || a.ended || !hasRealSrc()) return
         if (!document.hidden) return
         previewSystemPausedRef.current = true
@@ -2335,6 +2348,7 @@ export function DeckAudioProvider({
 
         const markInterrupted = () => {
           playerDiag('interrupted', { idx: previewIndexRef.current, hiddenMs: hiddenForMs })
+          stopTrackBridge('interrupted')
           previewInterruptedRef.current = true
           try {
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
@@ -2394,6 +2408,7 @@ export function DeckAudioProvider({
           blob: (a.getAttribute('src') || '').startsWith('blob:'),
           t: a.currentTime,
         })
+        stopTrackBridge('playing')
         markPlayingState()
         refreshNowPlaying()
       })
@@ -2447,6 +2462,8 @@ export function DeckAudioProvider({
       // el cambio de src si el elemento sigue «playing» por dentro.
       // Camino iOS verificado en iPhone: tocarlo exige repetir la QA I14.
       if (!isIosDevice() && !audio.paused) {
+        // ⏭ con un tema sonando: el puente cubre el hueco del pause().
+        startTrackBridge('switch')
         previewSwitchingRef.current = true
         try { audio.pause() } catch { previewSwitchingRef.current = false }
       }
