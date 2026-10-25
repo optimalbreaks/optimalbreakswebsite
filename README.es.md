@@ -869,6 +869,9 @@ Los `<audio>` compartidos y el `AudioContext` único viven a **nivel de módulo*
 - `play` / `playing` fuerzan `mediaSession.playbackState = 'playing'`: el `pause` que dispara el `pause()` justo antes de cambiar de src llegaba **después** del `play()` síncrono y dejaba la notificación con ▶ mientras sonaba la música (dos toques en Android).
 - Al volver a primer plano (`visibilitychange`), si el elemento dice que suena pero tiene `readyState < 2`, `currentTime < 0,5`, sin `error` y el watchdog ya saltó (el socket murió con la red congelada), el motor reasigna el mismo `src`, llama a `play()` (el elemento ya sonó dentro de un gesto, así que está permitido) y rearma el watchdog: sustituye el pause + play manual.
 
+- **Temas que solo existen en SoundCloud** (9 de ~22.000 filas de featured, oct 2026) suenan por el iframe oculto del widget, que pide su stream a SoundCloud en ese momento —justo cuando Android congela la red— y no se pueden bajar antes. En el auto-avance **con la página oculta**, `advanceFromCurrentTrack` los salta para que la cadena siga viva; en primer plano (y con ⏭ manual) suenan como siempre. Los YouTube (`chart_vinyl_tracks`) nunca estuvieron en la cola: cada uno lleva su propio iframe.
+- Perder el foco de audio ante otra app (nota de voz de WhatsApp, una llamada) sigue parándonos **a propósito**, como Spotify (invariante 3bis).
+
 **No** volver a un `<audio>` de precarga oculto ni fiarse de la caché HTTP en el cambio de pista, y no lanzar el prefetch desde `play().then()` (competía con el buffer inicial de la pista actual).
 
 ### Proxy de audio con Range (`src/lib/audio-upstream.ts`)

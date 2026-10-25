@@ -954,6 +954,9 @@ The shared `<audio>` elements and the single `AudioContext` live at **module sco
 - `play` / `playing` now force `mediaSession.playbackState = 'playing'`: the `pause` event fired by the `pause()` right before a src change arrived **after** the synchronous `play()` and left the lock-screen notification showing ▶ while music played (two taps needed on Android).
 - On `visibilitychange → visible`, if the element claims to be playing but has `readyState < 2`, `currentTime < 0.5`, no `error` and the watchdog already fired (the socket died while the network was frozen), the engine re-assigns the same `src` and calls `play()` (the element already played inside a gesture, so it is allowed) and re-arms the watchdog — this replaces the manual pause + play.
 
+- **SoundCloud-only tracks in the queue** (9 of ~22k featured rows, Oct 2026) play through the hidden widget iframe, which requests its stream from SoundCloud at that very moment — exactly when Android freezes the network — and cannot be pre-downloaded. On auto-advance **with the page hidden**, `advanceFromCurrentTrack` skips them so the chain stays alive; in the foreground (and on a manual ⏭) they play as before. YouTube rows (`chart_vinyl_tracks`) were never in the queue: each one has its own iframe.
+- Losing audio focus to another app (WhatsApp voice note, a call) still pauses us **on purpose**, like Spotify (invariant 3bis).
+
 **Do not** go back to a hidden preload `<audio>` or rely on the HTTP cache for the track boundary, and do not start the prefetch from `play().then()` (it competed with the current track's initial buffering).
 
 ### Range-aware audio proxy (`src/lib/audio-upstream.ts`)

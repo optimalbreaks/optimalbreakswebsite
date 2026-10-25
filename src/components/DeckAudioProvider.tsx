@@ -2013,7 +2013,17 @@ export function DeckAudioProvider({
     previewAdvancedRef.current = true
     const q = previewQueueRef.current
     const cur = previewIndexRef.current
-    const next = cur + 1
+    let next = cur + 1
+    // Pantalla bloqueada / app en segundo plano: un tema que solo existe en
+    // SoundCloud suena por el iframe del widget, que pide su stream a
+    // SoundCloud en ese momento — justo cuando Android congela la red (y
+    // no se puede bajar antes a memoria como los de tienda). Si se queda
+    // mudo, la lista muere ahí hasta desbloquear. En background se salta;
+    // en primer plano (y con ⏭ manual) suena como siempre. Son 9 temas de
+    // 22.000 (oct 2026).
+    if (typeof document !== 'undefined' && document.hidden) {
+      while (next < q.length && previewItemSoundCloudUrl(q[next])) next += 1
+    }
     if (next >= q.length) {
       stopPreviewInternal()
       return
@@ -2031,8 +2041,12 @@ export function DeckAudioProvider({
   // «no enganchaba» hasta desbloquear). Idempotente: se puede llamar en
   // cada `timeupdate`. SoundCloud va por iframe: no aplica.
   const preloadNextPreview = useCallback((queue: PreviewTrack[], idx: number) => {
-    const next = queue[idx + 1]
-    if (!next || !next.src || previewItemSoundCloudUrl(next)) return
+    // El siguiente tema de tienda (los de SoundCloud no se bajan: van por
+    // iframe, y en background se saltan).
+    let j = idx + 1
+    while (j < queue.length && previewItemSoundCloudUrl(queue[j])) j += 1
+    const next = queue[j]
+    if (!next || !next.src) return
     prefetchPreviewTrack(next.src)
   }, [])
 
