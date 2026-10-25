@@ -41,6 +41,8 @@ type Props = {
   trackTitle: string
   /** Texto del botón principal: «Generar historia», «Generar reel»… */
   confirmLabel: string
+  /** Segundos que suenan = duración del vídeo (por defecto, la de un tema). */
+  segmentSec?: number
   /** `null` = generar sin audio (si el audio no se pudo cargar). */
   onConfirm: (segment: ShareAudioSegment | null) => void
   onCancel: () => void
@@ -48,7 +50,7 @@ type Props = {
 
 export default function AudioSegmentPicker(props: Props) {
   const { audioUrl, segmentKey, onConfirm, onCancel } = props
-  const segSec = SHARE_SEGMENT_SEC
+  const segSec = props.segmentSec ?? SHARE_SEGMENT_SEC
   const es = props.lang === 'es'
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null)
   const [failed, setFailed] = useState(false)

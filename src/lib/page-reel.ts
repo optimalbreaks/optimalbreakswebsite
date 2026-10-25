@@ -86,7 +86,7 @@ export type FortnightReelInput = {
   debutTotal: number
   debut: string[]
   /** Audio del n.º 1 de la lista (mismo origen) para el selector de fragmento de R/F. */
-  audio?: { src: string; key: string; label: string } | null
+  audio?: { src: string; key: string; label: string; seconds: number } | null
 }
 
 const imageCache = new Map<string, Promise<Img | null>>()

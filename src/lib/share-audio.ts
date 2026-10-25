@@ -16,7 +16,6 @@ export const SHARE_AUDIO_RATE = 44100
 
 const FADE_IN_SEC = 0.12
 const FADE_OUT_SEC = 1.2
-const SEAM_FADE_SEC = 0.25
 
 /**
  * Audio decodificado + fragmento elegido: lo que necesita el renderizador.
@@ -150,35 +149,28 @@ export function suggestSegmentStart(buffer: AudioBuffer, dur = SHARE_SEGMENT_SEC
 }
 
 /**
- * Muestras estéreo de `durationSec` (la duración del VÍDEO). Empieza siempre en
- * `start`, el fragmento elegido. Si el vídeo dura más (artículos: 60 s), sigue
- * el tema; si el audio se acaba antes, vuelve a `start` con un fundido corto.
- * Fundido de entrada y de salida.
+ * Muestras estéreo del fragmento, de `durationSec` (la duración del VÍDEO:
+ * si es más largo que el fragmento, el audio llega hasta el final). Si no cabe desde
+ * `start`, el arranque retrocede; si el audio entero es más corto, el resto
+ * va en silencio. Fundido corto de entrada y de salida.
  */
 export function segmentChannels(buffer: AudioBuffer, start: number, durationSec: number): Float32Array[] {
   const sr = buffer.sampleRate
   const n = Math.round(durationSec * sr)
-  const from = Math.min(Math.max(0, Math.round(start * sr)), Math.max(0, buffer.length - 1))
-  const loopLen = buffer.length - from
-  const seam = Math.round(SEAM_FADE_SEC * sr)
+  const from = Math.round(Math.max(0, Math.min(start, buffer.duration - durationSec)) * sr)
   const out: Float32Array[] = []
   for (let c = 0; c < 2; c++) {
     const src = buffer.getChannelData(Math.min(c, buffer.numberOfChannels - 1))
     const ch = new Float32Array(n)
-    for (let pos = 0; loopLen > 0 && pos < n; pos += loopLen) {
-      const take = Math.min(loopLen, n - pos)
-      ch.set(src.subarray(from, from + take), pos)
-      const f = Math.min(seam, Math.floor(take / 2))
-      if (pos > 0) for (let i = 0; i < f; i++) ch[pos + i] *= i / f
-      if (pos + take < n) for (let i = 0; i < f; i++) ch[pos + take - 1 - i] *= i / f
-    }
+    ch.set(src.subarray(from, Math.min(src.length, from + n)))
     out.push(ch)
   }
-  const fadeIn = Math.min(n, Math.round(FADE_IN_SEC * sr))
-  const fadeOut = Math.min(n, Math.round(FADE_OUT_SEC * sr))
+  const real = Math.min(n, buffer.length - from)
+  const fadeIn = Math.min(real, Math.round(FADE_IN_SEC * sr))
+  const fadeOut = Math.min(real, Math.round(FADE_OUT_SEC * sr))
   for (const ch of out) {
     for (let i = 0; i < fadeIn; i++) ch[i] *= i / fadeIn
-    for (let i = 0; i < fadeOut; i++) ch[n - 1 - i] *= i / fadeOut
+    for (let i = 0; i < fadeOut; i++) ch[real - 1 - i] *= i / fadeOut
   }
   return out
 }

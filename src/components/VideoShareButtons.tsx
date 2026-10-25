@@ -35,8 +35,8 @@ export interface VideoShareButtonsProps {
   what: { es: string; en: string }
   makeVideo: (format: ReelFormat, onProgress: (ratio: number) => void, audio: ShareAudioSegment | null) => Promise<ReelResult>
   makeCaption: (platform: SharePlatform) => Promise<string>
-  /** Tema que suena (URL del mismo origen). Se eligen 30 s, como en los temas; si el vídeo dura más, sigue el tema. */
-  audio?: { src: string; key: string; label: string } | null
+  /** Tema que suena (URL del mismo origen) y segundos = duración del vídeo. */
+  audio?: { src: string; key: string; label: string; seconds: number } | null
   /** `light` = sobre papel claro (borde de tinta). Por defecto, botón oscuro como el resto de compartir. */
   tone?: 'dark' | 'light'
 }
@@ -240,6 +240,7 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
           lang={(es ? 'es' : 'en') as Locale}
           audioUrl={audio.src}
           segmentKey={audio.key}
+          segmentSec={audio.seconds}
           trackTitle={audio.label}
           confirmLabel={picker === 'reel' ? (es ? 'Generar reel' : 'Generate reel') : es ? 'Generar vídeo' : 'Generate video'}
           onConfirm={onPickerConfirm}
