@@ -16,15 +16,16 @@ export type SharePlatform = 'instagram' | 'facebook'
 export async function aiShareCaption(opts: {
   kind: ShareCaptionKind
   platform: SharePlatform
+  /** Idioma de la página. El pie va igual: español arriba, inglés debajo. */
   lang: Locale | string
   url: string
   context: Record<string, unknown>
   /** Plantilla en un idioma: se usa en los dos (ver `bilingualCaption`). */
   fallback: (lang: Locale) => string
 }): Promise<string> {
-  const main: Locale = opts.lang === 'en' ? 'en' : 'es'
-  const fallback = bilingualCaption(opts.fallback(main), opts.fallback(main === 'es' ? 'en' : 'es'), {
-    lang: main,
+  // Español primero siempre, también desde /en: el público y los artistas son sobre todo españoles.
+  const fallback = bilingualCaption(opts.fallback('es'), opts.fallback('en'), {
+    lang: 'es',
     url: opts.url,
     platform: opts.platform,
   })
@@ -35,7 +36,7 @@ export async function aiShareCaption(opts: {
       body: JSON.stringify({
         kind: opts.kind,
         platform: opts.platform,
-        lang: opts.lang,
+        lang: 'es',
         url: opts.url,
         context: opts.context,
       }),

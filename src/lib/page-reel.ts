@@ -85,8 +85,6 @@ export type FortnightReelInput = {
   key: string | null
   debutTotal: number
   debut: string[]
-  /** Idioma de la página: va primero en el recuadro «WHAT YOU SEE». */
-  es?: boolean
   /** Audio del n.º 1 de la lista (mismo origen) para el selector de fragmento de R/F. */
   audio?: { src: string; key: string; label: string; seconds: number } | null
 }

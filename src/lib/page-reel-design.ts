@@ -910,8 +910,6 @@ export type FortnightAnim = {
   key: string | null
   debutTotal: number
   debut: string[]
-  /** Idioma de la página: va primero en el recuadro «WHAT YOU SEE» (el otro, debajo). */
-  es?: boolean
 }
 /** Cada escena dura ~7 s: da tiempo a leer el titular, los datos y el recuadro «WHAT YOU SEE». */
 export const FORTNIGHT_DUR = 60
@@ -1170,17 +1168,17 @@ function fnNoteText(k: FnScene, d: FortnightAnim, P: string): { es: string; en: 
 }
 
 /**
- * Recuadro «WHAT YOU SEE»: la frase en el idioma de la página, grande, y debajo
- * la del otro idioma, más pequeña y en gris. Entran a máquina, al ritmo de lectura.
+ * Recuadro «LO QUE VES»: la frase en español, grande, y debajo la inglesa, más
+ * pequeña y en gris (el público es sobre todo español). Entran a máquina, al ritmo de lectura.
  */
-function fnNote(ctx: C, L: FnLayout, lt: number, text: { es: string; en: string }, es: boolean) {
+function fnNote(ctx: C, L: FnLayout, lt: number, text: { es: string; en: string }) {
   const N = L.note
   if (!N) return
-  const main = es ? text.es : text.en
-  const alt = es ? text.en : text.es
+  const main = text.es
+  const alt = text.en
   slide(ctx, ph(lt, 0.6, 0.45), 0, 40, () => {
     box(ctx, N.x, N.y, N.w, N.h, '#fff', INK, 8, 4)
-    chip(ctx, N.x + 24, N.y - 18, es ? 'LO QUE VES · WHAT YOU SEE' : 'WHAT YOU SEE · LO QUE VES', INK, YELLOW, L.V ? 22 : 20)
+    chip(ctx, N.x + 24, N.y - 18, 'LO QUE VES · WHAT YOU SEE', INK, YELLOW, L.V ? 22 : 20)
     const tw = N.w - 56
     const gap = 16
     // Letra grande para leerla en el móvil; solo baja si las dos frases no caben enteras.
@@ -1282,7 +1280,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     ctx.translate(-W * 0.35 * ex, 0)
     ctx.globalAlpha = 1 - ex
   }
-  fnNote(ctx, L, lt, fnNoteText(sc.k, d, P), d.es !== false)
+  fnNote(ctx, L, lt, fnNoteText(sc.k, d, P))
 
   if (sc.k === 'intro') {
     const sub = P === 'WEEK'

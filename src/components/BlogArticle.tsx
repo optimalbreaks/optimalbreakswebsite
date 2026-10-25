@@ -362,7 +362,6 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
           key: digest.sound.keys[0]?.key ?? null,
           debutTotal: digest.debut_total,
           debut: digest.debut.slice(0, 6).map((n) => n.name),
-          es: safeLang === 'es',
           // Suena el n.º 1 de la lista; si no tiene audio del mismo origen, el siguiente que lo tenga.
           audio: (() => {
             const sameOrigin = (u?: string | null) =>

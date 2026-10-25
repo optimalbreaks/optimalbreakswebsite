@@ -12,8 +12,9 @@
 // guardar y, como mucho, 5 hashtags genéricos de gran difusión. Nunca hashtags
 // de artistas, sellos o festivales: esos los etiqueta el admin a mano (se
 // filtran también aquí por si el modelo se los salta).
-// Bilingüe (25 oct 2026): el idioma de la página arriba y un bloque más corto en
-// el otro debajo («🇬🇧 EN» / «🇪🇸 ES»); enlace y hashtags una sola vez, al final.
+// Bilingüe (25 oct 2026): español arriba y un bloque más corto en inglés debajo
+// («🇬🇧 EN»); enlace y hashtags una sola vez, al final. El cliente manda siempre
+// `lang: 'es'`, también desde /en: el público y los artistas son sobre todo españoles.
 // Si falla, el cliente usa el texto de plantilla, también bilingüe (`bilingualCaption`).
 // ============================================
 
