@@ -1,0 +1,237 @@
+{
+  "week_date": "2008-03-31",
+  "picks": [
+    {
+      "title": "Torque Of The Devil",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/plump-djs/2955",
+          "name": "Plump DJs"
+        }
+      ],
+      "label": "Finger Lickin Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/torque-of-the-devil/536559",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f5477d43-19df-4540-a7f1-05477144c093.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Bb Minor",
+      "release_year": 2008,
+      "release_date": "2008-04-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Take The Weight",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/plump-djs/2955",
+          "name": "Plump DJs"
+        }
+      ],
+      "label": "Finger Lickin Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/take-the-weight/536560",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c490a525-c8e6-41c7-a6ef-be54e23f4fe2.LOFI.mp3",
+      "bpm": 101,
+      "music_key": "D Major",
+      "release_year": 2008,
+      "release_date": "2008-04-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "A.D.I.D.A.S.",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/wutam/3233",
+          "name": "Wutam"
+        },
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        }
+      ],
+      "label": "Digital Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/adidas/540005",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b49e86b7-0609-42ec-832b-26b5d9973501.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Bb Major",
+      "release_year": 2008,
+      "release_date": "2008-04-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "Everybody Thinks Im High And I Am",
+      "mix_name": "Wutam & J-Break Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-voodoo/9780",
+          "name": "DJ Voodoo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/wutam/3233",
+          "name": "Wutam"
+        },
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        },
+        {
+          "name": "J-"
+        }
+      ],
+      "label": "Digital Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/everybody-thinks-im-high-and-i-am/540009",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8668599f-279d-4d92-a8d1-b0fca252787e.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2008,
+      "release_date": "2008-04-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "Open Up Your Soul",
+      "mix_name": "Wutam & J-Break Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/agent-k/1946",
+          "name": "Agent K"
+        },
+        {
+          "url": "https://www.beatport.com/artist/wutam/3233",
+          "name": "Wutam"
+        },
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        },
+        {
+          "name": "J-"
+        }
+      ],
+      "label": "Digital Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/open-up-your-soul/540010",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/50aa3536-87d0-42d4-8f96-0f737fa3ca43.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Minor",
+      "release_year": 2008,
+      "release_date": "2008-04-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Body Rock",
+      "mix_name": "Wutam & J-Break Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ash-rock/40625",
+          "name": "Ash Rock"
+        },
+        {
+          "url": "https://www.beatport.com/artist/wutam/3233",
+          "name": "Wutam"
+        },
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        },
+        {
+          "name": "J-"
+        }
+      ],
+      "label": "Digital Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/body-rock/540011",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/37e29dd4-be4a-4b8e-8725-61f76b1cfc42.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "G Major",
+      "release_year": 2008,
+      "release_date": "2008-04-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "Scream",
+      "mix_name": "Wutam & J-Break Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/prizm-eclipse/72718",
+          "name": "Prizm & Eclipse"
+        },
+        {
+          "url": "https://www.beatport.com/artist/wutam/3233",
+          "name": "Wutam"
+        },
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        },
+        {
+          "name": "J-"
+        }
+      ],
+      "label": "Digital Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/scream/540008",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/53b383e7-00d8-4f53-bf2d-80d630eb7afc.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Major",
+      "release_year": 2008,
+      "release_date": "2008-04-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "No Soul",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "ILS"
+        }
+      ],
+      "label": "Marine Parade",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/no-soul/10771",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/db1ac53b-a8e5-44a0-a220-7174320690f6.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "D Minor",
+      "release_year": 2008,
+      "release_date": "2008-04-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8,
+      "spotify_url": "https://open.spotify.com/track/5BnM6yVV3GjZCczQRSQKj2"
+    }
+  ]
+}

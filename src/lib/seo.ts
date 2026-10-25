@@ -289,6 +289,7 @@ const COUNTRY_NAMES: Record<string, { es: string; en: string }> = {
   FI: { es: 'Finlandia', en: 'Finland' },
   JP: { es: 'Japón', en: 'Japan' },
   NZ: { es: 'Nueva Zelanda', en: 'New Zealand' },
+  ZA: { es: 'Sudáfrica', en: 'South Africa' },
 }
 
 /** Devuelve el nombre legible del país; si no hay match, devuelve el code tal cual. */

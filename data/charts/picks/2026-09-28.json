@@ -2,7 +2,6 @@
   "week_date": "2026-09-28",
   "picks": [
     {
-      "sort_order": 1,
       "title": "Bandido & Maleante",
       "mix_name": "Original Mix",
       "artists": [
@@ -16,14 +15,16 @@
       "link_label": "",
       "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-bandido-maleante.webp",
       "sample_url": "https://geo-samples.beatport.com/track/06916d7e-622b-4674-a8b6-d542d170760b.LOFI.mp3",
-      "full_audio_url": "/api/audio/kritycal-system-bandido-maleante.mp3",
-      "spotify_url": "https://open.spotify.com/track/0jzyRiOBK91mbvMfM3gmA4",
       "bpm": 135,
       "music_key": "G Minor",
       "release_year": 2026,
       "release_date": "2026-09-28",
       "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
-      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo.",
+      "sort_order": 1,
+      "full_audio_url": "/api/audio/kritycal-system-bandido-maleante.mp3",
+      "spotify_url": "https://open.spotify.com/track/0jzyRiOBK91mbvMfM3gmA4",
+      "tidal_url": "https://tidal.com/browse/track/538423230"
     },
     {
       "title": "Talk To Me",
@@ -48,7 +49,36 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 2
+      "sort_order": 2,
+      "spotify_url": "https://open.spotify.com/track/67UPdOkKHXhvGKmIHw5IEr",
+      "tidal_url": "https://tidal.com/browse/track/562746030"
+    },
+    {
+      "title": "I Hope You Find",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Visitor"
+        },
+        {
+          "name": "Pillo"
+        }
+      ],
+      "label": "Dubversified Culture",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-hope-you-find/30632841",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f4e1ebaf-7f4a-4164-9e2e-a3f1372c7092.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/23a855f0-67e5-49b4-8005-a659f4de9f44.LOFI.mp3",
+      "bpm": 92,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3,
+      "spotify_url": "https://open.spotify.com/track/5lG0X3gUdWpipBsgOlEupU",
+      "tidal_url": "https://tidal.com/browse/track/564452469"
     },
     {
       "title": "Big Bouncer",
@@ -92,7 +122,36 @@
       "release_date": "2026-09-28",
       "note_en": "",
       "note_es": "",
-      "sort_order": 5
+      "sort_order": 5,
+      "spotify_url": "https://open.spotify.com/track/3Hm3IDWZUlcCZgBHhHAKyA",
+      "tidal_url": "https://tidal.com/browse/track/563064010"
+    },
+    {
+      "title": "Alright",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dyce"
+        },
+        {
+          "name": "Mirage Musique"
+        }
+      ],
+      "label": "Dubversified Culture",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/alright/30632842",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f4e1ebaf-7f4a-4164-9e2e-a3f1372c7092.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/279a48f5-8b16-435f-8ca3-1ee6865a5a9d.LOFI.mp3",
+      "bpm": 101,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6,
+      "spotify_url": "https://open.spotify.com/track/2Z8qmuuBqwDtr7VmvPjWtV",
+      "tidal_url": "https://tidal.com/browse/track/561157887"
     },
     {
       "title": "Control",
@@ -114,7 +173,9 @@
       "release_date": "2026-09-28",
       "note_en": "",
       "note_es": "",
-      "sort_order": 7
+      "sort_order": 7,
+      "spotify_url": "https://open.spotify.com/track/50sszzaoA5x7MH5o5ooYp6",
+      "tidal_url": "https://tidal.com/browse/track/562500001"
     },
     {
       "title": "Bum Bum Real",
@@ -136,7 +197,9 @@
       "release_date": "2026-09-28",
       "note_en": "",
       "note_es": "",
-      "sort_order": 8
+      "sort_order": 8,
+      "spotify_url": "https://open.spotify.com/track/39B4ss0rDZNGOwvMe5vSoQ",
+      "tidal_url": "https://tidal.com/browse/track/554477070"
     },
     {
       "title": "WEEKEND SELEKTA",
@@ -158,7 +221,9 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 9
+      "sort_order": 9,
+      "spotify_url": "https://open.spotify.com/track/1m96fK3JNvuh5K30SFPlhQ",
+      "tidal_url": "https://tidal.com/browse/track/103458267"
     },
     {
       "title": "So Mad",
@@ -180,7 +245,9 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 10
+      "sort_order": 10,
+      "spotify_url": "https://open.spotify.com/track/2Wi6lxoBfWPUxxhvoDDdZ9",
+      "tidal_url": "https://tidal.com/browse/track/549889741"
     },
     {
       "title": "Musca",
@@ -202,7 +269,8 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 11
+      "sort_order": 11,
+      "spotify_url": "https://open.spotify.com/track/5pxET0ObLAR55YMx6uknJo"
     },
     {
       "title": "No Limit",
@@ -224,7 +292,8 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 12
+      "sort_order": 12,
+      "spotify_url": "https://open.spotify.com/track/4a7WvbdgCXifYyEd2MRwcy"
     },
     {
       "title": "Outside",
@@ -246,7 +315,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 13
+      "sort_order": 13,
+      "spotify_url": "https://open.spotify.com/track/5e9lR0VX3XGp1fZ6O8RfQD",
+      "tidal_url": "https://tidal.com/browse/track/556568685"
     },
     {
       "title": "Constellation",
@@ -268,7 +339,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 14
+      "sort_order": 14,
+      "spotify_url": "https://open.spotify.com/track/4eAjvyu7NKhsVlvK6ACM9R",
+      "tidal_url": "https://tidal.com/browse/track/556113835"
     },
     {
       "title": "Constellation",
@@ -293,7 +366,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 15
+      "sort_order": 15,
+      "spotify_url": "https://open.spotify.com/track/3NOX4kJzp0iui9Bw2eLOff",
+      "tidal_url": "https://tidal.com/browse/track/556113836"
     },
     {
       "title": "Constellation",
@@ -318,7 +393,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 16
+      "sort_order": 16,
+      "spotify_url": "https://open.spotify.com/track/2TQkJBU9MDErE1aV1Tlxsu",
+      "tidal_url": "https://tidal.com/browse/track/556113837"
     },
     {
       "title": "Constellation",
@@ -343,7 +420,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 17
+      "sort_order": 17,
+      "spotify_url": "https://open.spotify.com/track/5Y8Wl6GUOktlSd9PeaOzYw",
+      "tidal_url": "https://tidal.com/browse/track/556113838"
     },
     {
       "title": "ANTHEM",
@@ -365,7 +444,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 18
+      "sort_order": 18,
+      "spotify_url": "https://open.spotify.com/track/17Ru9SEVXkVP3Ap1JArmuu",
+      "tidal_url": "https://tidal.com/browse/track/428388982"
     },
     {
       "title": "Switch",
@@ -387,7 +468,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 19
+      "sort_order": 19,
+      "spotify_url": "https://open.spotify.com/track/4S0vGhnF3q1Mlh58NCCuXT",
+      "tidal_url": "https://tidal.com/browse/track/563010119"
     },
     {
       "title": "Buck Rogers",
@@ -409,7 +492,9 @@
       "release_date": "2026-09-30",
       "note_en": "",
       "note_es": "",
-      "sort_order": 20
+      "sort_order": 20,
+      "spotify_url": "https://open.spotify.com/track/4vDTunhbqUuKVlyIZ2aUUC",
+      "tidal_url": "https://tidal.com/browse/track/563010120"
     },
     {
       "title": "Black Desert",
@@ -431,7 +516,8 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 21
+      "sort_order": 21,
+      "spotify_url": "https://open.spotify.com/track/6So1x1wyfycNmLAfqBNtmD"
     },
     {
       "title": "Starship",
@@ -453,7 +539,8 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 22
+      "sort_order": 22,
+      "spotify_url": "https://open.spotify.com/track/1xcv3xCK0HiXHatEctxkgi"
     },
     {
       "title": "Back Out",
@@ -475,61 +562,8 @@
       "release_date": "2026-09-29",
       "note_en": "",
       "note_es": "",
-      "sort_order": 23
-    },
-    {
-      "title": "I Hope You Find",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Visitor"
-        },
-        {
-          "name": "Pillo"
-        }
-      ],
-      "label": "Dubversified Culture",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/i-hope-you-find/30632841",
-      "spotify_url": "https://open.spotify.com/track/5lG0X3gUdWpipBsgOlEupU",
-      "tidal_url": "https://tidal.com/browse/track/564452469",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f4e1ebaf-7f4a-4164-9e2e-a3f1372c7092.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/23a855f0-67e5-49b4-8005-a659f4de9f44.LOFI.mp3",
-      "bpm": 92,
-      "music_key": "Bb Minor",
-      "release_year": 2026,
-      "release_date": "2026-09-28",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 3
-    },
-    {
-      "title": "Alright",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Dyce"
-        },
-        {
-          "name": "Mirage Musique"
-        }
-      ],
-      "label": "Dubversified Culture",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/alright/30632842",
-      "spotify_url": "https://open.spotify.com/track/2Z8qmuuBqwDtr7VmvPjWtV",
-      "tidal_url": "https://tidal.com/browse/track/561157887",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f4e1ebaf-7f4a-4164-9e2e-a3f1372c7092.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/279a48f5-8b16-435f-8ca3-1ee6865a5a9d.LOFI.mp3",
-      "bpm": 101,
-      "music_key": "Db Minor",
-      "release_year": 2026,
-      "release_date": "2026-09-28",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 6
+      "sort_order": 23,
+      "spotify_url": "https://open.spotify.com/track/5uA3XDPLU18n0rgX7MkJTE"
     },
     {
       "title": "Radium",
@@ -573,7 +607,8 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 25
+      "sort_order": 25,
+      "tidal_url": "https://tidal.com/browse/track/565463865"
     },
     {
       "title": "Flying Low",
@@ -601,7 +636,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 26
+      "sort_order": 26,
+      "spotify_url": "https://open.spotify.com/track/5IohlmdzGtzRpX4MYu3aBz",
+      "tidal_url": "https://tidal.com/browse/track/562029959"
     },
     {
       "title": "Wayger",
@@ -623,7 +660,8 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 27
+      "sort_order": 27,
+      "spotify_url": "https://open.spotify.com/track/5zgaIBzEaP6IaSJheDmFjz"
     },
     {
       "title": "Velocity",
@@ -645,7 +683,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 28
+      "sort_order": 28,
+      "spotify_url": "https://open.spotify.com/track/7CCG9KUAUdxHUKMv774gvF",
+      "tidal_url": "https://tidal.com/browse/track/567513582"
     },
     {
       "title": "Edge",
@@ -673,7 +713,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 29
+      "sort_order": 29,
+      "spotify_url": "https://open.spotify.com/track/37dtHFSd6bnJ1N4OzJQ7QK",
+      "tidal_url": "https://tidal.com/browse/track/567513622"
     },
     {
       "title": "Darkness",
@@ -698,7 +740,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 30
+      "sort_order": 30,
+      "spotify_url": "https://open.spotify.com/track/5gNyyAsjLs1FXc60bLQB4U",
+      "tidal_url": "https://tidal.com/browse/track/480174741"
     },
     {
       "title": "Cyber Attack",
@@ -720,7 +764,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 31
+      "sort_order": 31,
+      "spotify_url": "https://open.spotify.com/track/0gS1ieNnvjMj0HC9Pbcm3j",
+      "tidal_url": "https://tidal.com/browse/track/559752510"
     },
     {
       "title": "Zombieland",
@@ -742,7 +788,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 32
+      "sort_order": 32,
+      "spotify_url": "https://open.spotify.com/track/700XVkuvXf7s0MpV2E7cAu",
+      "tidal_url": "https://tidal.com/browse/track/559752509"
     },
     {
       "title": "Losing My Mind",
@@ -764,7 +812,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 33
+      "sort_order": 33,
+      "spotify_url": "https://open.spotify.com/track/3Z3Nt22LQf5AbpzTUWAiBh",
+      "tidal_url": "https://tidal.com/browse/track/559752508"
     },
     {
       "title": "Swimsuit",
@@ -786,7 +836,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 34
+      "sort_order": 34,
+      "spotify_url": "https://open.spotify.com/track/3JiMwD9h5SMFAxtpynNXeG",
+      "tidal_url": "https://tidal.com/browse/track/559752506"
     },
     {
       "title": "Waiting For",
@@ -808,7 +860,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 35
+      "sort_order": 35,
+      "spotify_url": "https://open.spotify.com/track/3TOxgB5CBgr8T1Y3CT7cxC",
+      "tidal_url": "https://tidal.com/browse/track/559752505"
     },
     {
       "title": "THV Infected",
@@ -830,7 +884,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 36
+      "sort_order": 36,
+      "spotify_url": "https://open.spotify.com/track/4iW4HKZpCtOb6Rpl1tOHoi",
+      "tidal_url": "https://tidal.com/browse/track/480174730"
     },
     {
       "title": "Evil State",
@@ -852,7 +908,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 37
+      "sort_order": 37,
+      "spotify_url": "https://open.spotify.com/track/6ujvqH7KfpKqlbjBjulEhT",
+      "tidal_url": "https://tidal.com/browse/track/480174729"
     },
     {
       "title": "Nightmare",
@@ -874,7 +932,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 38
+      "sort_order": 38,
+      "spotify_url": "https://open.spotify.com/track/5uwfzwxoPfUi6DGeIapz65",
+      "tidal_url": "https://tidal.com/browse/track/559752502"
     },
     {
       "title": "Dark Side",
@@ -896,7 +956,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 39
+      "sort_order": 39,
+      "spotify_url": "https://open.spotify.com/track/3mhn0yJHxNEenwPe9BdnBq",
+      "tidal_url": "https://tidal.com/browse/track/480174727"
     },
     {
       "title": "Your Soul Is Mine",
@@ -918,7 +980,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 40
+      "sort_order": 40,
+      "spotify_url": "https://open.spotify.com/track/7qkGXn631zX5o4GvthoL6w",
+      "tidal_url": "https://tidal.com/browse/track/480174726"
     },
     {
       "title": "Damned",
@@ -940,7 +1004,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 41
+      "sort_order": 41,
+      "spotify_url": "https://open.spotify.com/track/2tnqMEITgZx4b1ofoUgVCZ",
+      "tidal_url": "https://tidal.com/browse/track/480174725"
     },
     {
       "title": "My Element",
@@ -962,7 +1028,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 42
+      "sort_order": 42,
+      "spotify_url": "https://open.spotify.com/track/32SSnbL5U00KvkWnaxgiPe",
+      "tidal_url": "https://tidal.com/browse/track/480174724"
     },
     {
       "title": "Arabian Terror",
@@ -984,7 +1052,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 43
+      "sort_order": 43,
+      "spotify_url": "https://open.spotify.com/track/0c8drw0npVbWuWNoMKnrVv",
+      "tidal_url": "https://tidal.com/browse/track/559752497"
     },
     {
       "title": "Ozone Breakdown",
@@ -1009,7 +1079,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 44
+      "sort_order": 44,
+      "spotify_url": "https://open.spotify.com/track/6hcv89Ff8ffsHYwygJLRSp",
+      "tidal_url": "https://tidal.com/browse/track/561171111"
     },
     {
       "title": "Ozone Breakdown",
@@ -1034,7 +1106,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 45
+      "sort_order": 45,
+      "spotify_url": "https://open.spotify.com/track/6hcv89Ff8ffsHYwygJLRSp",
+      "tidal_url": "https://tidal.com/browse/track/561171112"
     },
     {
       "title": "Roller Coaster Hands In The Air",
@@ -1056,7 +1130,9 @@
       "release_date": "2026-10-01",
       "note_en": "",
       "note_es": "",
-      "sort_order": 46
+      "sort_order": 46,
+      "spotify_url": "https://open.spotify.com/track/4xHkH2qAuy2aGAoQAOCWWI",
+      "tidal_url": "https://tidal.com/browse/track/563366142"
     },
     {
       "title": "Lollipop",
@@ -1078,7 +1154,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 47
+      "sort_order": 47,
+      "spotify_url": "https://open.spotify.com/track/4VDuCTXQ89F9mCjIzj4Bk3",
+      "tidal_url": "https://tidal.com/browse/track/568063574"
     },
     {
       "title": "Riddim",
@@ -1100,7 +1178,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 48
+      "sort_order": 48,
+      "spotify_url": "https://open.spotify.com/track/5ppncvLUtgrDsgYh151pgI",
+      "tidal_url": "https://tidal.com/browse/track/568063532"
     },
     {
       "title": "WEEKEND SELEKTA",
@@ -1122,7 +1202,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 49
+      "sort_order": 49,
+      "spotify_url": "https://open.spotify.com/track/2R1UnIrYx7qnOMgdRnovlO",
+      "tidal_url": "https://tidal.com/browse/track/564413894"
     },
     {
       "title": "Passion",
@@ -1147,7 +1229,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 50
+      "sort_order": 50,
+      "spotify_url": "https://open.spotify.com/track/3cHxfNznhPp0GRBTm4pcW7",
+      "tidal_url": "https://tidal.com/browse/track/269548641"
     },
     {
       "title": "Hypogeo",
@@ -1169,7 +1253,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 51
+      "sort_order": 51,
+      "spotify_url": "https://open.spotify.com/track/6k1gYpI2Q6b8PpLUusdDM7",
+      "tidal_url": "https://tidal.com/browse/track/567917502"
     },
     {
       "title": "Booty Booty",
@@ -1191,7 +1277,8 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 52
+      "sort_order": 52,
+      "spotify_url": "https://open.spotify.com/track/0XM3hbj0Xtu7lHUSg7gDGd"
     },
     {
       "title": "Grip",
@@ -1213,7 +1300,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 53
+      "sort_order": 53,
+      "spotify_url": "https://open.spotify.com/track/1tzRUSS4OBX6RnKkTcsr4N",
+      "tidal_url": "https://tidal.com/browse/track/561711893"
     },
     {
       "title": "Feel My Love",
@@ -1238,7 +1327,8 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 54
+      "sort_order": 54,
+      "spotify_url": "https://open.spotify.com/track/0ROYaluamZdgoBR3NSCPoj"
     },
     {
       "title": "POISON",
@@ -1260,7 +1350,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 55
+      "sort_order": 55,
+      "spotify_url": "https://open.spotify.com/track/63jUBfF721PDFNrRnR0VcD",
+      "tidal_url": "https://tidal.com/browse/track/536282256"
     },
     {
       "title": "Edit",
@@ -1285,7 +1377,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 56
+      "sort_order": 56,
+      "spotify_url": "https://open.spotify.com/track/1Hhh6nrE6v1tJQgcz7UOC2",
+      "tidal_url": "https://tidal.com/browse/track/91947635"
     },
     {
       "title": "Twisted Boogie",
@@ -1313,7 +1407,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 57
+      "sort_order": 57,
+      "spotify_url": "https://open.spotify.com/track/5uJiuwifFEgakoIZp3Hqid",
+      "tidal_url": "https://tidal.com/browse/track/561400159"
     },
     {
       "title": "No Filter",
@@ -1335,7 +1431,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 58
+      "sort_order": 58,
+      "spotify_url": "https://open.spotify.com/track/2Kzgr1exfyYHJuoYQx3m2t",
+      "tidal_url": "https://tidal.com/browse/track/563689507"
     },
     {
       "title": "You Are Unique",
@@ -1357,7 +1455,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 59
+      "sort_order": 59,
+      "spotify_url": "https://open.spotify.com/track/1a7Bafx14g3cybfSl8AQed",
+      "tidal_url": "https://tidal.com/browse/track/560642564"
     },
     {
       "title": "Esfinge",
@@ -1379,7 +1479,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 60
+      "sort_order": 60,
+      "spotify_url": "https://open.spotify.com/track/7kWFvSii7hc3OKL4Wlm5Pn",
+      "tidal_url": "https://tidal.com/browse/track/560591166"
     },
     {
       "title": "Totality",
@@ -1401,7 +1503,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 61
+      "sort_order": 61,
+      "spotify_url": "https://open.spotify.com/track/2NKbKIl6iNJBucvqtneZ4T",
+      "tidal_url": "https://tidal.com/browse/track/560591170"
     },
     {
       "title": "Loralie",
@@ -1426,7 +1530,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 62
+      "sort_order": 62,
+      "spotify_url": "https://open.spotify.com/track/1I4I1EEfnxtZo7FUhPTLFs",
+      "tidal_url": "https://tidal.com/browse/track/560394607"
     },
     {
       "title": "Dale",
@@ -1448,7 +1554,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 63
+      "sort_order": 63,
+      "spotify_url": "https://open.spotify.com/track/59EzFakhVRvVBWOfeU6P9a",
+      "tidal_url": "https://tidal.com/browse/track/560345351"
     },
     {
       "title": "Exotic",
@@ -1470,7 +1578,8 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 64
+      "sort_order": 64,
+      "spotify_url": "https://open.spotify.com/track/4axSr7OF9HlegLP0x4uWoo"
     },
     {
       "title": "Black Bird",
@@ -1492,7 +1601,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 65
+      "sort_order": 65,
+      "spotify_url": "https://open.spotify.com/track/261rYagTq63JQaqpFc08Hu",
+      "tidal_url": "https://tidal.com/browse/track/559530005"
     },
     {
       "title": "Pantapo",
@@ -1514,7 +1625,8 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 66
+      "sort_order": 66,
+      "spotify_url": "https://open.spotify.com/track/5K5oWUWSTsYFpgyj8w6d9l"
     },
     {
       "title": "MO CUISHLE",
@@ -1536,7 +1648,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 67
+      "sort_order": 67,
+      "spotify_url": "https://open.spotify.com/track/6J8wHZr6woEkP8Tbj2rogR",
+      "tidal_url": "https://tidal.com/browse/track/559297035"
     },
     {
       "title": "BLOW THE ROOF",
@@ -1558,7 +1672,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 68
+      "sort_order": 68,
+      "spotify_url": "https://open.spotify.com/track/3XrIj5nsy511h8TDxnpI84",
+      "tidal_url": "https://tidal.com/browse/track/557211429"
     },
     {
       "title": "You Got Me",
@@ -1583,7 +1699,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 69
+      "sort_order": 69,
+      "spotify_url": "https://open.spotify.com/track/3hImfTPMidNIBQuMZ4VB17",
+      "tidal_url": "https://tidal.com/browse/track/563688492"
     },
     {
       "title": "Pasion Eterna",
@@ -1605,7 +1723,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 70
+      "sort_order": 70,
+      "spotify_url": "https://open.spotify.com/track/69J0RoIdeW9VHS6rPG7T4o",
+      "tidal_url": "https://tidal.com/browse/track/563687343"
     },
     {
       "title": "Golden",
@@ -1630,7 +1750,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 71
+      "sort_order": 71,
+      "spotify_url": "https://open.spotify.com/track/0Fr9BlOf5m8XYsUYBt5QKY",
+      "tidal_url": "https://tidal.com/browse/track/563687285"
     },
     {
       "title": "Good For Me",
@@ -1652,7 +1774,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 72
+      "sort_order": 72,
+      "spotify_url": "https://open.spotify.com/track/0kQz2zcpw584OUjFCxng1F",
+      "tidal_url": "https://tidal.com/browse/track/563687255"
     },
     {
       "title": "Submerge",
@@ -1677,7 +1801,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 73
+      "sort_order": 73,
+      "spotify_url": "https://open.spotify.com/track/1jtnvRZ2qApjoEZdRvzG3Q",
+      "tidal_url": "https://tidal.com/browse/track/563687049"
     },
     {
       "title": "Horror Beats",
@@ -1699,7 +1825,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 74
+      "sort_order": 74,
+      "spotify_url": "https://open.spotify.com/track/31f3DQaBIGbHoaB9WTCsra",
+      "tidal_url": "https://tidal.com/browse/track/563512853"
     },
     {
       "title": "Behind The Door",
@@ -1724,7 +1852,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 75
+      "sort_order": 75,
+      "spotify_url": "https://open.spotify.com/track/22ZC1bxwzTuQVuHlOW8DK0",
+      "tidal_url": "https://tidal.com/browse/track/563512852"
     },
     {
       "title": "Trick Or Treat",
@@ -1746,7 +1876,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 76
+      "sort_order": 76,
+      "spotify_url": "https://open.spotify.com/track/5KSPNzcmswdPzvLUyiHKfO",
+      "tidal_url": "https://tidal.com/browse/track/563512851"
     },
     {
       "title": "Halloween",
@@ -1768,7 +1900,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 77
+      "sort_order": 77,
+      "spotify_url": "https://open.spotify.com/track/2WPDVJ9pnQJvoz2SWYPCUa",
+      "tidal_url": "https://tidal.com/browse/track/563512850"
     },
     {
       "title": "Phantom Groove",
@@ -1790,7 +1924,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 78
+      "sort_order": 78,
+      "spotify_url": "https://open.spotify.com/track/3kU4osVGfPgBgu9N4KVVeb",
+      "tidal_url": "https://tidal.com/browse/track/563512849"
     },
     {
       "title": "Night Of Halloween",
@@ -1815,7 +1951,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 79
+      "sort_order": 79,
+      "spotify_url": "https://open.spotify.com/track/4ckW6HlsR1fJ1wgCoTUyPr",
+      "tidal_url": "https://tidal.com/browse/track/563512848"
     },
     {
       "title": "Midnight",
@@ -1840,7 +1978,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 80
+      "sort_order": 80,
+      "spotify_url": "https://open.spotify.com/track/3kZtiJJNp7RiFA4vFvt1GD",
+      "tidal_url": "https://tidal.com/browse/track/563512847"
     },
     {
       "title": "Last Night",
@@ -1862,7 +2002,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 81
+      "sort_order": 81,
+      "spotify_url": "https://open.spotify.com/track/10G5SW5uxq2F61DffZviSB",
+      "tidal_url": "https://tidal.com/browse/track/563512846"
     },
     {
       "title": "Dreams",
@@ -1884,7 +2026,8 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 82
+      "sort_order": 82,
+      "spotify_url": "https://open.spotify.com/track/2PszRjIeXpgMKC0msf856B"
     },
     {
       "title": "Viernes 13",
@@ -1906,7 +2049,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 83
+      "sort_order": 83,
+      "spotify_url": "https://open.spotify.com/track/3zPaIRk6DwzWdhJhlUyh2t",
+      "tidal_url": "https://tidal.com/browse/track/563512844"
     },
     {
       "title": "I Need You",
@@ -1922,11 +2067,65 @@
       "link_label": "",
       "artwork_url": "https://i1.sndcdn.com/artworks-MVRAhZdnzxxLp3Ez-XAmdBw-t500x500.jpg",
       "sample_url": "https://api.soundcloud.com/tracks/2411701665?secret_token=s-gUIOCRk8lD4",
+      "bpm": null,
+      "music_key": "",
       "release_year": 2026,
       "release_date": "2026-10-02",
       "note_en": "Single shared by the artist on SoundCloud (Zero Dark) — not a DJ set.",
       "note_es": "Tema compartido por el artista en SoundCloud (Zero Dark) — no es sesión de DJ.",
       "sort_order": 84
+    },
+    {
+      "title": "The City Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/brothers-of-funk/16697",
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-city-night/30521733",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7e2cbd0b-c08f-4c74-9b48-2e75a3e1bc9a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d9d5b45d-d0c6-40b6-9243-d4bcc20000cd.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-10-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85,
+      "spotify_url": "https://open.spotify.com/track/4PHH2kTUxX9Ea6TeBt61yb"
+    },
+    {
+      "title": "Right Now",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fortuny/785047",
+          "name": "Fortuny"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jordaz-esp/1314645",
+          "name": "Jordaz (ESP)"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/right-now/30521097",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aa554964-8b01-46a0-8361-9aa34d50606d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/90b99a21-86d1-4e10-931d-851e34050893.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86,
+      "spotify_url": "https://open.spotify.com/track/68KC1Z6iLpexnQJ1SW629h"
     },
     {
       "title": "Invaders",
@@ -1949,7 +2148,9 @@
       "release_date": "2026-10-02",
       "note_en": "",
       "note_es": "",
-      "sort_order": 87
+      "sort_order": 87,
+      "spotify_url": "https://open.spotify.com/track/5wXUXDOjX66IbcOJUnjGKh",
+      "tidal_url": "https://tidal.com/browse/track/558586985"
     },
     {
       "title": "Basement Beats",
@@ -1973,6 +2174,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 88
+    },
+    {
+      "title": "Creepah",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Ragga Twins"
+        }
+      ],
+      "label": "Jungle Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/creepah/30575160",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2e76699e-0802-4a5f-a871-4e713205a320.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8cf3c61a-fb36-49f2-82a1-a26e972d4bb6.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
     }
   ]
 }

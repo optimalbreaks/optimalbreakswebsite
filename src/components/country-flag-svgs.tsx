@@ -274,6 +274,21 @@ function FlagNZ({ className }: FlagProps) {
   )
 }
 
+function FlagZA({ className }: FlagProps) {
+  return (
+    <svg className={className} viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path fill="#e03c31" d="M0 0h640v240H0z" />
+      <path fill="#001489" d="M0 240h640v240H0z" />
+      <path fill="#fff" d="M0 186h640v108H0z" />
+      <path fill="#007847" d="M0 204h640v72H0z" />
+      <path fill="#fff" d="M0 0v480l292-240z" />
+      <path fill="#007847" d="M0 52v376l228-188z" />
+      <path fill="#ffb81c" d="M0 96v288l172-144z" />
+      <path fill="#000" d="M0 144v192l112-96z" />
+    </svg>
+  )
+}
+
 const FLAG_MAP: Record<string, ComponentType<FlagProps>> = {
   us: FlagUS,
   gb: FlagGB,
@@ -301,6 +316,7 @@ const FLAG_MAP: Record<string, ComponentType<FlagProps>> = {
   fi: FlagFI,
   jp: FlagJP,
   nz: FlagNZ,
+  za: FlagZA,
 }
 
 const FLAG_DIMS = {

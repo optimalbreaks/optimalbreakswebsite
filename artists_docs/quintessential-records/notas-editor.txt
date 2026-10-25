@@ -1,0 +1,109 @@
+Alta editorial — Quintessential Records (octubre 2026)
+======================================================
+
+Slug: quintessential-records
+Name: Quintessential Records
+(Beatport, New Releases y la ficha de Hey! This is Brad usan exactamente «Quintessential Records».)
+
+country: ZA
+founded_year: 2025
+(Primer release documentado en Beatport: álbum Simply Shook de Quentin SounDrive, 2025-10-07, catálogo 3900818. Where the Party At se presenta en Audiomack/web del sello como álbum de debut, sin fecha de tienda independiente tan clara; no adelantar 2024.)
+is_active: true
+is_featured: false
+
+NO confundir con Quintessentials (UK/DE, deep house en vinilo, ~2008, Discogs distinto). Homónimo cercano. Esta ficha es SOLO Beatport id 120382.
+
+Fuentes primarias
+-----------------
+- Sitio oficial: https://quentinsoundrive.my.canva.site/quintessential-records
+  Copy: «Independent Electronic label». «Quintessential Records was created to help Artists with great potential who are struggling to get signed. We release all kinds of electronic music. We can help Artists through distribution and gaining [exposure].» «Designed to Push rising stars».
+  Email en el pie: quintessentialrecordings@gmail.com — NO poner en la ficha pública.
+  Facebook group JOIN: https://web.facebook.com/groups/1012222724704636
+  SoundCloud del operador: https://soundcloud.com/quentinsoundrive25
+  Audiomack del sello: https://audiomack.com/quintessential-records  («Feel the BOOM!», desde abr 2026)
+  Playlist Spotify del sello: https://open.spotify.com/playlist/0NKLnvtXD3u7XGKRr567dt
+- Beatport: https://www.beatport.com/label/quintessential-records/120382  id 120382
+- Threads @quentin.soundrive se presenta con la marca del sello.
+
+Geografía / operador
+--------------------
+Quentin SounDrive es productor EDM de Johannesburgo (Audiomack jun 2023; Beatport artist 769909; Canva artist page). El sitio del sello vive en su subdominio Canva. Asociación fuerte con la operación pública. NO escribir «fundado por Quentin SounDrive» ni «CEO»: las fuentes no lo dicen en esos términos.
+
+country = ZA por ese anclaje (Johannesburgo). No hay sede societaria publicada.
+
+NO Discogs de este sello (el match por nombre caería en Quintessentials UK). discogs_id = omitir.
+
+Catálogo Beatport (24 oct 2026, pestaña Tracks)
+-----------------------------------------------
+Filtros de género (un género por pista, recuentos de Beatport):
+- Mainstage (40)
+- Techno (Raw / Deep / Hypnotic) (14)
+- Breaks / Breakbeat / UK Bass (8)
+- House (6)
+- Electro House (6)
+- Tech House (5)
+- Electronica (3)
+- Techno (Peak Time / Driving) (1)
+- 140 / Deep Dubstep / Grime (1)
+- Minimal / Deep Tech (1)
+
+Artistas en el listado:
+- Quentin SounDrive (48)
+- Brian H (25)
+- Hey! This is Brad (7)
+- Brad Cousins (2) — mismo crédito civil que Hey! This is Brad; NO duplicar en el hero
+- Sam Adler (1) — Get on It con Brian H (Minimal / Deep Tech)
+- JRistheILLest (1) — no entra en el hero
+
+Identidad
+---------
+Sello electrónico independiente, multi-género, nativo digital (y vinilo vía elasticStage en la web). El centro de volumen en Beatport es Mainstage/EDM (Quentin) + techno/house (Brian H). El motivo de estar en Optimal Breaks es la hebra breakbeat de Hey! This is Brad (2026), no presentar el sello como un imprint exclusivo de breaks.
+
+Hebra breaks (Hey! This is Brad, género Beatport Breaks / Breakbeat / UK Bass)
+------------------------------------------------------------------------------
+- Freek the Beat — 2026-07-02 — 135 BPM
+- Simply Shook (Hey! This is Brad Remix) de Quentin SounDrive — 2026-08-03 — 130 BPM (ya en NR 2026-08-03)
+- Leave the Trumpet Alone! — 2026-08-25 — 132 BPM (NR 2026-08-24)
+- M. D. M. A (A Is for Acid) — 2026-10-09 — 132 BPM
+- Dopamean — 2026-10-13 — 135 BPM
+- Vigilante — 2026 (listado Beatport)
+
+También en NR: Freek the Beat (semana 2026-06-29).
+
+Brian H (House / Tech House / Techno): Make You Sweat, Feel the Bass, Faces of Oblivion, Work My Body, Losing My Mind, Lets Go, Whispers, The Hospital, etc.
+
+Quentin: álbum Simply Shook (2025-10-07); singles The Only Truth (House), Your Body.
+
+Adelanto en la home Canva (24 oct 2026): «Fettuccine» de Sativadiva, 27/10/26. Aún no en Beatport ese día → citar en bio, no en key_artists.
+
+Álbumes (página Albums Canva): Where the Party At (debut, Out Now, vinilo); Simply Shook; otro álbum con pre-save 20 November. elasticStage / Amazon / Spotify / SoundCloud / Beatport.
+
+key_artists (hero)
+------------------
+1. Quentin SounDrive
+2. Hey! This is Brad
+3. Brian H
+4. Sam Adler
+
+key_releases
+------------
+- Quentin SounDrive - Simply Shook (2025)
+- Quentin SounDrive - Where the Party At
+- Hey! This is Brad - Freek the Beat (2026)
+- Quentin SounDrive - Simply Shook (Hey! This is Brad Remix) (2026)
+- Hey! This is Brad - Leave the Trumpet Alone! (2026)
+- Hey! This is Brad - M. D. M. A (A Is for Acid) (2026)
+- Hey! This is Brad - Dopamean (2026)
+- Hey! This is Brad - Vigilante (2026)
+- Brian H - Make You Sweat
+- Sam Adler & Brian H - Get on It
+
+Logo
+----
+NO buscar en Google «Quintessential Records logo»: sale Quintessentials UK. Usar el avatar Beatport del sello 120382:
+https://geo-media.beatport.com/image_size/500x500/0e2ea385-f982-4b1c-9c20-86465a2d5e5c.jpg
+(portada usada como imagen de sello en Beatport; mismo patrón que DELAFRÄ).
+
+website
+-------
+https://quentinsoundrive.my.canva.site/quintessential-records

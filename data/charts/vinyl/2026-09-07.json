@@ -728,6 +728,66 @@
       "artwork_url": "https://i.ytimg.com/vi/dDcZ8ZC3MY8/hqdefault.jpg",
       "note_en": "2004 Lowered Recordings 12\" (LOW006). Beatport lists the same Tommy Vee Deep Vocal Remix; the archive row is the full YouTube.",
       "note_es": "12\" de Lowered Recordings de 2004 (LOW006). Beatport tiene el mismo Tommy Vee Deep Vocal Remix; en el archivo se queda el YouTube entero."
+    },
+    {
+      "sort_order": 38,
+      "title": "Old Spice",
+      "mix_name": "CNM Remix",
+      "artists": [
+        {
+          "name": "The Slag Brothers"
+        }
+      ],
+      "label": "Killer Green Recordings",
+      "catalog_number": "KG005R",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=ppAou2d-fvQ",
+      "artwork_url": "https://i.ytimg.com/vi/ppAou2d-fvQ/hqdefault.jpg",
+      "note_en": "C.N.M. remix of the 2003 Killer Green single, issued December 2004 (KG005R).",
+      "note_es": "Remix de C.N.M. del single de Killer Green de 2003, publicado en diciembre de 2004 (KG005R)."
+    },
+    {
+      "sort_order": 39,
+      "title": "Beggin",
+      "mix_name": "Stanton Warriors Bonus Beats Remix",
+      "artists": [
+        {
+          "name": "Timebox"
+        },
+        {
+          "name": "Stanton Warriors"
+        }
+      ],
+      "label": "Punks",
+      "catalog_number": "",
+      "year": 2008,
+      "format": "CD",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=jfpw4hg6evM",
+      "artwork_url": "https://i.ytimg.com/vi/jfpw4hg6evM/hqdefault.jpg",
+      "note_en": "Beggin and Bonus Beats as heard on Stanton Sessions Volume III, Punks, 27 Oct 2008.",
+      "note_es": "Beggin y Bonus Beats tal como suena en Stanton Sessions Volume III, Punks, 27 oct 2008."
+    },
+    {
+      "sort_order": 40,
+      "title": "Satisfaxion",
+      "mix_name": "Breaks Mix",
+      "artists": [
+        {
+          "name": "Benny Benassi"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": 2003,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=6TbYS0T8yeA",
+      "artwork_url": "https://i.ytimg.com/vi/6TbYS0T8yeA/hqdefault.jpg",
+      "note_en": "Breaks mix of Benny Benassi Satisfaction, 2003. The other Satisfaction rows in the store stay.",
+      "note_es": "Breaks Mix de Satisfaction, de Benny Benassi, 2003. Las otras filas de Satisfaction en la tienda se quedan."
     }
   ]
 }
