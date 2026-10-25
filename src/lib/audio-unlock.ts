@@ -146,16 +146,26 @@ export function connectDeckAudio(side: DeckSide): GainNode | null {
 // tema no arrancaba nunca. Android es lo contrario: la página sigue viva y
 // lo que se congela es la red. Cada plataforma usa el camino que le funciona.
 
+let iosDeviceCached: boolean | null = null
 let blobPrefetchAllowed: boolean | null = null
 
-/** Android / Chrome / Firefox / Edge → sí. iPhone, iPad (también con UA de escritorio) y Safari → no. */
+/** iPhone, iPad (también con UA de escritorio) o iPod, en cualquier navegador: todos son WebKit. */
+export function isIosDevice(): boolean {
+  if (iosDeviceCached !== null) return iosDeviceCached
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  iosDeviceCached =
+    /iP(hone|ad|od)/i.test(ua) || (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1)
+  return iosDeviceCached
+}
+
+/** Android / Chrome / Firefox / Edge → sí. iPhone, iPad y Safari → no. */
 export function blobPrefetchSupported(): boolean {
   if (blobPrefetchAllowed !== null) return blobPrefetchAllowed
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent || ''
-  const iosDevice = /iP(hone|ad|od)/i.test(ua) || (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1)
   const safariDesktop = /AppleWebKit/i.test(ua) && /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Android/i.test(ua)
-  blobPrefetchAllowed = !iosDevice && !safariDesktop
+  blobPrefetchAllowed = !isIosDevice() && !safariDesktop
   return blobPrefetchAllowed
 }
 

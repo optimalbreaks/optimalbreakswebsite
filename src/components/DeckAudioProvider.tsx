@@ -28,6 +28,7 @@ import {
   getSharedDeckAudio,
   getSharedMixAudio,
   getSharedPreviewAudio,
+  isIosDevice,
   isPrefetchedBlobSrc,
   pauseSharedPlayback,
   prefetchPreviewTrack,
@@ -1363,6 +1364,10 @@ export function DeckAudioProvider({
   // siempre: URL + <audio> oculto que precalienta la caché HTTP.
   const previewBlobRetriedRef = useRef(false)
   const previewPreloadRef = useRef<HTMLAudioElement | null>(null)
+  // `true` mientras el propio reproductor para el <audio> para cambiar de
+  // pista (⏭, error → avance). El listener de `pause` lo consume y así ese
+  // `pause` no se toma por «otra app nos ha quitado el altavoz».
+  const previewSwitchingRef = useRef(false)
   // Watchdog de arranque de pista: si tras el auto-avance el audio no
   // empieza a sonar (red parada en background), reintenta unas veces y,
   // si no hay manera, salta a la siguiente.
@@ -2285,6 +2290,11 @@ export function DeckAudioProvider({
       // el usuario lo pidiera, lo marcamos para que el keeper/visibility
       // puedan reanudar la lista.
       a.addEventListener('pause', () => {
+        // Pausa nuestra, justo antes de cambiar de pista: no es del SO.
+        if (previewSwitchingRef.current) {
+          previewSwitchingRef.current = false
+          return
+        }
         if (previewUserPausedRef.current || a.ended || !hasRealSrc()) return
         if (!document.hidden) return
         previewSystemPausedRef.current = true
@@ -2342,6 +2352,7 @@ export function DeckAudioProvider({
         // audio ha vuelto a ser nuestro.
         previewSystemPausedRef.current = false
         previewInterruptedRef.current = false
+        previewSwitchingRef.current = false
         markPlayingState()
         // iOS solo pinta MediaMetadata de forma fiable tras el evento play.
         refreshNowPlaying()
@@ -2383,7 +2394,24 @@ export function DeckAudioProvider({
     const targetSrc = queue[idx].src
     previewBlobRetriedRef.current = false
     if (!previewSrcEquals(audio, targetSrc)) {
-      try { audio.pause() } catch { /* no-op */ }
+      // iOS (25 oct 2026): NO se llama a `pause()` antes de cambiar el src.
+      // Con la pantalla bloqueada, ⏭ en la lockscreen cambiaba la carátula y
+      // el contador corría, pero no sonaba nada hasta tocar el móvil. El
+      // `pause()` saca la sesión de medios de WebKit del estado «Playing»; el
+      // `play()` siguiente tiene que pedir admisión otra vez y reactivar la
+      // AVAudioSession desde segundo plano, cosa que iOS no concede hasta
+      // volver a primer plano (el `play()` queda pendiente: ni `play` event,
+      // ni sonido). El fin natural de pista sí funcionaba porque ahí el
+      // elemento ya estaba parado y el `pause()` no hacía nada. Asignar el
+      // src sobre un elemento que suena ya descarta el reproductor anterior
+      // (algoritmo de carga) y la sesión sigue en «Playing», así que el
+      // `play()` entra por la vía corta sin tocar la sesión de audio.
+      // En Android/Chromium se conserva el `pause()` previo: algunos ignoran
+      // el cambio de src si el elemento sigue «playing» por dentro.
+      if (!isIosDevice() && !audio.paused) {
+        previewSwitchingRef.current = true
+        try { audio.pause() } catch { previewSwitchingRef.current = false }
+      }
       const prevAttr = audio.getAttribute('src')
       // Si la pista ya está en memoria (bajada mientras sonaba la anterior)
       // suena desde el blob: cero red en el cambio de tema con la pantalla
