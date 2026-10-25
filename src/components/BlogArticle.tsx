@@ -38,8 +38,6 @@ import { digestCoverFocuses } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
-import { FORTNIGHT_DUR } from '@/lib/page-reel-design'
-
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 
 /** Dónde vive la ficha. Quincena y trimestre: topreleases. El resto: blog. */
@@ -373,7 +371,6 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
               src: sameOrigin(t.audio_src) as string,
               key: t.featured_id ? `featured:${t.featured_id}` : `digest:${t.title}|${t.artists}`,
               label: `${t.title} — ${t.artists}`,
-              seconds: FORTNIGHT_DUR,
             }
           })(),
         }
