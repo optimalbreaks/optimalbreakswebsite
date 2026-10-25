@@ -19,6 +19,8 @@ import { DeckAudioContext, DeckAudioProgressContext } from '@/components/deck-au
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import { AUDIO_SESSION_KEY, clearPreviewSession, readPreviewSession, writePreviewSession } from '@/lib/audio-engine-pending'
 import {
+  assignAudioSrc,
+  blobPrefetchSupported,
   clearPreviewPrefetch,
   connectDeckAudio,
   getInitialDeckIndexes,
@@ -1355,7 +1357,12 @@ export function DeckAudioProvider({
   // auto-avance con la pantalla bloqueada el `src` pasa a ser `blob:` y el
   // play() no toca la red (Android la congela en cuanto el audio se para).
   // Si el blob no se puede decodificar, se vuelve a la URL UNA vez.
+  // Solo fuera de iOS / Safari (`blobPrefetchSupported`): en iOS un blob lo
+  // sirve la página, que está suspendida con la pantalla bloqueada, y el
+  // siguiente tema no arrancaba (25 oct 2026). Allí sigue el camino de
+  // siempre: URL + <audio> oculto que precalienta la caché HTTP.
   const previewBlobRetriedRef = useRef(false)
+  const previewPreloadRef = useRef<HTMLAudioElement | null>(null)
   // Watchdog de arranque de pista: si tras el auto-avance el audio no
   // empieza a sonar (red parada en background), reintenta unas veces y,
   // si no hay manera, salta a la siguiente.
@@ -1950,6 +1957,8 @@ export function DeckAudioProvider({
       releasePreviewBlob(attr)
     }
     clearPreviewPrefetch()
+    const pre = previewPreloadRef.current
+    if (pre) { pre.removeAttribute('src'); try { pre.load() } catch { /* no-op */ } }
     setPreviewPlaying(false)
     setPreviewQueue([])
     setPreviewIndex(0)
@@ -2047,7 +2056,20 @@ export function DeckAudioProvider({
     while (j < queue.length && previewItemSoundCloudUrl(queue[j])) j += 1
     const next = queue[j]
     if (!next || !next.src) return
-    prefetchPreviewTrack(next.src)
+    if (blobPrefetchSupported()) {
+      prefetchPreviewTrack(next.src)
+      return
+    }
+    // iOS / Safari: camino de siempre. <audio> oculto y mudo con
+    // preload="auto" que deja la siguiente pista en la caché HTTP.
+    let pre = previewPreloadRef.current
+    if (!pre) {
+      pre = new Audio()
+      pre.preload = 'auto'
+      pre.muted = true
+      previewPreloadRef.current = pre
+    }
+    assignAudioSrc(pre, next.src)
   }, [])
 
   // Watchdog de arranque: si tras (auto-)avanzar la pista el <audio> no
@@ -2238,7 +2260,7 @@ export function DeckAudioProvider({
         // Event-driven a propósito: los timers se throttlean en background,
         // `timeupdate` no mientras hay audio. Idempotente, y reintenta solo
         // si un intento anterior falló (back-off en `prefetchPreviewTrack`).
-        if (!a.paused && a.currentTime >= 1.5 && hasRealSrc()) {
+        if (blobPrefetchSupported() && !a.paused && a.currentTime >= 1.5 && hasRealSrc()) {
           preloadNextPreview(previewQueueRef.current, previewIndexRef.current)
         }
         // Refresca la posición en la lockscreen (~1.5 s). El rAF de la UI
@@ -2391,8 +2413,10 @@ export function DeckAudioProvider({
         const playKey = queue[idx].save ? canonicalKeyFromTrackPlaySave(queue[idx].save!) : null
         if (playKey && !skipNextPlayLogRef.current) logTrackPlay(playKey)
         skipNextPlayLogRef.current = false
-        // La siguiente pista se baja a memoria desde `timeupdate` (≥ 1,5 s),
-        // no aquí: así la actual tiene la red para ella al arrancar.
+        // Android: la siguiente pista se baja a memoria desde `timeupdate`
+        // (≥ 1,5 s), no aquí, para que la actual tenga la red al arrancar.
+        // iOS / Safari: el precalentamiento de siempre, en cuanto suena.
+        if (!blobPrefetchSupported()) preloadNextPreview(queue, idx)
       })
       .catch((err: unknown) => {
         skipNextPlayLogRef.current = false
@@ -2828,8 +2852,10 @@ export function DeckAudioProvider({
       // la red al cambiar de pista con la pantalla bloqueada (la siguiente no
       // estaba aún en memoria) y el socket murió sin `error`. Antes el usuario
       // tenía que dar pause + play. Reasignar el src relanza la carga y, como
-      // el elemento ya sonó en un gesto, el `play()` está permitido.
+      // el elemento ya sonó en un gesto, el `play()` está permitido. Solo
+      // Android: en iOS la carga la lleva el sistema y no se toca.
       if (
+        blobPrefetchSupported() &&
         previewStartAttemptsRef.current >= 1 &&
         a.readyState < 2 &&
         a.currentTime < 0.5 &&

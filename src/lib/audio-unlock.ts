@@ -137,6 +137,27 @@ export function connectDeckAudio(side: DeckSide): GainNode | null {
 // `play()` no toca la red. Si el prefetch no llegó, se usa la URL como antes.
 // Todas las URLs de preview son same-origin (/api/audio-proxy,
 // /api/bandcamp-preview, /api/audio/<slug>.mp3), así que fetch() las ve.
+//
+// SOLO fuera de iOS / Safari (25 oct 2026, PWA iPhone de Narciso: «se acaba
+// una canción y no pasa a la siguiente»). En iOS la reproducción de una URL
+// la hace un proceso del sistema (AVFoundation) que sigue vivo con la
+// pantalla bloqueada —por eso allí el problema era leve—, pero un `blob:` lo
+// tiene que servir la PÁGINA, y iOS la suspende al bloquear: el siguiente
+// tema no arrancaba nunca. Android es lo contrario: la página sigue viva y
+// lo que se congela es la red. Cada plataforma usa el camino que le funciona.
+
+let blobPrefetchAllowed: boolean | null = null
+
+/** Android / Chrome / Firefox / Edge → sí. iPhone, iPad (también con UA de escritorio) y Safari → no. */
+export function blobPrefetchSupported(): boolean {
+  if (blobPrefetchAllowed !== null) return blobPrefetchAllowed
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  const iosDevice = /iP(hone|ad|od)/i.test(ua) || (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1)
+  const safariDesktop = /AppleWebKit/i.test(ua) && /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Android/i.test(ua)
+  blobPrefetchAllowed = !iosDevice && !safariDesktop
+  return blobPrefetchAllowed
+}
 
 /** Tope del archivo en memoria. Samples 2-5 MB; exclusivas enteras 6-8 MB. */
 const PREFETCH_MAX_BYTES = 24 * 1024 * 1024
@@ -178,6 +199,7 @@ export function isPrefetchedBlobSrc(attr: string | null): boolean {
 /** Baja la pista en segundo plano. Idempotente: no repite si ya está o está bajando. */
 export function prefetchPreviewTrack(src: string | null | undefined): void {
   if (!canUseAudio() || !src) return
+  if (!blobPrefetchSupported()) return
   if (typeof fetch !== 'function' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return
   if (prefetched?.src === src || inflight?.src === src) return
   const fail = prefetchFailures.get(src)
@@ -244,6 +266,18 @@ export function clearPreviewPrefetch(): void {
   if (inflight) { inflight.ctl.abort(); inflight = null }
   if (prefetched) { revokeBlob(prefetched.url); prefetched = null }
   prefetchFailures.clear()
+}
+
+/**
+ * Camino de iOS / Safari (sin blob): `<audio>` oculto que precalienta la
+ * caché HTTP con la siguiente pista. Asigna `src` solo si cambia. Vive fuera
+ * del componente para que el compilador de React no trate la escritura de
+ * `.src` como una mutación de un valor guardado en un ref.
+ */
+export function assignAudioSrc(audio: HTMLAudioElement, src: string): void {
+  if (audio.getAttribute('src') === src) return
+  audio.src = src
+  try { audio.load() } catch { /* no-op */ }
 }
 
 // ─── Llamar SOLO dentro de un handler de click/tap ───────────────────────
