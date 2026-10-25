@@ -148,6 +148,17 @@ const blobOrigin = new Map<string, string>()
 let prefetched: { src: string; url: string } | null = null
 let inflight: { src: string; ctl: AbortController } | null = null
 const prefetchFailures = new Map<string, { attempts: number; nextAt: number }>()
+let onPrefetchReady: ((src: string, url: string) => void) | null = null
+
+/**
+ * Aviso de «ya está en memoria». El motor lo usa cuando la pista acabó ANTES
+ * de que la siguiente terminara de bajar (red lenta): la carga por URL puede
+ * quedarse sin bytes con la pantalla bloqueada; al llegar el blob se cambia
+ * a él sobre la marcha si el tema aún no ha arrancado.
+ */
+export function setPrefetchReadyListener(cb: ((src: string, url: string) => void) | null): void {
+  onPrefetchReady = cb
+}
 
 function revokeBlob(url: string): void {
   blobOrigin.delete(url)
@@ -195,6 +206,7 @@ export function prefetchPreviewTrack(src: string | null | undefined): void {
       blobOrigin.set(url, src)
       prefetched = { src, url }
       prefetchFailures.delete(src)
+      try { onPrefetchReady?.(src, url) } catch { /* no-op */ }
     } catch {
       if (ctl.signal.aborted) return
       const prev = prefetchFailures.get(src)
@@ -211,14 +223,12 @@ export function prefetchPreviewTrack(src: string | null | undefined): void {
 /**
  * Si la pista ya está en memoria devuelve su `blob:` y deja de ser «la
  * siguiente» (pasa a ser la que suena; la libera `releasePreviewBlob`).
- * Si no, `null`: el <audio> la cargará por URL, así que una descarga en
- * curso de ESA pista sobra y se aborta.
+ * Si no, `null`: el <audio> la carga por URL. Una descarga en curso de ESA
+ * misma pista se deja terminar: si la carga por URL se queda sin bytes
+ * (red congelada), `setPrefetchReadyListener` cambia al blob al llegar.
  */
 export function takePrefetchedPreview(src: string): string | null {
-  if (prefetched?.src !== src) {
-    if (inflight?.src === src) { inflight.ctl.abort(); inflight = null }
-    return null
-  }
+  if (prefetched?.src !== src) return null
   const url = prefetched.url
   prefetched = null
   return url

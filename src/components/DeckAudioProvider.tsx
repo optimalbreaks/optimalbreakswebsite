@@ -31,6 +31,7 @@ import {
   prefetchPreviewTrack,
   previewSrcOrigin,
   releasePreviewBlob,
+  setPrefetchReadyListener,
   takePrefetchedPreview,
 } from '@/lib/audio-unlock'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
@@ -2312,6 +2313,25 @@ export function DeckAudioProvider({
       a.addEventListener('playing', () => {
         markPlayingState()
         refreshNowPlaying()
+      })
+      // La pista acabó antes de que la siguiente terminara de bajar (red
+      // lenta): se cargó por URL y puede estar sin bytes con la pantalla
+      // bloqueada. Cuando el blob de ESA pista llega, si aún no ha
+      // arrancado, se cambia a él y sigue sin red. Si ya suena, el blob se
+      // queda guardado y lo libera el prefetch de la siguiente.
+      setPrefetchReadyListener((src) => {
+        if (previewAudioRef.current !== a || !hasRealSrc()) return
+        const cur = previewQueueRef.current[previewIndexRef.current]
+        if (!cur || cur.src !== src || previewItemSoundCloudUrl(cur)) return
+        if (previewUserPausedRef.current || previewInterruptedRef.current) return
+        if (a.readyState >= 2 || a.currentTime >= 0.5 || a.error) return
+        if (!previewSrcEquals(a, src)) return
+        const blobUrl = takePrefetchedPreview(src)
+        if (!blobUrl) return
+        const wasPlaying = !a.paused
+        a.src = blobUrl
+        previewStartAttemptsRef.current = 0
+        if (wasPlaying) void a.play().catch(() => { /* el watchdog lo cubre */ })
       })
     }
     const audio = previewAudioRef.current
