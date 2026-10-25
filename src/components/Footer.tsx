@@ -204,6 +204,14 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href={`/${lang}/install`}
+                  className="inline-block border-2 border-[var(--ink)] bg-[var(--yellow)] px-2 py-0.5 text-[15px] font-bold text-[var(--ink)] no-underline shadow-[2px_2px_0_var(--red)] transition-colors hover:bg-[var(--red)] hover:text-white"
+                >
+                  📲 {lang === 'es' ? 'Instalar PWA' : 'Install PWA'}
+                </Link>
+              </li>
             </ul>
           </nav>
 

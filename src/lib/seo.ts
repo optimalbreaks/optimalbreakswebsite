@@ -72,6 +72,7 @@ export type SeoStaticKey =
   | 'privacy'
   | 'terms'
   | 'cookies'
+  | 'install'
 
 type SeoDict = {
   site_name: string

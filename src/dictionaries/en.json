@@ -778,6 +778,10 @@
     "cookies": {
       "title": "Cookie policy",
       "description": "Cookies and similar technologies on www.optimalbreaks.com and how to manage your preferences."
+    },
+    "install": {
+      "title": "Install the app (PWA) on Android and iPhone",
+      "description": "Step-by-step guide to install Optimal Breaks on your phone as an app from Chrome (Android) or Safari (iPhone): full screen and music with the screen locked."
     }
   },
   "a11y": {
