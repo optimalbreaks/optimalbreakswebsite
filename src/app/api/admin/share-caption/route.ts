@@ -12,7 +12,9 @@
 // guardar y, como mucho, 5 hashtags genéricos de gran difusión. Nunca hashtags
 // de artistas, sellos o festivales: esos los etiqueta el admin a mano (se
 // filtran también aquí por si el modelo se los salta).
-// Si falla, el cliente usa el texto de plantilla (`share-track.ts`).
+// Bilingüe (25 oct 2026): el idioma de la página arriba y un bloque más corto en
+// el otro debajo («🇬🇧 EN» / «🇪🇸 ES»); enlace y hashtags una sola vez, al final.
+// Si falla, el cliente usa el texto de plantilla, también bilingüe (`bilingualCaption`).
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -148,7 +150,7 @@ function cleanCaption(raw: string, kind: Kind, ctx: Record<string, unknown>, pla
   }
   let text = body
   if (platform === 'facebook' && url && !text.includes(url)) text += `\n\n👉 ${url}`
-  if (platform === 'instagram' && !/bio\b/i.test(text)) text += `\n\n${es ? '🔗 Enlace en la bio.' : '🔗 Link in bio.'}`
+  if (platform === 'instagram' && !/bio\b/i.test(text)) text += `\n\n${es ? '🔗 Enlace en la bio · Link in bio' : '🔗 Link in bio · Enlace en la bio'}`
   return `${text}\n\n${ok.slice(0, 5).join(' ')}`.trim()
 }
 
@@ -196,17 +198,18 @@ export async function POST(request: NextRequest) {
         '- Español de España, natural y cercano, con criterio de DJ y amante del breakbeat. Nada de tono publicitario ni frases hechas vacías. No empieces por «Compartimos».',
         '- Primera línea: gancho de máximo 90 caracteres que se entienda sola (es lo único visible antes de «… más»). Puede empezar con 1 emoji.',
         long
-          ? `- Después, 3–4 párrafos cortos (1–3 frases cada uno, separados por una línea en blanco): los datos del contexto (${factsEs}), por qué escucharlo, y una línea para DJs con BPM y tonalidad si los hay. Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, nu skool, DJ set, rave, nuevo tema…). No inventes datos que no estén en el contexto (ni remezclas, ni historia, ni premios); lo que digas del sonido, en términos generales del género.`
+          ? `- Después, 3 párrafos cortos (1–3 frases cada uno, separados por una línea en blanco): los datos del contexto (${factsEs}), por qué escucharlo, y una línea para DJs con BPM y tonalidad si los hay. Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, nu skool, DJ set, rave, nuevo tema…). No inventes datos que no estén en el contexto (ni remezclas, ni historia, ni premios); lo que digas del sonido, en términos generales del género.`
           : '- Después 2–3 párrafos cortos (separados por una línea en blanco) con datos concretos del contexto (fechas, BPM, ciudad, festival, número de temas, puestos, nombres…). Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, DJ set, rave, nuevos lanzamientos…). No inventes nada que no esté en el contexto (ni ambiente, ni público, ni anécdotas).',
         '- Una línea que invite a interactuar de forma concreta para esta publicación (una pregunta para comentar, guardar para el finde, etiquetar a alguien…).',
+        `- Bilingüe: todo lo anterior, en español, ocupa ${long ? '1.100–1.300' : '450–550'} caracteres. Después, una línea en blanco, una línea «🇬🇧 EN» y un bloque en inglés de ${long ? '500–600' : '450–550'} caracteres con su propio gancho, los datos clave y la pregunta, escrito para quien lee en inglés (no una traducción literal). Los mismos datos: nada que no esté en el español.`,
         platform === 'instagram'
-          ? '- Enlace: una línea que diga que el enlace está en la bio. Sin URL (en Instagram no es clicable).'
-          : `- Enlace: incluye esta URL tal cual en una línea propia: ${url}`,
+          ? '- Enlace: una sola vez, al final, antes de los hashtags, exactamente «🔗 Enlace en la bio · Link in bio». Sin URL (en Instagram no es clicable).'
+          : `- Enlace: una sola vez, al final, antes de los hashtags, esta URL tal cual en una línea propia: ${url}`,
         '- Puedes nombrar artistas y sellos en el texto, sin @ (las menciones las pone el admin).',
         '- Última línea: como mucho 5 hashtags, en minúsculas, separados por espacios. PROHIBIDOS hashtags con nombres de artistas, sellos, festivales, eventos o de Optimal Breaks. Solo términos genéricos de gran difusión relacionados con el contenido (género, escena, formato): p. ej. #breakbeat #breaks #djset #newmusic #electronicmusic #ravemusic #vinyl… Elige los de más alcance que encajen.',
         long
-          ? '- Entre 1.000 y 1.800 caracteres en total (nunca más de 2.000) y como mucho 6 emojis.'
-          : '- Entre 500 y 1.200 caracteres en total y como mucho 5 emojis.',
+          ? '- En total, con hashtags, nunca más de 2.050 caracteres (Instagram corta en 2.200) y como mucho 7 emojis.'
+          : '- En total, con hashtags, nunca más de 1.250 caracteres y como mucho 6 emojis.',
         'Responde SOLO JSON: {"caption": string}',
       ].join('\n')
     : [
@@ -217,17 +220,18 @@ export async function POST(request: NextRequest) {
         '- Natural English with a DJ’s taste. No ad-speak, no empty clichés. Do not start with “Sharing”.',
         '- First line: a hook of max 90 characters that works on its own (it is all people see before “… more”). May start with 1 emoji.',
         long
-          ? `- Then 3–4 short paragraphs (1–3 sentences each, separated by a blank line): the facts from the context (${factsEn}), why to listen, and a line for DJs with BPM and key if present. Work in naturally the words people search on Instagram (breakbeat, breaks, nu skool, DJ set, rave, new track…). Never invent facts not in the context (no remixes, history or awards); describe the sound only in general genre terms.`
+          ? `- Then 3 short paragraphs (1–3 sentences each, separated by a blank line): the facts from the context (${factsEn}), why to listen, and a line for DJs with BPM and key if present. Work in naturally the words people search on Instagram (breakbeat, breaks, nu skool, DJ set, rave, new track…). Never invent facts not in the context (no remixes, history or awards); describe the sound only in general genre terms.`
           : '- Then 2–3 short paragraphs (separated by a blank line) with concrete facts from the context (dates, BPM, city, festival, number of tracks, positions, names…). Work in naturally the words people search on Instagram (breakbeat, breaks, DJ set, rave, new releases…). Never invent anything not in the context (no vibe, crowd or anecdotes).',
         '- One line inviting interaction, specific to this post (a question to comment, save it for the weekend, tag someone…).',
+        `- Bilingual: everything above, in English, takes ${long ? '1,100–1,300' : '450–550'} characters. Then a blank line, a line «🇪🇸 ES» and a block in Spanish from Spain of ${long ? '500–600' : '450–550'} characters with its own hook, the key facts and the question, written for Spanish readers (not a literal translation). Same facts: nothing that is not in the English.`,
         platform === 'instagram'
-          ? '- Link: one line saying the link is in bio. No URL (not clickable on Instagram).'
-          : `- Link: include this URL as-is on its own line: ${url}`,
+          ? '- Link: once, at the end, before the hashtags, exactly «🔗 Link in bio · Enlace en la bio». No URL (not clickable on Instagram).'
+          : `- Link: once, at the end, before the hashtags, this URL as-is on its own line: ${url}`,
         '- You may name artists and labels in the text, without @ (the admin adds the tags).',
         '- Last line: at most 5 lowercase hashtags separated by spaces. NEVER hashtags with artist, label, festival, event or Optimal Breaks names. Only generic high-reach terms related to the content (genre, scene, format): e.g. #breakbeat #breaks #djset #newmusic #electronicmusic #ravemusic #vinyl… Pick the highest-reach ones that fit.',
         long
-          ? '- Between 1,000 and 1,800 characters in total (never over 2,000) and at most 6 emojis.'
-          : '- Between 500 and 1,200 characters in total and at most 5 emojis.',
+          ? '- In total, with hashtags, never over 2,050 characters (Instagram cuts at 2,200) and at most 7 emojis.'
+          : '- In total, with hashtags, never over 1,250 characters and at most 6 emojis.',
         'Reply ONLY JSON: {"caption": string}',
       ].join('\n')
 

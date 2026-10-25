@@ -1265,7 +1265,7 @@ function top100Caption(tracks: CommunityTopTrack[], lang: Locale, platform: Shar
     platform,
     lang,
     url,
-    fallback: buildPageVideoCaption('top100', { first }, { lang, url, platform }),
+    fallback: (l) => buildPageVideoCaption('top100', { first }, { lang: l, url, platform }),
     context: {
       rows: top.map((t, i) => ({ pos: i + 1, title: topReelTitle(t), artists: t.artists, label: t.label, saves: t.save_count })),
     },

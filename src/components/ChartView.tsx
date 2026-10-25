@@ -1433,7 +1433,7 @@ export default function ChartView({
       platform,
       lang,
       url,
-      fallback: buildPageVideoCaption('week', { count: picks.length, weekLabel: formatWeekDate(weekDate, lang) }, { lang, url, platform }),
+      fallback: (l) => buildPageVideoCaption('week', { count: picks.length, weekLabel: formatWeekDate(weekDate, l) }, { lang: l, url, platform }),
       context: {
         weekOf: weekDate,
         newReleases: picks.length,

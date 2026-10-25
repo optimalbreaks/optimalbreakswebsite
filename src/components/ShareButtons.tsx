@@ -18,8 +18,7 @@ import {
 import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
 import type { PageReelInput } from '@/lib/page-reel'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
-import type { Locale } from '@/lib/i18n-config'
-
+import type { ShareAudioSegment } from '@/lib/share-audio'
 type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
 /** JSON de `/api/og/story?play=mix:…&format=json`. */
 type SetVideoData = ReelData & { eventName?: string | null; place?: string | null }
@@ -139,10 +138,10 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
   }
 
   /** R/F: sesión (`storyPlay` mix:…) o artículo del blog (`pageReel`). */
-  const makeVideo = async (format: ReelFormat, onProgress: (r: number) => void) => {
+  const makeVideo = async (format: ReelFormat, onProgress: (r: number) => void, audio: ShareAudioSegment | null) => {
     if (pageReel) {
       const { renderPageReel } = await import('@/lib/page-reel')
-      return renderPageReel(pageReel, format, onProgress)
+      return renderPageReel(pageReel, format, onProgress, audio)
     }
     const data = await getSetData()
     const { renderReel } = await import('@/lib/reel-renderer')
@@ -158,11 +157,12 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         platform,
         lang,
         url: fullUrl,
-        fallback: buildPageVideoCaption(
-          'events',
-          { count: shown, weekLabel: `${a.from} — ${a.until}`, first: a.events[0]?.name },
-          { lang, url: fullUrl, platform },
-        ),
+        fallback: (l) =>
+          buildPageVideoCaption(
+            'events',
+            { count: shown, weekLabel: `${a.from} — ${a.until}`, first: a.events[0]?.name },
+            { lang: l, url: fullUrl, platform },
+          ),
         context: {
           hook: a.es
             ? 'Eventos de los próximos 14 días, te los vas a perder'
@@ -189,21 +189,23 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         platform,
         lang,
         url: fullUrl,
-        fallback: buildPageVideoCaption(
-          'digest',
-          {
-            title: pageReel.title,
-            period: f.period,
-            weekLabel: `${f.from} — ${f.until}`,
-            count: f.totals.tracks,
-            artists: f.totals.artists,
-            labels: f.totals.labels,
-            topPlayed: name(f.played[0]),
-            topSaved: name(f.voted[0]),
-            bpm: f.bpm,
-          },
-          { lang, url: fullUrl, platform },
-        ),
+        fallback: (l) =>
+          buildPageVideoCaption(
+            'digest',
+            {
+              // El título del artículo solo existe en el idioma de la página.
+              title: l === lang ? pageReel.title : undefined,
+              period: f.period,
+              weekLabel: `${f.from} — ${f.until}`,
+              count: f.totals.tracks,
+              artists: f.totals.artists,
+              labels: f.totals.labels,
+              topPlayed: name(f.played[0]),
+              topSaved: name(f.voted[0]),
+              bpm: f.bpm,
+            },
+            { lang: l, url: fullUrl, platform },
+          ),
         context: {
           title: pageReel.title,
           period: f.period ?? 'FORTNIGHT',
@@ -234,7 +236,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         platform,
         lang,
         url: fullUrl,
-        fallback: buildPageVideoCaption('blog', { title: pageReel.title, excerpt: pageReel.excerpt }, { lang, url: fullUrl, platform }),
+        fallback: (l) => buildPageVideoCaption('blog', { title: pageReel.title, excerpt: pageReel.excerpt }, { lang: l, url: fullUrl, platform }),
         context: {
           title: pageReel.title,
           excerpt: pageReel.excerpt,
@@ -252,7 +254,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
       platform,
       lang,
       url: fullUrl,
-      fallback: buildMixVideoCaption(data, { lang: lang as Locale, url: fullUrl, platform }),
+      fallback: (l) => buildMixVideoCaption(data, { lang: l, url: fullUrl, platform }),
       context: {
         set: data.title,
         artists: data.artists,
@@ -374,6 +376,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           }
           makeVideo={makeVideo}
           makeCaption={makeCaption}
+          audio={pageReel?.fortnight?.audio ?? null}
         />
       )}
 

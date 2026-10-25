@@ -41,6 +41,8 @@ type Props = {
   trackTitle: string
   /** Texto del botón principal: «Generar historia», «Generar reel»… */
   confirmLabel: string
+  /** Segundos que suenan = duración del vídeo (por defecto, la de un tema). */
+  segmentSec?: number
   /** `null` = generar sin audio (si el audio no se pudo cargar). */
   onConfirm: (segment: ShareAudioSegment | null) => void
   onCancel: () => void
@@ -48,6 +50,7 @@ type Props = {
 
 export default function AudioSegmentPicker(props: Props) {
   const { audioUrl, segmentKey, onConfirm, onCancel } = props
+  const segSec = props.segmentSec ?? SHARE_SEGMENT_SEC
   const es = props.lang === 'es'
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null)
   const [failed, setFailed] = useState(false)
@@ -65,21 +68,21 @@ export default function AudioSegmentPicker(props: Props) {
     loadShareAudio(audioUrl)
       .then((buf) => {
         if (!alive) return
-        const sug = suggestSegmentStart(buf)
+        const sug = suggestSegmentStart(buf, segSec)
         const saved = getSavedSegmentStart(segmentKey)
         setBuffer(buf)
         setSuggested(sug)
-        setStart(saved != null ? Math.min(saved, maxSegmentStart(buf)) : sug)
+        setStart(saved != null ? Math.min(saved, maxSegmentStart(buf, segSec)) : sug)
       })
       .catch(() => alive && setFailed(true))
     return () => {
       alive = false
     }
-  }, [audioUrl, segmentKey])
+  }, [audioUrl, segmentKey, segSec])
 
   const duration = buffer?.duration ?? 0
-  const seg = Math.min(SHARE_SEGMENT_SEC, duration || SHARE_SEGMENT_SEC)
-  const maxStart = buffer ? maxSegmentStart(buffer) : 0
+  const seg = Math.min(segSec, duration || segSec)
+  const maxStart = buffer ? maxSegmentStart(buffer, segSec) : 0
   const peaks = useMemo(() => (buffer ? computePeaks(buffer, COLUMNS) : null), [buffer])
 
   const stop = useCallback(() => {
@@ -211,7 +214,7 @@ export default function AudioSegmentPicker(props: Props) {
     >
       <div className="w-full max-w-[560px] bg-[var(--paper)] text-[var(--ink)] border-4 border-[var(--ink)] shadow-[8px_8px_0_var(--ink)] p-4 sm:p-5">
         <div className="text-[11px] font-black tracking-[0.2em] text-[var(--red)] uppercase">
-          {es ? `Elige los ${SHARE_SEGMENT_SEC} s que suenan` : `Pick the ${SHARE_SEGMENT_SEC} s that play`}
+          {es ? `Elige los ${segSec} s que suenan` : `Pick the ${segSec} s that play`}
         </div>
         <div className="mt-1 text-[13px] font-bold leading-snug line-clamp-2">{props.trackTitle}</div>
 

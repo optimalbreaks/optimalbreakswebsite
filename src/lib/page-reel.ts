@@ -2,7 +2,8 @@
 // OPTIMAL BREAKS — Vídeos R/F de página (Top 100, New Releases, artículo del blog, agenda)
 //
 // Solo admins. Mismo motor que los reels de temas (`encodeCanvasVideo` en
-// `reel-renderer.ts`): Canvas 2D + WebCodecs, todo en el navegador, sin audio.
+// `reel-renderer.ts`): Canvas 2D + WebCodecs, todo en el navegador. Sin audio,
+// salvo el resumen de /topreleases: suena el n.º 1 de la lista (fragmento elegido).
 // El diseño y la animación están en `page-reel-design.ts`.
 //
 // Las carátulas llegan como URL de origen (Beatport, Supabase…) y el canvas no
@@ -33,6 +34,7 @@ export type EventsReelInput = {
   events: EventsReelEvent[]
 }
 import { encodeCanvasVideo, type ReelFormat, type ReelResult } from './reel-renderer'
+import type { ShareAudioSegment } from './share-audio'
 
 export type PageReelKind = 'top100' | 'week' | 'blog'
 
@@ -83,6 +85,10 @@ export type FortnightReelInput = {
   key: string | null
   debutTotal: number
   debut: string[]
+  /** Idioma de la página: va primero en el recuadro «WHAT YOU SEE». */
+  es?: boolean
+  /** Audio del n.º 1 de la lista (mismo origen) para el selector de fragmento de R/F. */
+  audio?: { src: string; key: string; label: string; seconds: number } | null
 }
 
 const imageCache = new Map<string, Promise<Img | null>>()
@@ -153,6 +159,7 @@ export async function renderPageReel(
   input: PageReelInput,
   format: ReelFormat,
   onProgress?: (ratio: number) => void,
+  audio?: ShareAudioSegment | null,
 ): Promise<ReelResult> {
   const W = format === 'horizontal' ? 1920 : 1080
   const H = format === 'horizontal' ? 1080 : 1920
@@ -190,7 +197,7 @@ export async function renderPageReel(
     const short = (iso: string) => reelDateLabel(iso).replace(/ \d{4}$/, '').toUpperCase()
     const data = { ...f, range: `${short(f.from)} — ${short(f.until)}`, covers, played, voted, stars }
     const draw = (c: CanvasRenderingContext2D, t: number) => animFortnight(c, W, H, data, t)
-    return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress)
+    return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress, audio)
   } else if (input.agenda) {
     return renderEventsReel(input.agenda, format, onProgress)
   } else {
@@ -209,7 +216,7 @@ export async function renderPageReel(
     draw = (c, t) => animBlog(c, W, H, data, t)
   }
 
-  return encodeCanvasVideo(W, H, DUR, 30, draw, onProgress)
+  return encodeCanvasVideo(W, H, DUR, 30, draw, onProgress, audio)
 }
 
 const MON_ES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']

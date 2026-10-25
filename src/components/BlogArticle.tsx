@@ -38,6 +38,7 @@ import { digestCoverFocuses } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
+import { FORTNIGHT_DUR } from '@/lib/page-reel-design'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 
@@ -361,6 +362,21 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
           key: digest.sound.keys[0]?.key ?? null,
           debutTotal: digest.debut_total,
           debut: digest.debut.slice(0, 6).map((n) => n.name),
+          es: safeLang === 'es',
+          // Suena el n.º 1 de la lista; si no tiene audio del mismo origen, el siguiente que lo tenga.
+          audio: (() => {
+            const sameOrigin = (u?: string | null) =>
+              u?.startsWith('/') ? u : u?.startsWith(SITE_URL) ? u.slice(SITE_URL.length) || null : null
+            const pool = [...digest.played, ...digest.voted, ...(digest.picks ?? []), ...(digest.released ?? [])]
+            const t = pool.find((r) => sameOrigin(r.audio_src))
+            if (!t) return null
+            return {
+              src: sameOrigin(t.audio_src) as string,
+              key: t.featured_id ? `featured:${t.featured_id}` : `digest:${t.title}|${t.artists}`,
+              label: `${t.title} — ${t.artists}`,
+              seconds: FORTNIGHT_DUR,
+            }
+          })(),
         }
       : undefined,
     agenda: agendaStored && agendaNights.length > 0

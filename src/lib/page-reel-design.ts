@@ -910,6 +910,8 @@ export type FortnightAnim = {
   key: string | null
   debutTotal: number
   debut: string[]
+  /** Idioma de la página: va primero en el recuadro «WHAT YOU SEE» (el otro, debajo). */
+  es?: boolean
 }
 /** Cada escena dura ~7 s: da tiempo a leer el titular, los datos y el recuadro «WHAT YOU SEE». */
 export const FORTNIGHT_DUR = 60
@@ -1123,60 +1125,97 @@ function fnCoverRow(ctx: C, imgs: (Img | null)[], x: number, y: number, w: numbe
   ctx.restore()
 }
 
-/** Qué enseña cada escena, en una frase llana (inglés, como el resto del vídeo). */
-function fnNoteText(k: FnScene, d: FortnightAnim, P: string): string {
+/** Qué enseña cada escena, en una frase corta y en los dos idiomas. */
+function fnNoteText(k: FnScene, d: FortnightAnim, P: string): { es: string; en: string } {
   const p = P.toLowerCase()
-  const delta = d.totals.tracks - d.totals.prev
+  const pEs = P === 'QUARTER' ? 'el trimestre' : P === 'WEEK' ? 'la semana' : 'la quincena'
+  const n = Math.abs(d.totals.tracks - d.totals.prev)
+  const up = d.totals.tracks >= d.totals.prev
+  const { tracks, artists, labels } = d.totals
   switch (k) {
     case 'intro':
       return P === 'WEEK'
-        ? `Due out next week (${d.range}): ${d.totals.tracks} tracks by ${d.totals.artists} artists on ${d.totals.labels} labels.`
-        : `${d.totals.tracks} new breakbeat tracks from ${d.range}: ${d.totals.artists} artists, ${d.totals.labels} labels. ${Math.abs(delta)} ${delta >= 0 ? 'more' : 'fewer'} than the previous ${p}.`
+        ? {
+            es: `Salen la semana que viene: ${tracks} temas, ${artists} artistas, ${labels} sellos.`,
+            en: `Out next week: ${tracks} tracks, ${artists} artists, ${labels} labels.`,
+          }
+        : {
+            es: `${tracks} temas nuevos de ${artists} artistas y ${labels} sellos. ${n} ${up ? 'más' : 'menos'} que ${pEs} anterior.`,
+            en: `${tracks} new tracks from ${artists} artists and ${labels} labels. ${n} ${up ? 'more' : 'fewer'} than last ${p}.`,
+          }
     case 'played':
-      return `The five most played tracks this ${p}. Only plays on optimalbreaks.com count: no Spotify, no Beatport.`
+      return {
+        es: 'Los 5 más escuchados. Solo cuentan las escuchas en optimalbreaks.com.',
+        en: 'The 5 most played. Only plays on optimalbreaks.com count.',
+      }
     case 'voted':
-      return `The five tracks our users saved most with the «+» button. Every save is one vote.`
+      return { es: 'Los 5 más guardados con el «+». Cada «+» es un voto.', en: 'The 5 most saved with the «+». Every save is a vote.' }
     case 'artists':
-      return `Who put out the most new tracks this ${p}. The bar counts tracks; the note, in how many releases.`
+      return { es: 'Quién sacó más temas. Barra = temas; nota = discos.', en: 'Who released the most tracks. Bar = tracks; note = releases.' }
     case 'stars':
-      return `Artists from our community Top 100 with new music this ${p}. The red tag is their spot on that board.`
+      return {
+        es: 'Artistas del Top 100 de la comunidad con música nueva. En rojo, su puesto.',
+        en: 'Community Top 100 artists with new music. Red tag = their rank.',
+      }
     case 'labels':
-      return `The labels that put out the most tracks this ${p}.`
+      return { es: 'Los sellos que más temas sacaron.', en: 'The labels that released the most tracks.' }
     case 'sound':
-      return `Average BPM of the ${p}, and how many tracks fall in each BPM range. Red is the busiest.${d.key ? ` Top key: ${d.key}.` : ''}`
+      return {
+        es: `BPM medio y temas por rango. En rojo, el más lleno.${d.key ? ` Tonalidad top: ${d.key}.` : ''}`,
+        en: `Average BPM and tracks per range. Red is the busiest.${d.key ? ` Top key: ${d.key}.` : ''}`,
+      }
     default:
-      return `Every cover of the ${p}. All the tracks are in the article, with their preview.`
+      return { es: 'Todas las portadas. Los temas, con su preview, en el artículo.', en: 'Every cover. All the tracks, with previews, in the article.' }
   }
 }
 
-/** Recuadro «WHAT YOU SEE»: la frase entra a máquina, al ritmo de lectura. */
-function fnNote(ctx: C, L: FnLayout, lt: number, text: string) {
+/**
+ * Recuadro «WHAT YOU SEE»: la frase en el idioma de la página, grande, y debajo
+ * la del otro idioma, más pequeña y en gris. Entran a máquina, al ritmo de lectura.
+ */
+function fnNote(ctx: C, L: FnLayout, lt: number, text: { es: string; en: string }, es: boolean) {
   const N = L.note
   if (!N) return
+  const main = es ? text.es : text.en
+  const alt = es ? text.en : text.es
   slide(ctx, ph(lt, 0.6, 0.45), 0, 40, () => {
     box(ctx, N.x, N.y, N.w, N.h, '#fff', INK, 8, 4)
-    chip(ctx, N.x + 24, N.y - 18, 'WHAT YOU SEE', INK, YELLOW, L.V ? 22 : 20)
-    // Letra grande para leerla en el móvil; solo baja si la frase no cabe entera.
-    let fs = L.V ? 34 : 32
-    let lh = fs * 1.3
-    ctx.font = MONO(fs)
-    let lines = wrap(ctx, text, N.w - 56)
-    while (fs > 24 && lines.length * lh > N.h - 40) {
-      fs -= 2
-      lh = fs * 1.3
+    chip(ctx, N.x + 24, N.y - 18, es ? 'LO QUE VES · WHAT YOU SEE' : 'WHAT YOU SEE · LO QUE VES', INK, YELLOW, L.V ? 22 : 20)
+    const tw = N.w - 56
+    const gap = 16
+    // Letra grande para leerla en el móvil; solo baja si las dos frases no caben enteras.
+    const measure = (fs: number) => {
+      const fb = Math.round(fs * 0.76)
       ctx.font = MONO(fs)
-      lines = wrap(ctx, text, N.w - 56)
+      const a = wrap(ctx, main, tw)
+      ctx.font = MONO(fb, 400)
+      const b = wrap(ctx, alt, tw)
+      const lha = fs * 1.26
+      const lhb = fb * 1.3
+      return { fs, fb, a, b, lha, lhb, h: a.length * lha + gap + b.length * lhb }
     }
-    const total = lines.join(' ').length
-    let left = Math.floor(total * ph(lt, 0.9, Math.max(1.2, total * 0.022)))
-    ctx.fillStyle = INK
+    let m = measure(L.V ? 36 : 32)
+    while (m.fs > 24 && m.h > N.h - 44) m = measure(m.fs - 2)
+    const total = main.length + alt.length
+    let left = Math.floor(total * ph(lt, 0.9, Math.max(1.4, total * 0.016)))
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
-    lines.forEach((ln, i) => {
-      if (left <= 0) return
-      ctx.fillText(ln.slice(0, left), N.x + 28, N.y + 34 + fs + i * lh)
+    let y = N.y + 26 + m.fs
+    ctx.font = MONO(m.fs)
+    ctx.fillStyle = INK
+    for (const ln of m.a) {
+      if (left > 0) ctx.fillText(ln.slice(0, left), N.x + 28, y)
       left -= ln.length + 1
-    })
+      y += m.lha
+    }
+    y += gap - m.lha + m.lhb
+    ctx.font = MONO(m.fb, 400)
+    ctx.fillStyle = MUTED
+    for (const ln of m.b) {
+      if (left > 0) ctx.fillText(ln.slice(0, left), N.x + 28, y)
+      left -= ln.length + 1
+      y += m.lhb
+    }
   })
 }
 
@@ -1186,14 +1225,14 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   const L: FnLayout = V
     ? {
         V, hx: 70, kY: 180, hY: 340, hW: 940,
-        S: { x: 70, y: 590, w: 940, h: 820 },
-        note: { x: 70, y: 1432, w: 940, h: 226 },
+        S: { x: 70, y: 590, w: 940, h: 720 },
+        note: { x: 70, y: 1336, w: 940, h: 322 },
         foot: { x: 70, y: 1682, w: 940, h: 18 },
       }
     : {
         V, hx: 90, kY: 160, hY: 310, hW: 760,
         S: { x: 940, y: 130, w: 890, h: 850 },
-        note: { x: 90, y: 580, w: 760, h: 280 },
+        note: { x: 90, y: 556, w: 760, h: 304 },
         foot: { x: 90, y: 880, w: 760, h: 16 },
       }
   const S = L.S
@@ -1243,7 +1282,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     ctx.translate(-W * 0.35 * ex, 0)
     ctx.globalAlpha = 1 - ex
   }
-  fnNote(ctx, L, lt, fnNoteText(sc.k, d, P))
+  fnNote(ctx, L, lt, fnNoteText(sc.k, d, P), d.es !== false)
 
   if (sc.k === 'intro') {
     const sub = P === 'WEEK'
@@ -1252,7 +1291,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     fnHeader(ctx, L, lt, P === 'WEEK' ? 'BREAKBEAT NEXT WEEK' : `BREAKBEAT ${P}`, d.range.replace(' — ', ' —\n'), sub, RED)
     const gap = 22
     const cw = (S.w - gap) / 2
-    const ch = V ? 210 : 220
+    const ch = V ? 180 : 220
     const stats: [string, number, string][] = [
       ['TRACKS', d.totals.tracks, RED],
       ['ARTISTS', d.totals.artists, INK],
@@ -1276,7 +1315,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
       }, (hash(i, 5) - 0.5) * 0.4)
     })
     const ry = S.y + ch * 2 + gap + 44
-    const cs = V ? 150 : 170
+    const cs = V ? 120 : 170
     slide(ctx, ph(ct, 1.2, 0.5), 0, 80, () => {
       fnCoverRow(ctx, d.covers, S.x, ry, S.w, cs, 70, t)
       fnCoverRow(ctx, [...d.covers].reverse(), S.x, ry + cs + 22, S.w, cs, -70, t)

@@ -221,7 +221,7 @@ export default function TrackShareButton(props: Props) {
       platform,
       lang: props.lang,
       url: fullUrl,
-      fallback: buildVideoCaption(data, { lang: props.lang, url: fullUrl, platform }),
+      fallback: (lang) => buildVideoCaption(data, { lang, url: fullUrl, platform }),
       context: {
         title: data.title,
         artists: data.artists,
