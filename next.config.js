@@ -177,7 +177,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: https://www.googletagmanager.com",
-              "media-src 'self' https:",
+              "media-src 'self' https: blob:",
               "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://w.soundcloud.com https://api.soundcloud.com",
               "frame-src 'self' https://www.youtube.com https://w.soundcloud.com https://www.mixcloud.com https://open.spotify.com",
               "frame-ancestors 'none'",
