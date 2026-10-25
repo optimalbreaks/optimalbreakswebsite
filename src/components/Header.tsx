@@ -41,6 +41,82 @@ function FlagGB({ className }: { className?: string }) {
   )
 }
 
+const LANG_OPTIONS: { code: Locale; label: string; Flag: typeof FlagES }[] = [
+  { code: 'es', label: 'Español', Flag: FlagES },
+  { code: 'en', label: 'English', Flag: FlagGB },
+]
+
+function HeaderLangMenu({ lang, pathname, variant }: { lang: Locale; pathname: string; variant: 'desktop' | 'mobile' }) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const current = LANG_OPTIONS.find((o) => o.code === lang) ?? LANG_OPTIONS[0]
+  const CurrentFlag = current.Flag
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('touchstart', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('touchstart', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const desktop = variant === 'desktop'
+
+  return (
+    <div ref={wrapRef} className="relative border-l-[3px] border-[var(--ink)]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={lang === 'es' ? 'Idioma: Español' : 'Language: English'}
+        title={lang === 'es' ? 'Idioma' : 'Language'}
+        className={`flex items-center h-full bg-transparent cursor-pointer transition-colors ${desktop ? 'gap-1.5 px-2 xl:px-3 py-3 hover:bg-[var(--yellow)]' : 'gap-1 px-2.5 hover:bg-[var(--yellow)]/40'}`}
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--ink)' }}
+      >
+        <CurrentFlag className={desktop ? 'w-5 h-[14px] rounded-[2px] shadow-sm' : 'w-6 h-[17px] rounded-[2px] shadow-sm'} />
+        {desktop && current.code.toUpperCase()}
+        <span className="text-[9px] opacity-60" aria-hidden>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full min-w-[170px] bg-[var(--paper)] border-4 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] z-[200]"
+        >
+          {LANG_OPTIONS.map(({ code, label, Flag }) => {
+            const on = code === lang
+            return (
+              <Link
+                key={code}
+                role="menuitemradio"
+                aria-checked={on}
+                href={on ? pathname : pathname.replace(`/${lang}`, `/${code}`)}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-2.5 px-4 py-3 no-underline border-b-[3px] last:border-b-0 border-[var(--ink)] ${on ? 'bg-[var(--ink)] text-[var(--yellow)]' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
+              >
+                <Flag className="w-5 h-[14px] rounded-[2px] shadow-sm shrink-0" />
+                <span className="flex-1">{label}</span>
+                {on && <span aria-hidden>✓</span>}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; variant: 'desktop' | 'mobile' }) {
   const [open, setOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -251,10 +327,6 @@ export default function Header({ dict, lang }: HeaderProps) {
 
   const paletteDict = (dict?.search || {}) as Parameters<typeof CommandPalette>[0]['dict']
 
-  const otherLang = lang === 'es' ? 'en' : 'es'
-  const switchPath = pathname.replace(`/${lang}`, `/${otherLang}`)
-  const FlagIcon = otherLang === 'es' ? FlagES : FlagGB
-
   const navActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
   const navLinkStyle = (key: string, href: string) => {
     const on = navActive(href)
@@ -399,15 +471,7 @@ export default function Header({ dict, lang }: HeaderProps) {
         </button>
 
         {/* Language switch */}
-        <Link
-          href={switchPath}
-          className="flex items-center gap-1.5 px-2 xl:px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--uv)] hover:text-white"
-          style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--ink)' }}
-          title={otherLang === 'es' ? 'Cambiar a Español' : 'Switch to English'}
-        >
-          <FlagIcon className="w-5 h-[14px] rounded-[2px] shadow-sm" />
-          {otherLang.toUpperCase()}
-        </Link>
+        <HeaderLangMenu lang={lang} pathname={pathname} variant="desktop" />
 
         {/* Auth button */}
         {!loading && (
@@ -435,13 +499,7 @@ export default function Header({ dict, lang }: HeaderProps) {
         >
           <SearchGlyph className="w-5 h-5" />
         </button>
-        <Link
-          href={switchPath}
-          className="flex items-center px-2.5 border-l-[3px] border-[var(--ink)] transition-colors hover:bg-[var(--uv)]"
-          title={otherLang === 'es' ? 'Cambiar a Español' : 'Switch to English'}
-        >
-          <FlagIcon className="w-6 h-[17px] rounded-[2px] shadow-sm" />
-        </Link>
+        <HeaderLangMenu lang={lang} pathname={pathname} variant="mobile" />
         {!loading && (
           user ? (
             <HeaderUserMenu lang={lang} user={user} variant="mobile" />
