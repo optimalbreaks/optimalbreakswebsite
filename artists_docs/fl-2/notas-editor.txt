@@ -23,5 +23,6 @@ Fechas que el informe traía mal (manda Beatport)
 - El tema Changes lleva una ce cirílica en Beatport (Сhanges). El disco
   se llama Changes. En la bio se escribe Changes.
 
-No publicar nombre civil ni ciudad. La ficha de Dr. Doc no se usa para
+Origen (27 oct 2026, Narciso): es cordobés. País ES, categoría andalusian.
+El nombre civil sigue sin publicarse. La ficha de Dr. Doc no se usa para
 decir de dónde es FL-2.
