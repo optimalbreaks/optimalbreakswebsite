@@ -1371,7 +1371,7 @@ export function DeckAudioProvider({
   // pista (⏭, error → avance). El listener de `pause` lo consume y así ese
   // `pause` no se toma por «otra app nos ha quitado el altavoz».
   const previewSwitchingRef = useRef(false)
-  // Diagnóstico temporal (lib/player-diag): cuándo se pidió la pista actual.
+  // Diagnóstico (lib/player-diag): cuándo se pidió la pista actual.
   const previewLoadAtRef = useRef(0)
   // Watchdog de arranque de pista: si tras el auto-avance el audio no
   // empieza a sonar (red parada en background), reintenta unas veces y,

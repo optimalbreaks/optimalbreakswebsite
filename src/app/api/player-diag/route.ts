@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import type { PlayerDiagnosticRow } from '@/types/database'
 
-// Diagnóstico temporal del reproductor (migración 096). Anónimo: no se guarda
+// Diagnóstico permanente del reproductor (migración 096, retención 30 días). Anónimo: no se guarda
 // IP ni usuario; la IP solo se usa en memoria para el límite de peticiones.
 
 const MAX_BODY = 32_000

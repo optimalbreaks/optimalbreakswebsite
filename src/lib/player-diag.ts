@@ -1,10 +1,14 @@
 /**
- * Diagnóstico TEMPORAL del reproductor (oct 2026): por qué la lista se para
- * en segundo plano / pantalla bloqueada en algunos móviles (Samsung S23…).
- * Anónimo: sin usuario, sin cookies; `sid` aleatorio por pestaña. Lo recibe
- * `/api/player-diag` → tabla `player_diagnostics` (migración 096, 30 días).
+ * Diagnóstico permanente del reproductor (desde oct 2026): por qué una lista
+ * se para en segundo plano o con la pantalla bloqueada. Anónimo: sin usuario,
+ * sin cookies; `sid` aleatorio por pestaña. Lo recibe `/api/player-diag` →
+ * tabla `player_diagnostics` (migración 096; pg_cron borra a los 30 días).
  * Se envía con `sendBeacon`, que sale aunque la página se oculte o se
  * congele justo después. Nunca lanza: si falla, se pierde la línea y ya.
+ *
+ * Los eventos de alta frecuencia (playing, waiting…) se quedan en uno cada
+ * 8 s por tema: arrastrar la barra de progreso generaba cientos por minuto
+ * y tapaba lo que importa.
  */
 
 type DiagValue = string | number | boolean | null
@@ -17,6 +21,11 @@ const MAX_PER_SESSION = 4000
 const BATCH = 30
 const FLUSH_DELAY_MS = 3000
 /** Eventos tras los que puede congelarse la página: se mandan ya. */
+/** Uno cada 8 s por tema: el primero de cada pista siempre entra. */
+const NOISY = new Set(['playing', 'waiting', 'stalled', 'suspend', 'emptied', 'abort'])
+const NOISY_GAP_MS = 8000
+const lastNoisyAt = new Map<string, number>()
+
 const FLUSH_NOW = new Set([
   'ended', 'error', 'play_err', 'watchdog', 'watchdog_give_up', 'hidden', 'freeze', 'pagehide',
   'interrupted', 'stop', 'ms_next', 'ms_prev', 'stuck',
@@ -92,6 +101,12 @@ function flush(): void {
 export function playerDiag(ev: string, data?: DiagData): void {
   try {
     if (!init()) return
+    if (NOISY.has(ev)) {
+      const k = `${ev}:${data?.idx ?? ''}`
+      const prev = lastNoisyAt.get(k) ?? 0
+      if (Date.now() - prev < NOISY_GAP_MS) return
+      lastNoisyAt.set(k, Date.now())
+    }
     if (sent >= MAX_PER_SESSION) return
     sent += 1
     let d: Record<string, DiagValue> | undefined
