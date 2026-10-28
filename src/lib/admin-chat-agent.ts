@@ -493,7 +493,8 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'stage_new_releases',
-      description: 'Preparar import New Releases desde URLs Beatport /track o /release. Requiere confirmación.',
+      description:
+        'Dejar un enlace de Beatport (/track o /release) para el pase de las 12. El chat no abre la ficha. Requiere confirmación. No pidas YouTube si el usuario ya pegó el enlace de Beatport.',
       parameters: {
         type: 'object',
         properties: {
@@ -876,7 +877,7 @@ async function runTool(
         default_week_date: args.default_week_date != null ? String(args.default_week_date) : null,
         create_edition_if_missing: true,
       },
-      `Import New Releases (${urls_text.split(/\n/).filter(Boolean).length} URL(s))`,
+      `Dejar para el pase de las 12 (${urls_text.split(/\n/).filter(Boolean).length} URL)`,
     )
   }
 
@@ -1306,11 +1307,11 @@ function applyYouTubeRoutes(
         existing.action.urls_text = `${have}\n${missing.join('\n')}`.trim()
       }
       const n = existing.action.urls_text.split(/\n/).filter(Boolean).length
-      existing.summary = `Import New Releases (${n} URL(s))`
+      existing.summary = `Dejar para el pase de las 12 (${n} URL)`
     } else {
       pendingOps.push({
         kind: 'chat_action',
-        summary: `Import New Releases (${beatportUrls.length} URL(s))`,
+        summary: `Dejar para el pase de las 12 (${beatportUrls.length} URL)`,
         action: {
           type: 'new_release',
           urls_text: beatportUrls.join('\n'),
@@ -1403,11 +1404,11 @@ function applySoundCloudRoutes(routes: SoundCloudTrackRoute[], pendingOps: Pendi
       const missing = beatportUrls.filter((u) => !have.includes(u))
       if (missing.length) existing.action.urls_text = `${have}\n${missing.join('\n')}`.trim()
       const n = existing.action.urls_text.split(/\n/).filter(Boolean).length
-      existing.summary = `Import New Releases (${n} URL(s))`
+      existing.summary = `Dejar para el pase de las 12 (${n} URL)`
     } else {
       pendingOps.push({
         kind: 'chat_action',
-        summary: `Import New Releases (${beatportUrls.length} URL(s))`,
+        summary: `Dejar para el pase de las 12 (${beatportUrls.length} URL)`,
         action: {
           type: 'new_release',
           urls_text: beatportUrls.join('\n'),

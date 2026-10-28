@@ -26,10 +26,16 @@ export const maxDuration = 300
 
 /** Un tema que ya estaba no es un fallo: sin ✗ ni «No se completó el guardado». */
 function confirmReply(results: Awaited<ReturnType<typeof executePendingOps>>): string {
-  const already = (r: (typeof results)[number]) => !r.ok && /ya est(?:á|aba)/i.test(r.summary)
-  const lines = results.map((r) => `${r.ok ? '✓' : already(r) ? '•' : '✗'} [${r.type}] ${r.summary}`)
-  if (results.some((r) => r.ok)) return `Hecho. Guardado en la BD:\n${lines.join('\n')}`
-  if (results.every(already)) return `Ya estaba en la web, no hace falta guardarlo:\n${lines.join('\n')}`
+  const waiting = (r: (typeof results)[number]) => r.ok && /pase de las 12/i.test(r.summary)
+  const already = (r: (typeof results)[number]) =>
+    !waiting(r) && !/no son fichas/i.test(r.summary) && /ya est(?:á|aba)/i.test(r.summary)
+  const saved = (r: (typeof results)[number]) => r.ok && !waiting(r)
+  const lines = results.map((r) => `${saved(r) || waiting(r) ? '✓' : already(r) ? '•' : '✗'} [${r.type}] ${r.summary}`)
+  if (results.some(saved)) return `Hecho. Guardado en la BD:\n${lines.join('\n')}`
+  if (results.some(waiting) && results.every((r) => waiting(r) || already(r))) {
+    return `Queda para el pase de las 12. El chat no abre Beatport; lo lee el pase de GitHub:\n${lines.join('\n')}`
+  }
+  if (results.length > 0 && results.every(already)) return `Ya estaba en la web, no hace falta guardarlo:\n${lines.join('\n')}`
   return `No se completó el guardado:\n${lines.join('\n')}`
 }
 

@@ -2,10 +2,11 @@
  * Pase diario a las 12:05 (Madrid), desde el 8 oct 2026.
  * El aviso lo da pg_cron (migración 090); este módulo es el trabajo, en GitHub Actions.
  * No recorre todos los artistas de la web.
- * 1. Fichas de los 140 primeros del tablero en Beatport, cualquier género → se publican.
- * 2. Listado de Breaks → lo que no entró por 1 ni estaba ya, a la cola pendiente
+ * 1. Enlaces que dejó el chat (`chart_import_links`) → se publican, cualquier fecha.
+ * 2. Fichas de los 140 primeros del tablero en Beatport, cualquier género → se publican.
+ * 3. Listado de Breaks → lo que no entró por 1 ni 2 ni estaba ya, a la cola pendiente
  *    (o publicado si en los créditos va uno de esos 140).
- * Un id de Beatport que ya está en el catálogo, en la cola o en el paso 1 no se vuelve a meter.
+ * Un id de Beatport que ya está en el catálogo, en la cola o en el paso 2 no se vuelve a meter.
  * Tampoco la misma canción (título + versión + artistas) resubida con otro id.
  */
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
@@ -15,6 +16,7 @@ import {
   dedupeKeyForFeaturedLink,
   extractNextData,
   canonicalBeatportCatalogUrl,
+  isBeatportTrackOrReleaseUrl,
   fetchBeatportPageHtml,
   findAllTracksFromNextData,
   pickFromTrackBlob,
@@ -27,7 +29,7 @@ import { revalidatePublicCatalog, revalidatePublicCharts } from '@/lib/revalidat
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
-import type { ChartFeaturedArtist, ChartImportVia } from '@/types/database'
+import type { ChartFeaturedArtist, ChartImportLinkRow, ChartImportVia } from '@/types/database'
 
 /** Primer día que entra en la cola. Hasta el 7 oct 2026 el catálogo ya está al día. */
 export const BEATPORT_IMPORT_FROM = '2026-10-08'
@@ -138,6 +140,186 @@ export function madridHour(): number {
     hourCycle: 'h23',
   }).format(new Date())
   return Number(h)
+}
+
+/** Antes de las 12:05 el pase de hoy todavía no ha leído. A las 12:05 ya ha salido el segundo aviso. */
+export function chatLinkPassWhen(d = new Date()): 'hoy' | 'mañana' {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Madrid',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(d)
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value)
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value)
+  if (hour < 12 || (hour === 12 && minute < 5)) return 'hoy'
+  return 'mañana'
+}
+
+const CHAT_LINKS_PER_PASS = 40
+
+export type ChatLinkEnqueue = {
+  queued: string[]
+  already: string[]
+  waiting: string[]
+  invalid: string[]
+  when: 'hoy' | 'mañana'
+}
+
+async function filedBeatportTrack(
+  sb: ReturnType<typeof createServiceSupabase>,
+  id: string,
+): Promise<boolean> {
+  const [featured, queue] = await Promise.all([
+    sb.from('chart_featured_tracks').select('id').like('link_url', `%/${id}`).limit(1),
+    sb
+      .from('chart_import_queue')
+      .select('id')
+      .eq('beatport_track_id', id)
+      .in('status', ['pending', 'approved'])
+      .limit(1),
+  ])
+  return Boolean(featured.data?.length || queue.data?.length)
+}
+
+/**
+ * El chat no abre Beatport. Deja el enlace para el pase de las 12, que sí tiene Chrome.
+ * Un tema que ya está en el catálogo o en Por aprobar no se vuelve a apuntar.
+ */
+export async function enqueueBeatportChatLinks(urlsText: string): Promise<ChatLinkEnqueue> {
+  const sb = createServiceSupabase()
+  const out: ChatLinkEnqueue = {
+    queued: [],
+    already: [],
+    waiting: [],
+    invalid: [],
+    when: chatLinkPassWhen(),
+  }
+  const seen = new Set<string>()
+  for (const raw of urlsText.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean)) {
+    let parsed: URL
+    try {
+      parsed = new URL(raw)
+    } catch {
+      out.invalid.push(raw)
+      continue
+    }
+    if (!isBeatportTrackOrReleaseUrl(raw)) {
+      out.invalid.push(raw)
+      continue
+    }
+    const canonical = canonicalBeatportCatalogUrl(raw)
+    if (!canonical || seen.has(canonical)) continue
+    seen.add(canonical)
+    const kind = /\/release\//i.test(parsed.pathname) ? 'release' : 'track'
+    const id = parsed.pathname.match(/\/(\d+)\/?$/)?.[1]
+    if (!id) {
+      out.invalid.push(raw)
+      continue
+    }
+    if (kind === 'track' && (await filedBeatportTrack(sb, id))) {
+      out.already.push(raw)
+      continue
+    }
+    const { data: existing } = await sb
+      .from('chart_import_links')
+      .select('status')
+      .eq('link_url', canonical)
+      .maybeSingle()
+    if (existing?.status === 'pending') {
+      out.waiting.push(raw)
+      continue
+    }
+    if (existing?.status === 'done') {
+      out.already.push(raw)
+      continue
+    }
+    const { error } = await sb.from('chart_import_links').insert({
+      link_url: canonical,
+      beatport_id: id,
+      kind,
+      status: 'pending',
+    })
+    if (error) {
+      if (/duplicate|unique/i.test(error.message)) out.waiting.push(raw)
+      else throw new Error(error.message)
+      continue
+    }
+    out.queued.push(raw)
+  }
+  return out
+}
+
+/**
+ * Lo primero del pase: abre los enlaces que dejó el chat y los publica.
+ * La ventana del 8 oct no aplica: el enlace es explícito. Si la ficha no se lee,
+ * se queda pendiente para el día siguiente.
+ */
+async function publishPendingChatLinks(
+  sb: ReturnType<typeof createServiceSupabase>,
+  cache: Map<string, EditionState>,
+  known: KnownTracks,
+  readTracks: (url: string) => Promise<BeatportPickInput[]>,
+  say: (line: string) => void,
+): Promise<number> {
+  const { data, error } = await sb
+    .from('chart_import_links')
+    .select('id, link_url, kind')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(CHAT_LINKS_PER_PASS)
+  if (error) throw new Error(error.message)
+  const rows = (data || []) as Pick<ChartImportLinkRow, 'id' | 'link_url' | 'kind'>[]
+  if (!rows.length) return 0
+  say(`Enlaces del chat: ${rows.length}`)
+  let inserted = 0
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    if (!row) continue
+    if (i > 0) await pauseBetweenBeatportPages()
+    try {
+      const tracks = await readTracks(row.link_url)
+      if (!tracks.length) {
+        await sb.from('chart_import_links').update({ error: 'La ficha no trajo temas' }).eq('id', row.id)
+        say(`  sin temas: ${row.link_url}`)
+        continue
+      }
+      let failed = 0
+      for (const pick of tracks) {
+        const id = beatportIdFromLink(pick.link_url)
+        if (id && known.ids.has(id)) continue
+        const identity = trackDisplayIdentityKey(pick.title, pick.mix_name, pick.artists)
+        if (identity && known.identities.has(identity)) continue
+        try {
+          const pub = await publishFeaturedPick(sb, cache, pick)
+          if (id) known.ids.add(id)
+          if (identity) known.identities.add(identity)
+          if (pub.status === 'inserted') {
+            inserted += 1
+            say(`  Publicado (chat): ${pick.artists.map((a) => a.name).join(', ')} — ${pick.title}`)
+          }
+        } catch (e) {
+          failed += 1
+          say(`  ${shortImportError(e instanceof Error ? e.message : String(e))}`)
+        }
+      }
+      if (failed > 0) {
+        await sb.from('chart_import_links').update({ error: 'No se pudo publicar' }).eq('id', row.id)
+        continue
+      }
+      await sb
+        .from('chart_import_links')
+        .update({ status: 'done', read_at: new Date().toISOString(), error: null })
+        .eq('id', row.id)
+    } catch (e) {
+      await sb
+        .from('chart_import_links')
+        .update({ error: shortImportError(e instanceof Error ? e.message : String(e)) })
+        .eq('id', row.id)
+      say(`  no se leyó: ${row.link_url}`)
+    }
+  }
+  return inserted
 }
 
 function shortImportError(raw: string): string {
@@ -799,6 +981,19 @@ export async function runBeatportGenreImport(opts: {
       await pauseBetweenBeatportPages()
     }
     try {
+      try {
+        published += await publishPendingChatLinks(sb, cache, known, async (url) => {
+          if (!browser) browser = await withTimeout(openBrowserReader(), 30_000, 'Chrome')
+          try {
+            return await withTimeout(browser.readTracks(url), 40_000, 'Beatport')
+          } catch (err) {
+            await dropBrowser()
+            throw err
+          }
+        }, say)
+      } catch (e) {
+        say(`Enlaces del chat: ${shortImportError(e instanceof Error ? e.message : String(e))}`)
+      }
       // El listado de Breaks es lo que llena «por aprobar». Se lee y se guarda
       // antes del Top 100: el 14 oct 2026 el pase se quedó en las fichas, GitHub
       // lo cortó a los 40 min y la cola salió vacía porque el guardado era al final.

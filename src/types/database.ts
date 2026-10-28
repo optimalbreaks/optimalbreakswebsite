@@ -93,6 +93,18 @@ export type ChartImportQueueRow = {
   created_at: string
 }
 
+/** Enlace de Beatport que el chat deja para que lo lea el pase de las 12. */
+export type ChartImportLinkRow = {
+  id: string
+  link_url: string
+  beatport_id: string
+  kind: 'track' | 'release'
+  status: 'pending' | 'done'
+  error: string | null
+  created_at: string
+  read_at: string | null
+}
+
 export type ChartImportRunRow = {
   id: string
   started_at: string
@@ -409,6 +421,17 @@ export interface Database {
         Row: ChartImportQueueRow
         Insert: Omit<ChartImportQueueRow, 'id' | 'created_at'> & { id?: string; created_at?: string }
         Update: Partial<Omit<ChartImportQueueRow, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
+      chart_import_links: {
+        Row: ChartImportLinkRow
+        Insert: Omit<ChartImportLinkRow, 'id' | 'created_at' | 'read_at' | 'error'> & {
+          id?: string
+          created_at?: string
+          read_at?: string | null
+          error?: string | null
+        }
+        Update: Partial<Omit<ChartImportLinkRow, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
       chart_import_runs: {

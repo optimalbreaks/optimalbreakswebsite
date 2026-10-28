@@ -170,7 +170,7 @@ function youtubeIdFromUrl(url: string): string | null {
 }
 
 function beatportTrackId(url: string): string | null {
-  const m = url.match(/beatport\.com\/track\/[^/?#]+\/(\d+)/i)
+  const m = url.match(/\/track\/[^/?#]+\/(\d+)/i)
   return m?.[1] || null
 }
 
@@ -324,6 +324,34 @@ function expand(op: LooseOp | undefined, line: ResultLine, at: string): Omit<Dra
   }
 
   if (line.type === 'new_release') {
+    if (/pase de las 12/i.test(summary)) {
+      const tagged = (tag: string) => {
+        const m = summary.match(new RegExp(`${tag}\\s+((?:https:\\/\\/\\S+\\s*)+)`, 'i'))
+        return new Set(
+          (m?.[1] || '')
+            .split(/\s+/)
+            .map((s) => s.trim())
+            .filter((s) => s.startsWith('https://')),
+        )
+      }
+      const cola = tagged('COLA')
+      const espera = tagged('ESPERA')
+      const urls = urlsFrom(action?.urls_text)
+      const list = urls.length ? urls : [...cola, ...espera, ...tagged('YA')]
+      return list.map((url) => {
+        const waiting = cola.has(url) || espera.has(url)
+        const bp = beatportTrackId(url)
+        return {
+          key: bp ? `nr:${bp}` : `nr:${stableUrl(url).toLowerCase()}`,
+          kind: 'tema' as const,
+          title: url.startsWith('https://') ? titleFromUrl(url) : clip(summary),
+          at,
+          note: clip(summary),
+          intended: waiting ? ('new' as const) : ('fail' as const),
+          lookup: waiting && url.startsWith('https://') ? { type: 'featured' as const, url, beatportId: bp } : null,
+        }
+      })
+    }
     const [insertadas = 0, dupes = 0, , fallidas = 0] = countsFrom(
       summary,
       /(\d+)\s+insertadas,\s+(\d+)\s+dupes,\s+(\d+)\s+multi,\s+(\d+)\s+fallidas/,
@@ -798,6 +826,7 @@ export async function loadCollaboratorContributions(lang: string): Promise<Colla
         }
       } else if (intended === 'ambiguous' || !draft.lookup) status = 'sin-comprobar'
       else if (intended === 'update') status = hit ? 'actualizado' : 'ya-no-esta'
+      else if (intended === 'new' && /pase de las 12/i.test(draft.note) && !hit) status = 'sin-comprobar'
       else status = hit ? 'sigue' : 'ya-no-esta'
 
       const note = draft.attempts > 1 ? `${draft.attempts} confirmaciones` : ''

@@ -32,6 +32,8 @@ alwaysApply: true
 
 2. **Si usa el panel admin:** `/[lang]/administrator/tracks` → import Beatport (**`/api/admin/featured-import`**): escribe directamente en **`chart_featured_tracks`**; no hace falta `db:chart:featured` después de esa importación (salvo mantener Git al día con commits del JSON como copia opcional).
 
+2bis. **Chat editorial (28 oct 2026):** un `/track/` o `/release/` confirmado no llama a `featured-import`. Cloudflare tapa la ficha en Vercel. El enlace queda en `chart_import_links` y lo publica el pase de las 12, en GitHub, con Chrome. Si el id ya está en el catálogo o en Por aprobar, el chat dice que ya está. Detalle: regla **`admin-chat-captura`**.
+
 3. **No** dar por cerrada la petición solo con «JSON guardado» o «script batch hecho». Regla **`base-de-datos-sin-dejar-trabajo-al-usuario`**: publicar datos en BD como parte del trabajo.
 
 ## Beatport — viernes / día fuerte de lanzamientos

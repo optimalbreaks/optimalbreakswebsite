@@ -512,10 +512,20 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
         clearFiles()
         stopWaitingHints()
         if (opsToConfirm?.length || savedThisTurn) {
-          const anySaved =
-            data.ok === true || data.saved === true || results.some((r) => r.ok)
-          setStatus(anySaved ? 'Guardado en BD' : 'Error al guardar — mira el mensaje')
-          if (!anySaved) setError('No se completó el guardado')
+          const reply = data.reply || ''
+          const realSave =
+            data.saved === true ||
+            results.some((r) => r.ok && !/pase de las 12/i.test(r.summary))
+          if (/Queda para el pase de las 12/i.test(reply) && !realSave) {
+            setStatus('Queda para el pase de las 12')
+          } else if (realSave || data.ok === true) {
+            setStatus('Guardado en BD')
+          } else if (/ya estaba en la web/i.test(reply)) {
+            setStatus('Ya estaba en la web')
+          } else {
+            setStatus('Error al guardar — mira el mensaje')
+            setError('No se completó el guardado')
+          }
         } else if (nextPending.length) {
           setStatus('Pendiente de confirmar')
         } else {

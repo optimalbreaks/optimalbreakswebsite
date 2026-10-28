@@ -6,6 +6,7 @@ import {
   chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
 } from '@/lib/beatport-next-data-tracks'
+import { enqueueBeatportChatLinks } from '@/lib/beatport-genre-import'
 import { collectBeatportArtistCredits } from '@/lib/remixer-credits'
 import { vinylIdentityKey } from '@/lib/share-track'
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
@@ -2722,9 +2723,10 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
 
 async function importNewReleasesAction(
   action: Extract<ChatAction, { type: 'new_release' }>,
-  originRequest: Request,
+  _originRequest: Request,
 ): Promise<ActionResult> {
   // Un SoundCloud colado aquí ya tiene su propia operación (soundcloud_track).
+  // El chat no abre Beatport: Cloudflare lo tapa en Vercel. El enlace espera al pase de las 12.
   const urls_text = String(action.urls_text || '')
     .split(/\r?\n/)
     .filter((l) => /beatport\.com\//i.test(l))
@@ -2733,42 +2735,25 @@ async function importNewReleasesAction(
   if (!urls_text) {
     return { type: 'new_release', ok: false, summary: 'Sin URLs Beatport' }
   }
-  const { ok, json } = await adminInternalPost(originRequest, '/api/admin/featured-import', {
-    urls_text,
-    default_week_date: action.default_week_date || null,
-    create_edition_if_missing: action.create_edition_if_missing !== false,
-    pause_ms: 2200,
-  })
-  if (!ok) {
-    return {
-      type: 'new_release',
-      ok: false,
-      summary: `New Releases: ${String(json.error || 'error')}`,
-      detail: json,
-    }
+  const filed = await enqueueBeatportChatLinks(urls_text)
+  const when = filed.when === 'hoy' ? 'entra hoy a las 12:05' : 'entra mañana a las 12:05'
+  const parts: string[] = []
+  if (filed.queued.length) parts.push(`COLA ${filed.queued.join(' ')}`)
+  if (filed.waiting.length) parts.push(`ESPERA ${filed.waiting.join(' ')}`)
+  if (filed.already.length) parts.push(`YA ${filed.already.join(' ')}`)
+  if (filed.already.length) {
+    parts.push('Ya estaban en el catálogo. No te preocupes, que este tema ya está.')
   }
-  const summary = json.summary as
-    | { insertadas?: number; fallidas?: number; saltadas_duplicado?: number; saltadas_multi?: number }
-    | undefined
-  const failed = Array.isArray(json.failed) ? (json.failed as { reason?: string }[]) : []
-  const why = failed.find((f) => f?.reason)?.reason
-  const inserted = summary?.insertadas ?? 0
-  const dupes = summary?.saltadas_duplicado ?? 0
-  const multi = summary?.saltadas_multi ?? 0
-  const failedCount = summary?.fallidas ?? 0
-  const line = `New Releases: ${inserted} insertadas, ${dupes} dupes, ${multi} multi, ${failedCount} fallidas${why ? ` (${why})` : ''}`
-  const queued = Array.isArray(json.queued) ? (json.queued as { title?: string }[]) : []
-  const queuedNote = queued.length
-    ? ` · ${queued.map((q) => q.title).filter(Boolean).join(', ') || 'El tema'}: no te preocupes, que este tema ya está (pendiente de validar en Imports)`
-    : ''
-  if (inserted > 0 || queued.length > 0) {
-    return { type: 'new_release', ok: true, summary: line + queuedNote, detail: json }
+  if (filed.invalid.length) parts.push(`no son fichas de Beatport: ${filed.invalid.join(' ')}`)
+  const queued = filed.queued.length + filed.waiting.length
+  const summary = queued
+    ? `Queda para el pase de las 12 (${when}). ${parts.join(' | ')}`
+    : parts.join(' | ') || 'Sin URLs Beatport'
+  return {
+    type: 'new_release',
+    ok: queued > 0,
+    summary,
   }
-  const already =
-    dupes > 0 && failedCount === 0
-      ? `New Releases: ya estaban en el catálogo (${dupes}). No te preocupes, que este tema ya está.`
-      : line
-  return { type: 'new_release', ok: false, summary: already, detail: json }
 }
 
 /** El YouTube anterior a 2012 sustituye a la fila de tienda del mismo corte. */
