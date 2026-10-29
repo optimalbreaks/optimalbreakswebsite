@@ -4,6 +4,7 @@
  * Un reel de Instagram no puede decir «X es el nº 1» y que quien entra justo
  * después vea otro orden. Dos casos:
  *   · Artículo de quincena/trimestre: 72 h desde `published_at`, sin hacer nada.
+ *     El del mes no: se publica con el mes abierto y sigue en directo.
  *   · «Congela los tops»: fila en `top_freezes` (`scripts/top-freeze.mjs`).
  * La primera petición calcula en directo y guarda la foto; las demás leen esa
  * misma (números y orden juntos). Votos y escuchas se siguen guardando y
@@ -52,7 +53,7 @@ export async function getActivePageFreeze(): Promise<PublicFreeze | null> {
 /** Las 72 h que siguen a la publicación de un artículo. */
 export function articleFreeze(slug: string, publishedAt: string | null | undefined): PublicFreeze | null {
   const at = publishedAt ? Date.parse(publishedAt) : NaN
-  if (!slug || !Number.isFinite(at)) return null
+  if (!slug || slug.startsWith('mes-breakbeat-') || !Number.isFinite(at)) return null
   const until = at + ARTICLE_FREEZE_MS
   const now = Date.now()
   if (now < at || now >= until) return null

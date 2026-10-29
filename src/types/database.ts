@@ -1329,8 +1329,8 @@ export interface FortnightDigestCopy {
 }
 
 export interface FortnightDigest {
-  /** Ausente = quincena. `semana` = lo que sale la semana que viene (adelantos). */
-  kind?: 'quincena' | 'trimestre' | 'semana'
+  /** Ausente = quincena. `mes` = mes natural (desde oct 2026). `semana` = lo que sale la semana que viene (adelantos). */
+  kind?: 'quincena' | 'mes' | 'trimestre' | 'semana'
   /** Solo `semana`: temas con el «+» de la cuenta editorial, por orden de salida. */
   picks?: FortnightDigestTrack[]
   /** Solo `semana`: foto fija. Momento del recuento; la ficha no lo recalcula. */

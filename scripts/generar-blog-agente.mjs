@@ -14,6 +14,12 @@
  *   npm run db:blog:agent -- --agenda [YYYY-MM-DD primer día] [--solo-datos] [--borrador] [--forzar [--mantener-textos]]
  *
  *   npm run db:blog:agent -- --trimestre 2026-07 [mismas opciones]
+ *   npm run db:blog:agent -- --mes [YYYY-MM] [mismas opciones]
+ *
+ * --mes (desde oct 2026 sustituye a la quincena): los temas con release en ese mes natural
+ * (por defecto, el mes en curso). Slug `mes-breakbeat-<desde>-<hasta>`, ranking de 20,
+ * escuchas y votos desde siempre (un adelanto de fin de mes ya suena antes de salir).
+ * Se publica al momento aunque el mes no haya cerrado; sin foto de 72 h, la ficha va en directo.
  *   npm run db:blog:agent -- --semana [YYYY-MM-DD lunes] [mismas opciones]
  *
  * --semana: «A día de hoy: los lanzamientos de breakbeat que se esperan…». Los temas con
@@ -428,6 +434,17 @@ function trimestreDe(ym) {
   return { from, until: addDaysYmd(next.toISOString().slice(0, 10), -1), prevFrom: prev.toISOString().slice(0, 10) }
 }
 
+/** `--mes 2026-10` → del 1 al 31 de octubre; el anterior empieza el 1 de septiembre. */
+function mesDe(ym) {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(ym || '')
+  if (!m) throw new Error('--mes espera el mes: 2026-10')
+  const next = new Date(Date.UTC(Number(m[1]), Number(m[2]), 1))
+  const prev = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 2, 1))
+  return { from: `${ym}-01`, until: addDaysYmd(next.toISOString().slice(0, 10), -1), prevFrom: prev.toISOString().slice(0, 10) }
+}
+
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
 /** Título fijo: la página recalcula escuchas y votos en directo y los líderes cambian. «Mejores» no: suena a premio. Antes del 6 oct 2026 no hay escuchas, así que el título dice votados. */
 const PLAYS_SINCE = '2026-10-06'
 function tituloQuincena(from, until, lang, kind = 'quincena') {
@@ -436,6 +453,12 @@ function tituloQuincena(from, until, lang, kind = 'quincena') {
     const s = SEASONS[from.slice(5, 7)]
     if (lang === 'es') return `${heard ? 'Los más escuchados' : 'Los más votados'} ${s.es} de ${from.slice(0, 4)}`
     return `The most ${heard ? 'played' : 'voted'} tracks of ${s.en} ${from.slice(0, 4)}`
+  }
+  if (kind === 'mes') {
+    const mi = Number(from.slice(5, 7)) - 1
+    const en = new Date(`${from}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })
+    if (lang === 'es') return `${heard ? 'Los más escuchados' : 'Los más votados'} de ${MESES_ES[mi]} de ${from.slice(0, 4)}`
+    return `The most ${heard ? 'played' : 'voted'} tracks of ${en} ${from.slice(0, 4)}`
   }
   const sameYear = from.slice(0, 4) === until.slice(0, 4)
   const sameMonth = sameYear && from.slice(5, 7) === until.slice(5, 7)
@@ -529,26 +552,28 @@ async function loadLiveRanking(from, until, topN) {
   return fn(from, until, topN)
 }
 
-async function computeQuincena(untilArg, trimestre = null, semana = null) {
+async function computeQuincena(untilArg, trimestre = null, semana = null, mes = null) {
   const creds = supabaseApiCredentials()
   if (!creds) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY')
   const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
 
-  const kind = trimestre ? 'trimestre' : semana ? 'semana' : 'quincena'
-  const period = trimestre ? trimestreDe(trimestre) : null
+  const kind = trimestre ? 'trimestre' : mes ? 'mes' : semana ? 'semana' : 'quincena'
+  const period = trimestre ? trimestreDe(trimestre) : mes ? mesDe(mes) : null
   const until = period ? period.until : semana ? addDaysYmd(semana, 6) : untilArg
   const from = period ? period.from : semana || addDaysYmd(until, -13)
   const prevFrom = period ? period.prevFrom : addDaysYmd(from, semana ? -7 : -14)
-  const TOP = trimestre ? 20 : 10
-  // Gramática del brief: la quincena / el trimestre / la semana que viene.
+  const TOP = trimestre || mes ? 20 : 10
+  // Gramática del brief: la quincena / el mes / el trimestre / la semana que viene.
   const G = trimestre
     ? { del: 'del trimestre', en: 'en el trimestre', esta: 'este trimestre', ant: 'Trimestre anterior', ant_l: 'trimestre anterior', NOM: 'TRIMESTRE' }
-    : semana
+    : mes
+      ? { del: 'del mes', en: 'en el mes', esta: 'este mes', ant: 'Mes anterior', ant_l: 'mes anterior', NOM: 'MES' }
+      : semana
       ? { del: 'de la semana', en: 'en la semana', esta: 'la semana que viene', ant: 'Semana en curso', ant_l: 'semana en curso', NOM: 'PRÓXIMA SEMANA' }
       : { del: 'de la quincena', en: 'en la quincena', esta: 'esta quincena', ant: 'Quincena anterior', ant_l: 'quincena anterior', NOM: 'QUINCENA' }
   const inWin = (d) => d >= from && d <= until
-  // Un adelanto se escucha antes de salir: la semana que viene cuenta todas las escuchas.
-  const sinceIso = semana ? `${PLAYS_SINCE}T00:00:00Z` : `${addDaysYmd(from, -1)}T00:00:00Z`
+  // Un adelanto se escucha antes de salir: la semana que viene y el mes cuentan todas las escuchas.
+  const sinceIso = semana || mes ? `${PLAYS_SINCE}T00:00:00Z` : `${addDaysYmd(from, -1)}T00:00:00Z`
 
   const [editions, featAll, artistRows, labelRows] = await Promise.all([
     fetchAllRows(sb, 'chart_editions', 'id, is_published, week_date'),
@@ -662,7 +687,7 @@ async function computeQuincena(untilArg, trimestre = null, semana = null) {
   // Escuchas de la quincena (previews y temas completos en la web).
   const plays = await fetchAllRows(sb, 'track_play_events', 'id, canonical_key, created_at', (q) => q.gte('created_at', sinceIso))
   // Las escuchas se registran desde el 6 oct 2026: un trimestre anterior cuenta todas, no las de sus días.
-  const playsWin = trimestre || semana ? plays : plays.filter((p) => inWin(madridDay(p.created_at)))
+  const playsWin = trimestre || mes || semana ? plays : plays.filter((p) => inWin(madridDay(p.created_at)))
   const featByKey = new Map(feat.filter((f) => f.link_url).map((f) => [normUrl(f.link_url), f]))
   const playCount = new Map()
   for (const p of playsWin) {
@@ -775,8 +800,10 @@ async function computeQuincena(untilArg, trimestre = null, semana = null) {
     ? `- El artículo trata SOLO de los temas que salen la semana que viene (del ${from} al ${until}): nada ha salido todavía. Habla en futuro o en presente de anuncio («sale el viernes», «llega», «se espera»). Son adelantos: las fechas pueden moverse; no prometas nada. Nada de sesiones ni de lo que ya salió.
 - «picks» presenta los ${WEEK_HIGHLIGHTS} destacados que vienen (la selección de Optimal Breaks): 1–2 frases, cita 2–3 nombres de esa lista. No digas cuál va primero.
 - Si un día concentra casi todo (normalmente el viernes), dilo en el intro.`
-    : `- El artículo trata SOLO de los temas que han salido en ${trimestre ? `estos tres meses (${SEASONS[from.slice(5, 7)].es.replace(/^de la |^del /, '')})` : 'estas dos semanas'}: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.`
-  const brief = `ARTÍCULO ${trimestre ? 'TRIMESTRAL' : semana ? 'DE LA PRÓXIMA SEMANA (A DÍA DE HOY)' : 'QUINCENAL'} DE OPTIMAL BREAKS — DATOS DE LA WEB (fuente única; no inventes ni redondees cifras)
+    : mes
+      ? `- El artículo trata SOLO de los temas con fecha de salida en ${MESES_ES[Number(from.slice(5, 7)) - 1]} de ${from.slice(0, 4)}: qué sale, quién lo firma, qué se escucha y se vota. El mes puede estar aún en curso: los últimos días llegan como adelantos que ya suenan en la web. No digas que el mes ha terminado. Nada de sesiones ni de temas de otros meses.`
+      : `- El artículo trata SOLO de los temas que han salido en ${trimestre ? `estos tres meses (${SEASONS[from.slice(5, 7)].es.replace(/^de la |^del /, '')})` : 'estas dos semanas'}: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.`
+  const brief = `ARTÍCULO ${trimestre ? 'TRIMESTRAL' : mes ? 'MENSUAL' : semana ? 'DE LA PRÓXIMA SEMANA (A DÍA DE HOY)' : 'QUINCENAL'} DE OPTIMAL BREAKS — DATOS DE LA WEB (fuente única; no inventes ni redondees cifras)
 ${data}
 
 QUÉ ESCRIBES: SOLO TEXTOS CORTOS
@@ -940,7 +967,7 @@ Devuelve SOLO este JSON:
   }
 }
 
-const QUINCENA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes los textos cortos del resumen quincenal o trimestral. Tono: revista musical con criterio, directo, nada de relleno ni frases infladas, sin meta-comentarios sobre datos o fuentes. Devuelves UN objeto JSON válido y nada más.`
+const QUINCENA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes los textos cortos del resumen quincenal, mensual o trimestral. Tono: revista musical con criterio, directo, nada de relleno ni frases infladas, sin meta-comentarios sobre datos o fuentes. Devuelves UN objeto JSON válido y nada más.`
 
 const COPY_KEYS = ['intro', 'picks', 'released', 'played', 'voted', 'artists', 'top100', 'labels', 'sound', 'debut']
 
@@ -956,18 +983,19 @@ function digestToHtml(digest, lang) {
   const h = (title, text) => (text ? `<h2>${escHtml(title)}</h2>\n<p>${escHtml(text)}</p>` : '')
   const es = lang === 'es'
   const q = digest.kind === 'trimestre'
+  const m = digest.kind === 'mes'
   const picks = (digest.picks || [])
     .map((t) => `<li>${escHtml(t.release_date || '')} — ${escHtml(t.artists)} — ${escHtml(t.title)}${t.label ? ` [${escHtml(t.label)}]` : ''}</li>`)
     .join('\n')
   return [
     c.intro ? `<p>${escHtml(c.intro)}</p>` : '',
     picks ? `<h2>${es ? `Los ${digest.picks.length} destacados que vienen` : `The ${digest.picks.length} highlights on the way`}</h2>\n${c.picks ? `<p>${escHtml(c.picks)}</p>\n` : ''}<ul>\n${picks}\n</ul>` : '',
-    h(es ? 'Lo que ha salido' : q ? 'Out this quarter' : 'Out this fortnight', c.released),
+    h(es ? 'Lo que ha salido' : q ? 'Out this quarter' : m ? 'Out this month' : 'Out this fortnight', c.released),
     h(es ? 'Lo más escuchado' : 'Most played', c.played),
     h(es ? 'Lo más votado' : 'Most voted', c.voted),
     h(es ? 'Quién más ha publicado' : 'Who released the most', c.artists),
     h(es ? 'Estrellas del Top 100 con temas nuevos' : 'Top 100 stars with new music', c.top100),
-    h(es ? (q ? 'Sellos del trimestre' : 'Sellos de la quincena') : q ? 'Labels of the quarter' : 'Labels of the fortnight', c.labels),
+    h(es ? (q ? 'Sellos del trimestre' : m ? 'Sellos del mes' : 'Sellos de la quincena') : q ? 'Labels of the quarter' : m ? 'Labels of the month' : 'Labels of the fortnight', c.labels),
     h(es ? 'Radiografía sonora' : 'Sound check', c.sound),
     h(es ? 'Debutantes' : 'Debut artists', c.debut),
   ].filter(Boolean).join('\n')
@@ -1052,6 +1080,10 @@ function parseArgs(argv) {
       const next = argv[i + 1]
       out.quincena = next && /^\d{4}-\d{2}-\d{2}$/.test(next) ? argv[++i] : madridDay(Date.now())
     } else if (a === '--trimestre') out.trimestre = argv[++i] || ''
+    else if (a === '--mes') {
+      const next = argv[i + 1]
+      out.mes = next && /^\d{4}-\d{2}$/.test(next) ? argv[++i] : madridDay(Date.now()).slice(0, 7)
+    }
     else if (a === '--semana') {
       const next = argv[i + 1]
       out.semana = semanaDe(next && /^\d{4}-\d{2}-\d{2}$/.test(next) ? argv[++i] : null)
@@ -1106,11 +1138,13 @@ async function mainQuincena(args) {
   console.log(
     args.trimestre
       ? `[blog-agent] Trimestre ${args.trimestre}: leyendo datos…`
-      : args.semana
+      : args.mes
+        ? `[blog-agent] Mes ${args.mes}: leyendo datos…`
+        : args.semana
         ? `[blog-agent] Semana que empieza el ${args.semana}: leyendo adelantos…`
         : `[blog-agent] Quincena que acaba el ${args.quincena}: leyendo datos…`,
   )
-  const q = await computeQuincena(args.quincena, args.trimestre || null, args.semana || null)
+  const q = await computeQuincena(args.quincena, args.trimestre || null, args.semana || null, args.mes || null)
   const brief = [q.brief, loadBrief(args.briefPaths)].filter(Boolean).join('\n\n---\n\nNOTAS DEL EDITOR:\n')
   if (!q.votesReady) {
     console.warn(`[blog-agent] ${SITE_URL} aún no filtra el Top 100 por fechas: falta desplegar. Sin bloque de votos.`)
@@ -1457,7 +1491,7 @@ async function main() {
     process.exit(r.status ?? 1)
   }
   if (args.agenda) return mainAgenda(args)
-  if (args.quincena || args.trimestre || args.semana) return mainQuincena(args)
+  if (args.quincena || args.trimestre || args.mes || args.semana) return mainQuincena(args)
   if (!args.slug || (!args.titleHint && !args.fromJson)) {
     console.error(
       'Uso: node scripts/generar-blog-agente.mjs <slug> "Título ES" [--featured] [--brief archivo.txt] [--no-search] [--json-only] [--save-json] [--from-json [ruta]]',

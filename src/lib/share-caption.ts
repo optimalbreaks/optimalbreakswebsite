@@ -102,7 +102,7 @@ export function buildPageVideoCaption(
     first?: string
     excerpt?: string
     /** Resumen de /topreleases. */
-    period?: 'FORTNIGHT' | 'QUARTER' | 'WEEK'
+    period?: 'FORTNIGHT' | 'MONTH' | 'QUARTER' | 'WEEK'
     artists?: number
     labels?: number
     topPlayed?: string
@@ -162,10 +162,10 @@ export function buildPageVideoCaption(
   if (kind === 'digest') {
     const week = d.period === 'WEEK'
     const p = es
-      ? d.period === 'QUARTER' ? 'trimestre' : week ? 'semana que viene' : 'quincena'
-      : d.period === 'QUARTER' ? 'quarter' : week ? 'next week' : 'fortnight'
+      ? d.period === 'QUARTER' ? 'del trimestre' : d.period === 'MONTH' ? 'del mes' : week ? 'de la semana que viene' : 'de la quincena'
+      : d.period === 'QUARTER' ? 'quarter' : d.period === 'MONTH' ? 'month' : week ? 'next week' : 'fortnight'
     return [
-      es ? `📊 El breakbeat de la ${p}, en datos.` : `📊 The ${p} in breakbeat, in numbers.`,
+      es ? `📊 El breakbeat ${p}, en datos.` : `📊 The ${p} in breakbeat, in numbers.`,
       d.title || null,
       '',
       es

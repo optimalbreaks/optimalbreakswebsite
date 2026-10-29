@@ -77,6 +77,12 @@ const nextConfig = {
         destination: '/:lang/topalltimes',
         permanent: true,
       },
+      /** Octubre de 2026 pasó de quincenas a mes entero (29 oct 2026). */
+      {
+        source: '/:lang(es|en)/:section(topreleases|blog)/quincena-breakbeat-2026-10-03-2026-10-16',
+        destination: '/:lang/topreleases/mes-breakbeat-2026-10-01-2026-10-31',
+        permanent: true,
+      },
       /** Slug antiguo del perfil Masterblaster (rebrand a nombre real Aquasky Vs Masterblaster) */
       {
         source: '/:lang/artists/master-blaster',

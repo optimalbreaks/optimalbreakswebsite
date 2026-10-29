@@ -157,10 +157,11 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   const storedDigest: FortnightDigestData | null = rawDigest && rawDigest.kind !== 'agenda' ? rawDigest : null
   const agendaNights = agendaStored ? await loadAgendaNights(supabase, agendaStored.from, agendaStored.until, agendaStored.places) : []
   const quarter = storedDigest?.kind === 'trimestre'
+  const month = storedDigest?.kind === 'mes'
   const week = storedDigest?.kind === 'semana'
   // La próxima semana es «a día de hoy»: foto fija del generador, no se recalcula.
   const live = storedDigest && !week
-    ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10, { slug: post.slug, publishedAt: post.published_at })
+    ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter || month ? 20 : 10, { slug: post.slug, publishedAt: post.published_at })
     : null
   const digest = storedDigest && live
     ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
@@ -352,7 +353,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
               stars: digest.top100.slice(0, 6).map((a) => ({ rank: a.rank, name: a.name, track: a.tracks[0]?.title || '', image: abs(a.image_url) })),
             }
           })(),
-          period: quarter ? ('QUARTER' as const) : week ? ('WEEK' as const) : undefined,
+          period: quarter ? ('QUARTER' as const) : month ? ('MONTH' as const) : week ? ('WEEK' as const) : undefined,
           from: digest.from,
           until: digest.until,
           totals: { ...digest.totals, prev: digest.totals.prev_tracks },
@@ -494,8 +495,8 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
             heading={
               digest
                 ? safeLang === 'es'
-                  ? `LAS ${albumTracks.length} IMPRESCINDIBLES ${quarter ? 'DEL TRIMESTRE' : 'DE LA QUINCENA'}`
-                  : `THE ${quarter ? "QUARTER'S" : "FORTNIGHT'S"} ${albumTracks.length} ESSENTIALS`
+                  ? `LAS ${albumTracks.length} IMPRESCINDIBLES ${quarter ? 'DEL TRIMESTRE' : month ? 'DEL MES' : 'DE LA QUINCENA'}`
+                  : `THE ${quarter ? "QUARTER'S" : month ? "MONTH'S" : "FORTNIGHT'S"} ${albumTracks.length} ESSENTIALS`
                 : safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'
             }
             defaultExpanded

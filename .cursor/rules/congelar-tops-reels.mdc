@@ -9,7 +9,7 @@ Godino graba un reel sobre un artículo o sobre el Top 100 y se sube a Instagram
 
 ## Artículo de quincena o trimestre: solo, sin hacer nada
 
-72 h desde `published_at` el artículo enseña una foto (la hace el primer render tras publicar). La comparten el artículo, su tarjeta en `/topreleases` y la tarjeta de quincena de la home. Luego vuelve a directo. **No** hay que lanzar ningún script al publicar.
+Desde el 29 oct 2026 el artículo es **mensual** (`mes-breakbeat-*`) y **no** lleva estas 72 h: se publica con el mes abierto y va en directo (decisión de Narciso). Para un reel del mes, «congela los tops». Trimestre (y quincenas antiguas): 72 h desde `published_at` el artículo enseña una foto (la hace el primer render tras publicar). La comparten el artículo, su tarjeta en `/topreleases` y la tarjeta de quincena de la home. Luego vuelve a directo. **No** hay que lanzar ningún script al publicar.
 
 ## «Congela los tops» → congelar
 

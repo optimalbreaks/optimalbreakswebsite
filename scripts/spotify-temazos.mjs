@@ -159,7 +159,7 @@ async function loadArticles() {
   for (const p of posts) {
     const digest = p.digest
     if (!digest || digest.kind === 'agenda' || digest.kind === 'semana' || !digest.from || !digest.until) continue
-    const topN = digest.kind === 'trimestre' ? 20 : 10
+    const topN = digest.kind === 'trimestre' || digest.kind === 'mes' ? 20 : 10
     let live = null
     try {
       live = await load(digest.from, digest.until, topN)

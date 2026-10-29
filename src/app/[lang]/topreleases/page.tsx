@@ -1,9 +1,9 @@
 // ============================================
 // OPTIMAL BREAKS — Top novedades
 // ----------------------------------------------
-// Las quincenas y las temporadas nacen en el blog. Aquí se leen agrupadas:
-// arriba la última quincena (suena ahí mismo), debajo una tarjeta por
-// temporada con sus quincenas dentro. `?year=` cambia de año cuando hay más
+// Los meses (antes, quincenas) y las temporadas nacen en el blog. Aquí se leen
+// agrupados: arriba el último mes (suena ahí mismo), debajo una tarjeta por
+// temporada con sus meses dentro. `?year=` cambia de año cuando hay más
 // de uno. Las escuchas existen desde el 6 oct 2026: un periodo que cerró
 // antes se ordena por votos. El top histórico sigue en /topalltimes.
 // ============================================
@@ -32,10 +32,10 @@ const COPY = {
     kicker: 'TOP NOVEDADES',
     title: 'Top novedades',
     subtitle:
-      'Lo más escuchado de cada quincena, agrupado por temporada. Desde el 6 de octubre de 2026 el puesto sale de las escuchas; antes, de los votos.',
+      'Lo más escuchado de cada mes, agrupado por temporada. Desde el 6 de octubre de 2026 el puesto sale de las escuchas; antes, de los votos.',
     shout:
       '¡Esto es lo que la gente escucha en Optimal Breaks! Solo cuentan las reproducciones de esta web. No tomamos como referencia los datos de ninguna otra plataforma.',
-    empty: 'Todavía no hay quincenas publicadas.',
+    empty: 'Todavía no hay artículos publicados.',
     read: 'VER EL ARTÍCULO →',
     plays: 'escuchas',
     playOne: 'escucha',
@@ -45,14 +45,16 @@ const COPY = {
     byVotes: 'Más votados',
     votesNote: 'Ordenado por votos: las escuchas se cuentan desde el 6 oct 2026.',
     latest: 'ÚLTIMA QUINCENA',
-    fortnight: 'QUINCENA',
+    latestMonth: 'ÚLTIMO MES',
+    thisMonth: 'ESTE MES',
     seasons: ['INVIERNO', 'PRIMAVERA', 'VERANO', 'OTOÑO'],
     seasonNames: ['Invierno', 'Primavera', 'Verano', 'Otoño'],
     running: 'EN CURSO',
-    byFortnight: (season: string) => `${season}, quincena a quincena`,
-    pending: 'El artículo de la temporada sale cuando cierra el trimestre. Mientras, sus quincenas:',
-    fortnights: (n: number) => (n === 1 ? '1 QUINCENA' : `${n} QUINCENAS`),
+    byFortnight: (season: string) => `${season}, mes a mes`,
+    pending: 'El artículo de la temporada sale cuando cierra el trimestre. Mientras, sus meses:',
+    fortnights: (n: number) => (n === 1 ? '1 MES' : `${n} MESES`),
     playFortnight: '▶ ESCUCHAR LA QUINCENA · {n} TEMAS',
+    playMonth: '▶ ESCUCHAR EL MES · {n} TEMAS',
     playSeason: (label: string) => `▶ ESCUCHAR ${label} · {n} TEMAS`,
     years: 'AÑO',
   },
@@ -60,10 +62,10 @@ const COPY = {
     kicker: 'TOP RELEASES',
     title: 'Top releases',
     subtitle:
-      'The most played tracks of each fortnight, grouped by season. From 6 October 2026 rank comes from plays; before that, from votes.',
+      'The most played tracks of each month, grouped by season. From 6 October 2026 rank comes from plays; before that, from votes.',
     shout:
       'This is what people listen to on Optimal Breaks! Only plays on this site count. We do not use figures from any other platform as a reference.',
-    empty: 'No fortnights published yet.',
+    empty: 'No articles published yet.',
     read: 'READ THE ARTICLE →',
     plays: 'plays',
     playOne: 'play',
@@ -73,14 +75,16 @@ const COPY = {
     byVotes: 'Most voted',
     votesNote: 'Ranked by votes: plays are counted from 6 OCT 2026.',
     latest: 'LATEST FORTNIGHT',
-    fortnight: 'FORTNIGHT',
+    latestMonth: 'LATEST MONTH',
+    thisMonth: 'THIS MONTH',
     seasons: ['WINTER', 'SPRING', 'SUMMER', 'AUTUMN'],
     seasonNames: ['Winter', 'Spring', 'Summer', 'Autumn'],
     running: 'IN PROGRESS',
-    byFortnight: (season: string) => `${season}, fortnight by fortnight`,
-    pending: 'The season article comes out when the quarter closes. Meanwhile, its fortnights:',
-    fortnights: (n: number) => (n === 1 ? '1 FORTNIGHT' : `${n} FORTNIGHTS`),
+    byFortnight: (season: string) => `${season}, month by month`,
+    pending: 'The season article comes out when the quarter closes. Meanwhile, its months:',
+    fortnights: (n: number) => (n === 1 ? '1 MONTH' : `${n} MONTHS`),
     playFortnight: '▶ PLAY THE FORTNIGHT · {n} TRACKS',
+    playMonth: '▶ PLAY THE MONTH · {n} TRACKS',
     playSeason: (label: string) => `▶ PLAY ${label} · {n} TRACKS`,
     years: 'YEAR',
   },
@@ -105,7 +109,7 @@ type PostRow = {
   released: FortnightDigestTrack | null
 }
 
-type Post = PostRow & { from: string; until: string; season: boolean; year: number; q: number; rank: Rank }
+type Post = PostRow & { from: string; until: string; season: boolean; month: boolean; year: number; q: number; rank: Rank }
 
 type SeasonGroup = { year: number; q: number; post: Post | null; fortnights: Post[] }
 
@@ -198,7 +202,7 @@ export default async function TopReleasesPage({
 
   const posts: Post[] = rows
     .filter((r): r is PostRow & { from: string; until: string } => !!r.slug && r.kind !== 'agenda' && r.kind !== 'semana' && !!r.from && !!r.until)
-    .map((r) => ({ ...r, season: r.kind === 'trimestre', rank: rankOf(r.until), ...quarterOf(r.from, r.until) }))
+    .map((r) => ({ ...r, season: r.kind === 'trimestre', month: r.kind === 'mes', rank: rankOf(r.until), ...quarterOf(r.from, r.until) }))
     .sort((a, b) => b.until.localeCompare(a.until))
 
   const groups = new Map<string, SeasonGroup>()
@@ -218,10 +222,11 @@ export default async function TopReleasesPage({
 
   const liveTargets = [...(hero ? [hero] : []), ...visible.flatMap((s) => (s.post ? [s.post] : []))]
   const liveRows = await Promise.all(
-    liveTargets.map((p) => getFortnightLive(p.from, p.until, p.season ? 20 : 10, { slug: p.slug, publishedAt: p.published_at })),
+    liveTargets.map((p) => getFortnightLive(p.from, p.until, p.season || p.month ? 20 : 10, { slug: p.slug, publishedAt: p.published_at })),
   )
   const live = new Map(liveTargets.map((p, i) => [p.slug, liveRows[i]]))
   const today = todayMadrid()
+  const heroLabel = (p: Post) => (p.month ? (p.until >= today ? t.thisMonth : t.latestMonth) : t.latest)
 
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
@@ -333,7 +338,7 @@ export default async function TopReleasesPage({
                 <article className="mb-10 border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
                   <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b-[3px] border-[var(--ink)] bg-[var(--yellow)]">
                     <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
-                      {t.latest}
+                      {heroLabel(hero)}
                     </span>
                     <span className="text-[11px] font-bold uppercase" style={mono}>{periodLabel(hero.from, hero.until, lang)}</span>
                   </div>
@@ -348,7 +353,7 @@ export default async function TopReleasesPage({
                       spot={`h-${hero.slug}`}
                       groupKey={`topreleases:${hero.from}:${hero.until}`}
                       units={unitsFor(hero.rank)}
-                      playAll={t.playFortnight}
+                      playAll={hero.month ? t.playMonth : t.playFortnight}
                       large
                     />
                     {hero.rank === 'votes' ? <p className="mt-2 text-[11px] text-[var(--dim)]" style={mono}>{t.votesNote}</p> : null}

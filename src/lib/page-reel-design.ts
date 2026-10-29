@@ -896,7 +896,7 @@ export type FortnightTrackAnim = { title: string; artists: string; value: number
 export type FortnightAnim = {
   range: string
   /** Ausente = FORTNIGHT. */
-  period?: 'FORTNIGHT' | 'QUARTER' | 'WEEK'
+  period?: 'FORTNIGHT' | 'MONTH' | 'QUARTER' | 'WEEK'
   totals: { tracks: number; artists: number; labels: number; releases: number; prev: number }
   covers: (Img | null)[]
   played: FortnightTrackAnim[]
@@ -1128,7 +1128,7 @@ function fnCoverRow(ctx: C, imgs: (Img | null)[], x: number, y: number, w: numbe
 /** Qué enseña cada escena, en una frase corta y en los dos idiomas. */
 function fnNoteText(k: FnScene, d: FortnightAnim, P: string): { es: string; en: string } {
   const p = P.toLowerCase()
-  const pEs = P === 'QUARTER' ? 'el trimestre' : P === 'WEEK' ? 'la semana' : 'la quincena'
+  const pEs = P === 'QUARTER' ? 'el trimestre' : P === 'MONTH' ? 'el mes' : P === 'WEEK' ? 'la semana' : 'la quincena'
   const n = Math.abs(d.totals.tracks - d.totals.prev)
   const up = d.totals.tracks >= d.totals.prev
   const { tracks, artists, labels } = d.totals

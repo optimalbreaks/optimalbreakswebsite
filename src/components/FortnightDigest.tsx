@@ -67,7 +67,7 @@ const T = {
     playAllHint: 'Suenan uno detrás de otro. Pulsa + en los que te gusten y quedan en Mis Tracks.',
     weekCta: 'Cada semana tiene su lista completa en Tracks, con preview de todos los temas.',
     weekBtn: 'VER LA ÚLTIMA SEMANA →',
-    releasesCta: 'Cada quincena y cada temporada están en Top novedades, aparte del top histórico.',
+    releasesCta: 'Cada mes y cada temporada están en Top novedades, aparte del top histórico.',
     releasesBtn: 'VER TOP NOVEDADES →',
     voteGuest: 'Tu + es tu voto. Crea tu cuenta gratis: guardas los temas en Mis Tracks y cuentan para el top histórico.',
     voteGuestBtn: 'CREAR CUENTA',
@@ -116,7 +116,7 @@ const T = {
     playAllHint: 'They play back to back. Hit + on the ones you like and they land in My Tracks.',
     weekCta: 'Every week has its full list on Tracks, with a preview of every track.',
     weekBtn: 'SEE THE LATEST WEEK →',
-    releasesCta: 'Every fortnight and every season lives on Top releases, apart from the all-time top.',
+    releasesCta: 'Every month and every season lives on Top releases, apart from the all-time top.',
     releasesBtn: 'SEE TOP RELEASES →',
     voteGuest: 'Your + is your vote. Create a free account: tracks go to My Tracks and count towards the all-time top.',
     voteGuestBtn: 'CREATE ACCOUNT',
@@ -145,6 +145,22 @@ const QUARTER = {
   },
 }
 
+const MONTH = {
+  es: {
+    fortnight: 'MES',
+    prev: 'mes anterior',
+    labelsTitle: 'Sellos del mes',
+    playAll: (n: number) => `▶ ESCUCHAR EL MES · ${n} TEMAS`,
+  },
+  en: {
+    fortnight: 'MONTH',
+    prev: 'previous month',
+    released: 'Most played this month',
+    labelsTitle: 'Labels of the month',
+    playAll: (n: number) => `▶ PLAY THE MONTH · ${n} TRACKS`,
+  },
+}
+
 /** Lo que sale la semana que viene: todo son adelantos y los números son de antes del lanzamiento. */
 const WEEK = {
   es: {
@@ -162,7 +178,7 @@ const WEEK = {
     playAll: (n: number) => `▶ ESCUCHAR LA PRÓXIMA SEMANA · ${n} TEMAS`,
     weekCta: 'La semana entera está en Tracks, con preview de todos los temas.',
     weekBtn: 'VER LA SEMANA →',
-    releasesCta: 'Cuando salgan, lo más escuchado de cada quincena pasa a Top novedades.',
+    releasesCta: 'Cuando salgan, lo más escuchado de cada mes pasa a Top novedades.',
   },
   en: {
     fortnight: 'NEXT WEEK',
@@ -179,7 +195,7 @@ const WEEK = {
     playAll: (n: number) => `▶ PLAY NEXT WEEK · ${n} TRACKS`,
     weekCta: 'The whole week is on Tracks, with a preview of every track.',
     weekBtn: 'SEE THE WEEK →',
-    releasesCta: 'Once they are out, the most played of each fortnight moves to Top releases.',
+    releasesCta: 'Once they are out, the most played of each month moves to Top releases.',
   },
 }
 
@@ -610,7 +626,14 @@ export default function FortnightDigest({
   playedArtists?: FortnightPlayedArtist[]
 }) {
   const week = d.kind === 'semana'
-  const t = d.kind === 'trimestre' ? { ...T[lang], ...QUARTER[lang] } : week ? { ...T[lang], ...WEEK[lang] } : T[lang]
+  const t =
+    d.kind === 'trimestre'
+      ? { ...T[lang], ...QUARTER[lang] }
+      : d.kind === 'mes'
+        ? { ...T[lang], ...MONTH[lang] }
+        : week
+          ? { ...T[lang], ...WEEK[lang] }
+          : T[lang]
   const copy = d.copy[lang]
   const picks = d.picks ?? []
   const delta = d.totals.tracks - d.totals.prev_tracks

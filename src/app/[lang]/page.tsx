@@ -262,10 +262,13 @@ const MUSIC_COPY = {
     title2: 'Y LO QUE VIENE',
     all: 'TOP NOVEDADES',
     fortnight: 'ÚLTIMA QUINCENA',
+    month: 'ESTE MES',
+    lastMonth: 'ÚLTIMO MES',
     nextWeek: 'PRÓXIMA SEMANA',
     thisWeek: 'ESTA SEMANA',
     plays: ['escucha', 'escuchas'] as const,
     playFortnight: '▶ ESCUCHAR LA QUINCENA · {n} TEMAS',
+    playMonth: '▶ ESCUCHAR EL MES · {n} TEMAS',
     playWeek: '▶ ESCUCHAR LOS {n} DESTACADOS',
     fortnightNote: 'Lo más escuchado en Optimal Breaks, en directo.',
     weekStats: (top: number, tracks: number, artists: number, labels: number) =>
@@ -279,10 +282,13 @@ const MUSIC_COPY = {
     title2: "AND WHAT'S NEXT",
     all: 'TOP RELEASES',
     fortnight: 'LATEST FORTNIGHT',
+    month: 'THIS MONTH',
+    lastMonth: 'LATEST MONTH',
     nextWeek: 'NEXT WEEK',
     thisWeek: 'THIS WEEK',
     plays: ['play', 'plays'] as const,
     playFortnight: '▶ PLAY THE FORTNIGHT · {n} TRACKS',
+    playMonth: '▶ PLAY THE MONTH · {n} TRACKS',
     playWeek: '▶ PLAY THE {n} HIGHLIGHTS',
     fortnightNote: 'The most played on Optimal Breaks, live.',
     weekStats: (top: number, tracks: number, artists: number, labels: number) =>
@@ -430,9 +436,9 @@ export default async function HomePage({
       .from('blog_posts')
       .select('slug, published_at, title_es, title_en, from:digest->>from, until:digest->>until')
       .eq('is_published', true)
-      .like('slug', 'quincena-breakbeat-%')
-      .order('slug', { ascending: false })
-      .limit(1),
+      .or('slug.like.quincena-breakbeat-%,slug.like.mes-breakbeat-%')
+      .order('published_at', { ascending: false })
+      .limit(4),
     supabase
       .from('blog_posts')
       .select(
@@ -443,11 +449,15 @@ export default async function HomePage({
       .order('slug', { ascending: false })
       .limit(1),
   ])
-  const fortnightPost = ((fortnightRows || []) as unknown as HomeDigestPost[]).find((p) => p.from && p.until) ?? null
+  const fortnightPost =
+    ((fortnightRows || []) as unknown as HomeDigestPost[])
+      .filter((p) => p.from && p.until)
+      .sort((a, b) => b.until!.localeCompare(a.until!))[0] ?? null
+  const monthPost = !!fortnightPost?.slug.startsWith('mes-breakbeat-')
   const weekCandidate = ((weekRows || []) as unknown as HomeWeekPost[])[0] ?? null
   const weekPost = weekCandidate?.from && weekCandidate.until && weekCandidate.until >= todayHome ? weekCandidate : null
   const fortnightLive = fortnightPost
-    ? await getFortnightLive(fortnightPost.from!, fortnightPost.until!, 10, { slug: fortnightPost.slug, publishedAt: fortnightPost.published_at ?? null })
+    ? await getFortnightLive(fortnightPost.from!, fortnightPost.until!, monthPost ? 20 : 10, { slug: fortnightPost.slug, publishedAt: fortnightPost.published_at ?? null })
     : null
   const fortnightTracks = fortnightLive?.released?.length ? fortnightLive.released : fortnightLive?.played ?? []
   const weekTracks = weekPost ? weekQueue(weekPost) : []
@@ -626,7 +636,7 @@ export default async function HomePage({
                 <article className="flex flex-col min-w-0 border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
                   <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b-[3px] border-[var(--ink)] bg-[var(--acid)]">
                     <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--ink)] text-[var(--paper)]" style={HOME_BTN_STYLE}>
-                      {music.fortnight}
+                      {monthPost ? (fortnightPost.until! >= todayHome ? music.month : music.lastMonth) : music.fortnight}
                     </span>
                     <span className="text-[11px] font-bold uppercase" style={{ fontFamily: "'Courier Prime', monospace" }}>
                       {homePeriodLabel(fortnightPost.from!, fortnightPost.until!, lang)}
@@ -649,7 +659,7 @@ export default async function HomePage({
                       spot="home-q"
                       groupKey={`home:quincena:${fortnightPost.from}`}
                       units={music.plays}
-                      playAll={music.playFortnight}
+                      playAll={monthPost ? music.playMonth : music.playFortnight}
                       large
                     />
                     <div className="mt-auto pt-4">
