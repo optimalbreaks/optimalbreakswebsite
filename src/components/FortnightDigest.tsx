@@ -454,6 +454,52 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
   )
 }
 
+/** Una fila por artista: retrato a la izquierda, sus temas en lista a la derecha (en tarjetas, los ▶ se apelotonaban). */
+function TopStarsRows({ stars, lang }: { stars: Digest['top100']; lang: Locale }) {
+  const { play, current, playing } = useContext(PlayCtx)
+  const cardPlay = cardPlayWith(play)
+  return (
+    <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
+      {stars.map((a) => (
+        <div key={a.name} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border-b-[3px] border-[var(--ink)]/10 last:border-b-0">
+          <div className="relative w-20 sm:w-28 shrink-0 self-start">
+            <CardThumbnail src={a.image_url} alt={a.name} aspectClass="aspect-square" frameClass="border-[3px] border-[var(--ink)]" sizes="112px" />
+            <span className="absolute top-1 left-1 bg-[var(--red)] text-white border-[2px] border-[var(--ink)] px-1.5 text-[12px] font-black" style={display}>#{a.rank}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[14px] sm:text-[16px] font-black uppercase leading-tight mb-2" style={display}>
+              <NameLink name={a.name} slug={a.slug} base="artists" lang={lang} />
+            </div>
+            <ul className="m-0 p-0 list-none">
+              {a.tracks.map((tr, i) => {
+                const on = current === rowKeyOf(tr) && playing
+                return (
+                  <li
+                    key={`${tr.title}-${i}`}
+                    id={spotId('top', tr)}
+                    onClick={cardPlay(tr, 'top')}
+                    className={`flex items-center gap-2 py-1.5 border-t-[2px] border-[var(--ink)]/10 first:border-t-0 ${tr.audio_src ? 'cursor-pointer hover:bg-[var(--yellow)]/15' : ''} ${on ? 'bg-[var(--red)]/15' : ''}`}
+                  >
+                    <div className="w-9 shrink-0"><Cover src={tr.artwork_url} alt={tr.title} sizes="36px" /></div>
+                    <PlayButton track={tr} spot="top" className="h-[32px] w-[32px] shrink-0 rounded-full text-[11px]" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] sm:text-[13px] font-bold leading-tight truncate" style={mono}>{trackName(tr)}</div>
+                      <div className="text-[10px] sm:text-[11px] text-[var(--dim)] truncate" style={mono}>
+                        {[tr.artists !== a.name ? tr.artists : '', tr.label, tr.release_date ? shortDate(tr.release_date, lang) : ''].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                    <SaveButton track={tr} lang={lang} className="shrink-0 !h-[32px] !w-[32px]" />
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Carátula limpia y botones en su fila: encima de la portada se apelotonaban en móvil. */
 function CoverGrid({ tracks, spot, lang, showDate = false }: { tracks: FortnightDigestTrack[]; spot: Spot; lang: Locale; showDate?: boolean }) {
   const { play } = useContext(PlayCtx)
@@ -830,38 +876,7 @@ export default function FortnightDigest({
 
       {d.top100.length > 0 && (
         <Section title={t.top100} copy={copy.top100}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {d.top100.map((a) => (
-              <div key={a.name} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
-                <div className="relative">
-                  <CardThumbnail src={a.image_url} alt={a.name} aspectClass="aspect-square" sizes="(max-width: 640px) 50vw, 190px" />
-                  <span className="absolute top-2 left-2 bg-[var(--red)] text-white border-[2px] border-[var(--ink)] px-2 text-[14px] font-black" style={display}>#{a.rank}</span>
-                </div>
-                <div className="p-2">
-                  <div className="text-[13px] font-black uppercase truncate" style={display}>
-                    <NameLink name={a.name} slug={a.slug} base="artists" lang={lang} />
-                  </div>
-                  <div className="flex gap-1 mt-2">
-                    {a.tracks.slice(0, 3).map((tr, i) => {
-                      const img = <div className="w-10"><Cover src={tr.artwork_url} alt={tr.title} sizes="40px" /></div>
-                      if (tr.audio_src) {
-                        return (
-                          <span key={i} id={spotId('top', tr)} className="relative block" title={trackName(tr)}>
-                            {img}
-                            <PlayButton track={tr} spot="top" className="absolute inset-0 !border-0 !bg-black/40 hover:!bg-[var(--red)] !text-white text-[13px]" />
-                          </span>
-                        )
-                      }
-                      return <span key={i} title={trackName(tr)}>{img}</span>
-                    })}
-                  </div>
-                  <div className="text-[11px] text-[var(--dim)] mt-1 line-clamp-2" style={mono}>
-                    {a.tracks.map((tr) => tr.title).filter((v, i, arr) => arr.indexOf(v) === i).join(' · ')}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <TopStarsRows stars={d.top100} lang={lang} />
           <Cta text={t.top100Cta} label={t.top100Btn} href={`/${lang}/topalltimes`} />
         </Section>
       )}
