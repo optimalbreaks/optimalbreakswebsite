@@ -710,47 +710,55 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 </div>
                 </div>
                 {a.top_tracks && a.top_tracks.length > 0 ? (
-                  <ul className="min-w-0 flex-1 border-2 border-[var(--ink)] bg-[var(--paper)] divide-y divide-[var(--ink)]/20">
+                  <ul className="m-0 p-0 list-none min-w-0 flex-1">
                     {a.top_tracks.map((t) => {
                       const rowKey = artistTrackRowKey(a.rank, t)
                       const playable = artistBundle.some((m) => m.rowKey === rowKey)
-                      const isActive = activeArtistRowKey === rowKey
-                      const isPausedHere = isActive && !previewPlaying
+                      const isOn = activeArtistRowKey === rowKey && previewPlaying
                       const fallbackHref = t.youtube_url || t.external_url
+                      const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? t.mix_name : ''
+                      const subline = [
+                        t.artists !== a.name ? t.artists : '',
+                        t.label,
+                        `${t.save_count} ${cm.artists_saves || 'saves'}`,
+                      ].filter(Boolean).join(' · ')
                       return (
                         <li
                           key={rowKey}
                           id={rowKey}
-                          className={`flex items-center gap-2 px-2 py-1.5 ${isActive ? 'bg-[var(--yellow)]/40' : ''}`}
+                          onClick={(e) => {
+                            if (!playable || (e.target as HTMLElement).closest('button, a')) return
+                            playArtistTrack(rowKey)
+                          }}
+                          className={`flex items-center gap-2 py-1.5 border-t-[2px] border-[var(--ink)]/10 first:border-t-0 ${playable ? 'cursor-pointer hover:bg-[var(--yellow)]/15' : ''} ${isOn ? 'bg-[var(--red)]/15' : ''}`}
                         >
-                          {t.artwork_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={t.artwork_url}
-                              alt=""
-                              loading="lazy"
-                              className="h-9 w-9 shrink-0 border border-[var(--ink)] object-cover"
+                          <div className="w-9 shrink-0">
+                            <CardThumbnail
+                              src={t.artwork_url || null}
+                              alt={t.title}
+                              aspectClass="aspect-square"
+                              frameClass="border-[2px] border-[var(--ink)]"
+                              sizes="36px"
                             />
-                          ) : (
-                            <div className="h-9 w-9 shrink-0 border border-[var(--ink)] bg-[var(--paper-dark)]" />
-                          )}
+                          </div>
                           {playable ? (
                             <button
                               type="button"
                               onClick={() => playArtistTrack(rowKey)}
-                              aria-label={isActive && !isPausedHere ? 'Pause' : 'Play'}
-                              className={`h-[32px] w-[32px] shrink-0 rounded-full border-2 border-[var(--ink)] text-[11px] font-black flex items-center justify-center cursor-pointer touch-manipulation transition-colors
-                                ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                              aria-label={`${isOn ? 'Pause' : 'Play'} ${t.artists} — ${t.title}`}
+                              className={`h-[32px] w-[32px] shrink-0 rounded-full border-[2px] border-[var(--ink)] text-[11px] font-black flex items-center justify-center cursor-pointer touch-manipulation transition-colors
+                                ${isOn ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white hover:bg-[var(--ink)]'}`}
+                              style={{ fontFamily: "'Courier Prime', monospace" }}
                             >
-                              {isActive && !isPausedHere ? '❚❚' : '▶'}
+                              {isOn ? '❚❚' : '▶'}
                             </button>
                           ) : fallbackHref ? (
                             <a
                               href={fallbackHref}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label="Open"
-                              className="h-[32px] w-[32px] shrink-0 rounded-full border-2 border-[var(--ink)] text-[11px] font-black flex items-center justify-center no-underline text-[var(--ink)] hover:bg-[var(--yellow)]"
+                              aria-label={`${t.artists} — ${t.title}`}
+                              className="h-[32px] w-[32px] shrink-0 rounded-full border-[2px] border-[var(--ink)] text-[11px] font-black flex items-center justify-center no-underline bg-[var(--red)] text-white hover:bg-[var(--ink)]"
                             >
                               ↗
                             </a>
@@ -759,19 +767,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           )}
                           <div className="min-w-0 flex-1">
                             <div
-                              className="text-[12px] sm:text-[13px] font-black text-[var(--ink)] truncate"
+                              className="text-[12px] sm:text-[13px] font-bold leading-tight truncate text-[var(--ink)]"
                               style={{ fontFamily: "'Courier Prime', monospace" }}
                             >
                               {t.title}
-                              {t.mix_name ? <span className="font-bold text-[var(--ink)]/50"> ({t.mix_name})</span> : null}
+                              {mix ? ` (${mix})` : ''}
                             </div>
                             <div
-                              className="text-[10px] text-[var(--ink)]/50 font-bold truncate"
+                              className="text-[10px] sm:text-[11px] text-[var(--dim)] truncate"
                               style={{ fontFamily: "'Courier Prime', monospace" }}
                             >
-                              {t.artists}
-                              {' · '}
-                              {t.save_count} {cm.artists_saves || 'saves'}
+                              {subline}
                             </div>
                           </div>
                           {t.primary.source === 'beatport_top' && t.external_url ? (
