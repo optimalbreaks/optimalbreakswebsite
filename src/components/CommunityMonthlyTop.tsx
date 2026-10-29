@@ -720,7 +720,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       const subline = [
                         t.artists !== a.name ? t.artists : '',
                         t.label,
-                        `${t.save_count} ${cm.artists_saves || 'saves'}`,
                       ].filter(Boolean).join(' · ')
                       return (
                         <li
