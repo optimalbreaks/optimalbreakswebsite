@@ -107,6 +107,8 @@ interface CommunityTopArtist {
   previous_rank?: number | null
   weeks_in_top10?: number
   weeks_at_1?: number
+  /** Sus 3 temas más votados (orden del Top 100 de temas). */
+  top_tracks?: CommunityTopTrack[]
 }
 
 interface CommunityTopCountry {
@@ -127,6 +129,10 @@ interface ApiResponse {
   top_countries?: CommunityTopCountry[]
   /** Tops congelados (`top_freezes`): foto de `at`, vuelve a moverse en `until`. */
   frozen?: { at: string; until: string }
+}
+
+function artistTrackRowKey(rank: number, t: CommunityTopTrack): string {
+  return `community-artist-${rank}-${t.canonical_key}`.replace(/[^a-zA-Z0-9_-]+/g, '-')
 }
 
 function freezeStamp(iso: string, lang: Locale): string {
@@ -451,10 +457,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // propia, viven solo como JSONB) y modo ref para el resto.
   // Cola del reproductor global: solo samples Beatport/Bandcamp (<audio>).
   // Vinilos YouTube: ▶ en fila abre embed inline (como /mixes), no entran en PLAY ALL.
-  const previewBundle = useMemo<PreviewTrack[]>(() => {
-    const out: PreviewTrack[] = []
-    if (!data) return out
-    for (const t of data.top_tracks) {
+  const previewItem = useCallback((t: CommunityTopTrack, rowKey: string): PreviewTrack | null => {
       const src = t.full_audio_url
         ? t.full_audio_url
         : t.playback_kind === 'bandcamp' && t.external_url
@@ -462,15 +465,15 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
           : t.sample_url
             ? previewAudioSrc(t.sample_url, t.playback_kind, t.external_url)
             : ''
-      if (!src) continue
-      out.push({
-        rowKey: `community-top-${t.canonical_key}`,
+      if (!src) return null
+      return {
+        rowKey,
         src,
         title: t.title,
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
         ...catalogLockScreenFields(t.mix_name, t.label),
-        domId: `community-top-${t.canonical_key}`,
+        domId: rowKey,
         // Vuelta al origen desde el mini reproductor: el Top 100 público.
         // Las filas se montan al terminar el fetch; el reproductor reintenta
         // el scroll hasta encontrarlas.
@@ -490,12 +493,32 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               canonicalUrl: t.external_url || null,
             },
         share: shareForCommunityTop(t),
-      })
+      }
+  }, [shareForCommunityTop, lang])
+
+  const previewBundle = useMemo<PreviewTrack[]>(() => {
+    const out: PreviewTrack[] = []
+    for (const t of data?.top_tracks ?? []) {
+      const item = previewItem(t, `community-top-${t.canonical_key}`)
+      if (item) out.push(item)
     }
     return out
-  }, [data, shareForCommunityTop, lang])
+  }, [data, previewItem])
+
+  /** Cola del top de artistas: sus 3 temas, artista tras artista. */
+  const artistBundle = useMemo<PreviewTrack[]>(() => {
+    const out: PreviewTrack[] = []
+    for (const a of data?.top_artists ?? []) {
+      for (const t of a.top_tracks ?? []) {
+        const item = previewItem(t, artistTrackRowKey(a.rank, t))
+        if (item) out.push(item)
+      }
+    }
+    return out
+  }, [data, previewItem])
 
   const groupKey = 'community-top-all-time'
+  const artistGroupKey = 'community-top-artists'
 
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying,
@@ -546,6 +569,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   }, [previewBundle, playPreviewQueue, groupKey])
 
   const activeRowKey = isGroupActive ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const activeArtistRowKey = previewGroupKey === artistGroupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const playArtistTrack = useCallback((rowKey: string) => {
+    if (activeArtistRowKey === rowKey) {
+      togglePreview()
+      return
+    }
+    const idx = artistBundle.findIndex((m) => m.rowKey === rowKey)
+    if (idx < 0) return
+    setShuffleMode(false)
+    playPreviewQueue(artistBundle, idx, artistGroupKey)
+  }, [activeArtistRowKey, artistBundle, playPreviewQueue, togglePreview])
   const artistLeaderLine = data?.top_artists?.[0] ? leaderHeadline(data.top_artists[0], cm) : null
   const artistRows = data?.top_artists || []
   const visibleArtists = showAllArtists ? artistRows : artistRows.slice(0, ARTISTS_VISIBLE_INITIAL)
@@ -622,8 +656,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             return (
               <li
                 key={`${a.rank}-${a.name}`}
-                className="flex items-center gap-3 sm:gap-4 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-[var(--yellow)]/10 transition-colors"
+                className="flex flex-col md:flex-row md:items-center gap-2.5 md:gap-4 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-[var(--yellow)]/10 transition-colors"
               >
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0 md:w-[42%] md:shrink-0">
                 <RankOrderBadge rank={a.rank} />
                 {a.slug ? (
                   <Link
@@ -673,6 +708,95 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     {a.unique_tracks} {cm.artists_tracks || 'tracks'}
                   </div>
                 </div>
+                </div>
+                {a.top_tracks && a.top_tracks.length > 0 ? (
+                  <ul className="min-w-0 flex-1 border-2 border-[var(--ink)] bg-[var(--paper)] divide-y divide-[var(--ink)]/20">
+                    {a.top_tracks.map((t) => {
+                      const rowKey = artistTrackRowKey(a.rank, t)
+                      const playable = artistBundle.some((m) => m.rowKey === rowKey)
+                      const isActive = activeArtistRowKey === rowKey
+                      const isPausedHere = isActive && !previewPlaying
+                      const fallbackHref = t.youtube_url || t.external_url
+                      return (
+                        <li
+                          key={rowKey}
+                          id={rowKey}
+                          className={`flex items-center gap-2 px-2 py-1.5 ${isActive ? 'bg-[var(--yellow)]/40' : ''}`}
+                        >
+                          {t.artwork_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={t.artwork_url}
+                              alt=""
+                              loading="lazy"
+                              className="h-9 w-9 shrink-0 border border-[var(--ink)] object-cover"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 shrink-0 border border-[var(--ink)] bg-[var(--paper-dark)]" />
+                          )}
+                          {playable ? (
+                            <button
+                              type="button"
+                              onClick={() => playArtistTrack(rowKey)}
+                              aria-label={isActive && !isPausedHere ? 'Pause' : 'Play'}
+                              className={`h-[32px] w-[32px] shrink-0 rounded-full border-2 border-[var(--ink)] text-[11px] font-black flex items-center justify-center cursor-pointer touch-manipulation transition-colors
+                                ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                            >
+                              {isActive && !isPausedHere ? '❚❚' : '▶'}
+                            </button>
+                          ) : fallbackHref ? (
+                            <a
+                              href={fallbackHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Open"
+                              className="h-[32px] w-[32px] shrink-0 rounded-full border-2 border-[var(--ink)] text-[11px] font-black flex items-center justify-center no-underline text-[var(--ink)] hover:bg-[var(--yellow)]"
+                            >
+                              ↗
+                            </a>
+                          ) : (
+                            <span className="h-[32px] w-[32px] shrink-0" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div
+                              className="text-[12px] sm:text-[13px] font-black text-[var(--ink)] truncate"
+                              style={{ fontFamily: "'Courier Prime', monospace" }}
+                            >
+                              {t.title}
+                              {t.mix_name ? <span className="font-bold text-[var(--ink)]/50"> ({t.mix_name})</span> : null}
+                            </div>
+                            <div
+                              className="text-[10px] text-[var(--ink)]/50 font-bold truncate"
+                              style={{ fontFamily: "'Courier Prime', monospace" }}
+                            >
+                              {t.artists}
+                              {' · '}
+                              {t.save_count} {cm.artists_saves || 'saves'}
+                            </div>
+                          </div>
+                          {t.primary.source === 'beatport_top' && t.external_url ? (
+                            <SaveTrackButton
+                              externalUrl={t.external_url}
+                              externalTrackId={t.primary.id}
+                              snapshot={snapshotForBeatportTop(t)}
+                              canonicalUrl={t.external_url}
+                              lang={lang}
+                              size="sm"
+                            />
+                          ) : (
+                            <SaveTrackButton
+                              source={t.primary.source}
+                              trackId={t.primary.id}
+                              canonicalUrl={t.external_url || undefined}
+                              lang={lang}
+                              size="sm"
+                            />
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                ) : null}
               </li>
             )
           })}

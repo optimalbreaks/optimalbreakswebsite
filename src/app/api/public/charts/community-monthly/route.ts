@@ -66,6 +66,7 @@ import {
 import { extractRemixerNames } from '@/lib/remixer-credits'
 
 const TOP_ARTISTS_LIMIT = 50
+const ARTIST_TOP_TRACKS = 3
 /** Ventana de las flechas del tablero de artistas: 7 días exactos. */
 const MOVEMENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 /** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
@@ -980,7 +981,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
       (a.title || '').localeCompare(b.title || ''),
   )
 
-  const top_tracks = aggregates.slice(0, limit).map((a, idx) => ({
+  const trackOut = (a: (typeof aggregates)[number], idx: number) => ({
     rank: idx + 1,
     canonical_key: a.canonical_key,
     title: a.title,
@@ -1007,7 +1008,9 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     sources: a.sources,
     primary: a.primary,
     beatport_share_origin: a.beatport_share_origin,
-  }))
+  })
+  const top_tracks = aggregates.slice(0, limit).map(trackOut)
+  const trackPos = new Map(aggregates.map((a, i) => [a.canonical_key, i]))
 
   // Top artistas: créditos de save (aparición en track guardado), luego users, luego tracks.
   const artistRanked = Array.from(artistAgg.entries())
@@ -1098,6 +1101,18 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     })
   }
 
+  // Sus 3 temas más votados, con el orden del Top 100 de temas (solo temas que le acreditan tras los saltos).
+  const top_artists_with_tracks = top_artists.map((row, i) => {
+    const credited = artistAgg.get(artistRanked[i].key)?._tracks ?? new Set<string>()
+    const tracks = Array.from(credited)
+      .map((k) => trackPos.get(k))
+      .filter((p): p is number => p != null)
+      .sort((x, y) => x - y)
+      .slice(0, ARTIST_TOP_TRACKS)
+      .map((p) => trackOut(aggregates[p], p))
+    return { ...row, top_tracks: tracks }
+  })
+
   // Podio de países: nacionalidad (artists.country) de TODOS los artistas
   // con créditos de save (no solo el top 50 del tablero). Un país compuesto
   // («AU/UK») acredita a ambos. Solo cuentan artistas con ficha en catálogo
@@ -1156,7 +1171,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     scope,
     totals,
     top_tracks,
-    top_artists,
+    top_artists: top_artists_with_tracks,
     top_countries,
   })
 }
