@@ -24,7 +24,7 @@ import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import FortnightDigest from '@/components/FortnightDigest'
 import AgendaDigestView from '@/components/AgendaDigest'
-import { getFortnightLive } from '@/lib/fortnight-live'
+import { getFortnightLive, getPeriodStats } from '@/lib/fortnight-live'
 import { agendaCoverImage, loadAgendaNights } from '@/lib/agenda-nights'
 import type { AgendaDigest as AgendaDigestData, BeatportTopTrack, BlogPost, FortnightDigest as FortnightDigestData } from '@/types/database'
 import {
@@ -44,6 +44,12 @@ type Props = { params: Promise<{ lang: Locale; slug: string }> }
 
 /** Dónde vive la ficha. Quincena y trimestre: topreleases. El resto: blog. */
 export type ArticleHome = 'blog' | 'topreleases'
+
+/** `2026-10-01` → `2026-09-01`. */
+function previousMonthStart(from: string): string {
+  const d = new Date(Date.UTC(Number(from.slice(0, 4)), Number(from.slice(5, 7)) - 2, 1))
+  return d.toISOString().slice(0, 10)
+}
 
 function articleSegment(home: ArticleHome): ArticleHome {
   return home === 'topreleases' ? 'topreleases' : 'blog'
@@ -163,9 +169,14 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   const live = storedDigest && !week
     ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter || month ? 20 : 10, { slug: post.slug, publishedAt: post.published_at })
     : null
-  const digest = storedDigest && live
-    ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
-    : storedDigest
+  // El mes también recalcula cifras, artistas, sellos, sonido y debutantes (temas con salida en el mes).
+  const stats = storedDigest && month
+    ? await getPeriodStats(storedDigest.from, storedDigest.until, previousMonthStart(storedDigest.from))
+    : null
+  const liveDigest = storedDigest && stats ? { ...storedDigest, ...stats } : storedDigest
+  const digest = liveDigest && live
+    ? { ...liveDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
+    : liveDigest
   const heroCovers = digestCoverUrls(digest?.covers)
   const heroFocus = await digestCoverFocuses(digest?.covers)
   const albumTracks = Array.isArray(post.beatport_tracks)

@@ -9,10 +9,10 @@ import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self-credit'
-import { fetchAllPages } from '@/lib/supabase-paginate'
+import { fetchAllPages, fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import { articleFreeze, frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
-import type { FortnightDigestTrack } from '@/types/database'
+import type { FortnightDigest, FortnightDigestTrack } from '@/types/database'
 
 /** Cabecera del artículo: los temas más escuchados. Sin mezclar votos. */
 const RELEASED_N = 20
@@ -73,6 +73,26 @@ function audioSrc(f: FeatRow): string | null {
     }
   } catch { /* url cruda */ }
   return f.sample_url
+}
+
+function digestTrack(f: FeatRow, value: number, weekBy: Map<string, string>): FortnightDigestTrack {
+  return {
+    title: f.title,
+    mix_name: f.mix_name || null,
+    artists: artistsLine(f.artists),
+    artwork_url: f.artwork_url || null,
+    label: f.label || null,
+    release_date: f.release_date || null,
+    value,
+    featured_id: f.id,
+    week_date: (f.chart_edition_id && weekBy.get(f.chart_edition_id)) || null,
+    external_url: f.link_url || null,
+    audio_src: audioSrc(f),
+    bpm: f.bpm ?? null,
+    music_key: f.music_key || null,
+    spotify_url: f.spotify_url ?? null,
+    tidal_url: f.tidal_url ?? null,
+  }
 }
 
 /** Sin caché: lo usa el script de la lista Temazos 2026 (fuera de Next). */
@@ -149,23 +169,7 @@ export async function loadFortnightLive(from: string, until: string, topN: numbe
     votesTotal += 1
   }
 
-  const toTrack = (f: FeatRow, value: number): FortnightDigestTrack => ({
-    title: f.title,
-    mix_name: f.mix_name || null,
-    artists: artistsLine(f.artists),
-    artwork_url: f.artwork_url || null,
-    label: f.label || null,
-    release_date: f.release_date || null,
-    value,
-    featured_id: f.id,
-    week_date: (f.chart_edition_id && weekBy.get(f.chart_edition_id)) || null,
-    external_url: f.link_url || null,
-    audio_src: audioSrc(f),
-    bpm: f.bpm ?? null,
-    music_key: f.music_key || null,
-    spotify_url: f.spotify_url ?? null,
-    tidal_url: f.tidal_url ?? null,
-  })
+  const toTrack = (f: FeatRow, value: number) => digestTrack(f, value, weekBy)
 
   const played = [...plays.entries()]
     .filter(([k, n]) => n > 0 && byKey.has(k))
@@ -250,6 +254,168 @@ export async function getFortnightLive(
     })()
   } catch (err) {
     console.warn('[fortnight-live]', err instanceof Error ? err.message : err)
+    return null
+  }
+}
+
+// ── Cifras del periodo en directo (artículo del mes) ─────────────────────
+// Mismo cálculo que `computeQuincena` en scripts/generar-blog-agente.mjs: solo
+// temas con fecha de salida en el periodo, aunque se añadan después de publicar.
+
+export type PeriodStats = Pick<FortnightDigest, 'totals' | 'top100' | 'artists' | 'labels' | 'sound' | 'debut' | 'debut_total'>
+
+const AGGREGATOR_LABELS = new Set([
+  'distrokid', 'tunecore', 'cd baby', 'amuse', 'routenote',
+  'united masters', 'unitedmasters', 'artistfy', 'create music group',
+])
+
+const normName = (s: string | null | undefined) =>
+  String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+
+function creditNames(a: unknown): string[] {
+  if (!Array.isArray(a)) return []
+  return a
+    .map((x) => (x && typeof x === 'object' ? (x as { name?: string }).name : x))
+    .map((x) => String(x || '').trim())
+    .filter(Boolean)
+}
+
+const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) || 0) + 1)
+const topOf = (m: Map<string, number>, n: number) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n)
+const mean = (a: number[]) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(1)) : null)
+
+type BoardArtist = { rank: number; name: string; slug?: string | null; image_url?: string | null }
+
+async function loadBoardArtists(): Promise<BoardArtist[]> {
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.optimalbreaks.com').replace(/\/$/, '')
+  try {
+    const res = await fetch(`${site}/api/public/charts/community-monthly?limit=5&artists=100&cached=1`, { next: { revalidate: 300 } })
+    if (!res.ok) return []
+    const j = (await res.json()) as { top_artists?: BoardArtist[] }
+    return j.top_artists ?? []
+  } catch {
+    return []
+  }
+}
+
+export async function loadPeriodStats(from: string, until: string, prevFrom: string): Promise<PeriodStats> {
+  const sb = createServiceSupabase()
+  const cols = 'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url'
+  const [winAll, prevAll, beforeAll, editions, artistRows, labelRows, board] = await Promise.all([
+    fetchAllPages<FeatRow>((a, b) =>
+      sb.from('chart_featured_tracks').select(cols).gte('release_date', from).lte('release_date', until).order('id').range(a, b),
+    ),
+    fetchAllPages<{ chart_edition_id: string | null; bpm: number | null }>((a, b) =>
+      sb.from('chart_featured_tracks').select('id, chart_edition_id, bpm').gte('release_date', prevFrom).lt('release_date', from).order('id').range(a, b),
+    ),
+    fetchAllPagesParallel<{ chart_edition_id: string | null; artists: unknown }>(
+      () => sb.from('chart_featured_tracks').select('id', { count: 'exact', head: true }).lt('release_date', from),
+      (a, b) => sb.from('chart_featured_tracks').select('id, chart_edition_id, artists').lt('release_date', from).order('id').range(a, b),
+      1000,
+    ),
+    fetchAllPages<{ id: string; week_date: string; is_published: boolean | null }>((a, b) =>
+      sb.from('chart_editions').select('id, week_date, is_published').order('id').range(a, b),
+    ),
+    fetchAllPages<{ slug: string; name: string | null; name_display: string | null }>((a, b) =>
+      sb.from('artists').select('id, slug, name, name_display').order('id').range(a, b),
+    ),
+    fetchAllPages<{ slug: string; name: string | null }>((a, b) => sb.from('labels').select('id, slug, name').order('id').range(a, b)),
+    loadBoardArtists(),
+  ])
+
+  const unpublished = new Set(editions.filter((e) => e.is_published === false).map((e) => e.id))
+  const weekBy = new Map(editions.map((e) => [e.id, e.week_date]))
+  const live = <T extends { chart_edition_id: string | null }>(rows: T[]) =>
+    rows.filter((f) => !f.chart_edition_id || !unpublished.has(f.chart_edition_id))
+  const win = live(winAll).map((f) => ({ f, names: creditNames(f.artists) }))
+  const prev = live(prevAll)
+
+  const artistBy = new Map<string, string>()
+  for (const a of artistRows) for (const n of [a.name, a.name_display]) if (n && !artistBy.has(normName(n))) artistBy.set(normName(n), a.slug)
+  const labelBy = new Map(labelRows.map((l) => [normName(l.name), l.slug]))
+  const slugOf = (n: string) => artistBy.get(normName(n)) || null
+
+  // Un disco = mismo sello, mismo día y mismo primer artista.
+  const releases = new Map<string, FeatRow[]>()
+  for (const { f, names } of win) {
+    const key = `${normName(f.label)}|${f.release_date}|${normName(names[0])}`
+    releases.set(key, [...(releases.get(key) ?? []), f])
+  }
+  const perArtistTracks = new Map<string, number>()
+  const perArtistReleases = new Map<string, Set<string>>()
+  for (const { f, names } of win) {
+    const key = `${normName(f.label)}|${f.release_date}|${normName(names[0])}`
+    for (const n of names) {
+      bump(perArtistTracks, n)
+      perArtistReleases.set(n, (perArtistReleases.get(n) ?? new Set()).add(key))
+    }
+  }
+
+  const labels = new Map<string, number>()
+  for (const { f } of win) if (f.label && !AGGREGATOR_LABELS.has(normName(f.label))) bump(labels, f.label)
+
+  const bpms = win.map(({ f }) => Number(f.bpm)).filter(Boolean)
+  const bands = new Map<string, number>()
+  for (const b of bpms) {
+    const lo = Math.floor(b / 5) * 5
+    bump(bands, `${lo}–${lo + 4}`)
+  }
+  const keys = new Map<string, number>()
+  for (const { f } of win) if (f.music_key) bump(keys, f.music_key)
+
+  const seenBefore = new Set(live(beforeAll).flatMap((r) => creditNames(r.artists).map(normName)))
+  const debutantes = [...perArtistTracks.keys()].filter((n) => !seenBefore.has(normName(n)))
+
+  const winByArtist = new Map<string, FeatRow[]>()
+  for (const { f, names } of win) for (const n of names) winByArtist.set(normName(n), [...(winByArtist.get(normName(n)) ?? []), f])
+
+  return {
+    totals: {
+      tracks: win.length,
+      artists: perArtistTracks.size,
+      labels: new Set(win.map(({ f }) => f.label).filter(Boolean)).size,
+      releases: releases.size,
+      prev_tracks: prev.length,
+    },
+    top100: board
+      .filter((a) => winByArtist.has(normName(a.name)))
+      .slice(0, 8)
+      .map((a) => ({
+        rank: a.rank,
+        name: a.name,
+        slug: a.slug || slugOf(a.name),
+        image_url: a.image_url || null,
+        tracks: winByArtist.get(normName(a.name))!.slice(0, 6).map((f) => digestTrack(f, 0, weekBy)),
+      })),
+    artists: [...perArtistTracks.entries()]
+      .map(([name, tracks]) => ({ name, tracks, releases: perArtistReleases.get(name)?.size || 0 }))
+      .sort((a, b) => b.tracks - a.tracks || b.releases - a.releases)
+      .slice(0, 8)
+      .map((a) => ({ ...a, slug: slugOf(a.name) })),
+    labels: topOf(labels, 8).map(([name, tracks]) => ({ name, slug: labelBy.get(normName(name)) || null, tracks })),
+    sound: {
+      avg_bpm: mean(bpms),
+      prev_avg_bpm: mean(prev.map((f) => Number(f.bpm)).filter(Boolean)),
+      bands: [...bands.entries()]
+        .filter(([, c]) => c >= 2)
+        .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
+        .map(([band, count]) => ({ band, count })),
+      keys: topOf(keys, 6).map(([key, count]) => ({ key, count })),
+    },
+    debut: debutantes.slice(0, 24).map((name) => ({ name, slug: slugOf(name) })),
+    debut_total: debutantes.length,
+  }
+}
+
+/** null si la BD falla: la página se queda con las cifras guardadas en el digest. */
+export async function getPeriodStats(from: string, until: string, prevFrom: string): Promise<PeriodStats | null> {
+  try {
+    return await unstable_cache(() => loadPeriodStats(from, until, prevFrom), ['period-stats', from, until, prevFrom], {
+      revalidate: 300,
+      tags: [PUBLIC_CATALOG_CACHE_TAG],
+    })()
+  } catch (err) {
+    console.warn('[period-stats]', err instanceof Error ? err.message : err)
     return null
   }
 }
