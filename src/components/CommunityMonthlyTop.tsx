@@ -599,7 +599,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
             style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
           >
-            {cm.artists_title || 'Most-saved artists'}
+            {(cm.artists_title || 'Top {n} most-saved artists').replace('{n}', String(artistRows.length))}
           </h2>
           <p
             className="text-sm sm:text-base text-[var(--ink)]/60"
