@@ -175,6 +175,51 @@ export function segmentChannels(buffer: AudioBuffer, start: number, durationSec:
   return out
 }
 
+function floatToI16(x: number): number {
+  const s = x < -1 ? -1 : x > 1 ? 1 : x
+  return s < 0 ? Math.round(s * 32768) : Math.round(s * 32767)
+}
+
+/**
+ * WAV PCM del fragmento (estéreo 16 bit). Lo reproduce un `<audio>`, no Web
+ * Audio: en el iPhone el Web Audio queda mudo con el interruptor de silencio
+ * y un segundo AudioContext no arranca. El diálogo está en primer plano, así
+ * que el `blob:` lo sirve la página mientras eligen (no es el cambio de pista
+ * con la pantalla bloqueada).
+ */
+export function segmentToWavBlob(buffer: AudioBuffer, start: number, dur: number): Blob {
+  const channels = segmentChannels(buffer, start, dur)
+  const sr = buffer.sampleRate || SHARE_AUDIO_RATE
+  const n = channels[0]?.length ?? 0
+  const header = new ArrayBuffer(44)
+  const v = new DataView(header)
+  const str = (o: number, s: string) => {
+    for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i))
+  }
+  const pcm = new Int16Array(Math.max(1, n) * 2)
+  const left = channels[0]
+  const right = channels[1] ?? left
+  for (let i = 0; i < n; i++) {
+    pcm[i * 2] = floatToI16(left[i] ?? 0)
+    pcm[i * 2 + 1] = floatToI16(right?.[i] ?? 0)
+  }
+  const dataSize = pcm.byteLength
+  str(0, 'RIFF')
+  v.setUint32(4, 36 + dataSize, true)
+  str(8, 'WAVE')
+  str(12, 'fmt ')
+  v.setUint32(16, 16, true)
+  v.setUint16(20, 1, true)
+  v.setUint16(22, 2, true)
+  v.setUint32(24, sr, true)
+  v.setUint32(28, sr * 4, true)
+  v.setUint16(32, 4, true)
+  v.setUint16(34, 16, true)
+  str(36, 'data')
+  v.setUint32(40, dataSize, true)
+  return new Blob([header, pcm], { type: 'audio/wav' })
+}
+
 // ---------- fragmento recordado por tema ----------
 
 const STORE_PREFIX = 'ob.shareSegment.'

@@ -29,6 +29,7 @@ const lastNoisyAt = new Map<string, number>()
 const FLUSH_NOW = new Set([
   'ended', 'error', 'play_err', 'watchdog', 'watchdog_give_up', 'hidden', 'freeze', 'pagehide',
   'interrupted', 'stop', 'ms_next', 'ms_prev', 'stuck',
+  'share_listen_ok', 'share_listen_err',
 ])
 
 let sid = ''
