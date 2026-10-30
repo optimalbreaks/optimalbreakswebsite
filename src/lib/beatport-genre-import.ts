@@ -121,12 +121,26 @@ export const FOLLOW_BOARD_LIMIT = 140
 /** Fuera del corte, pero el pase lee su ficha y publica sus créditos. 15 oct 2026: Dubaxface y AceNoise. */
 const EXTRA_FOLLOW_NAMES = ['Dubaxface', 'AceNoise']
 
+/**
+ * El mismo artista, escrito con espacio o sin él. El tablero guarda el crédito
+ * «WelderB»; la ficha y Beatport dicen «Welder B». Sin esto el sábado no abre la página.
+ */
+const FOLLOW_KEY_ALIASES: string[][] = [['welderb', 'welder b']]
+
+function expandFollowAliases(keys: Set<string>): void {
+  for (const group of FOLLOW_KEY_ALIASES) {
+    if (!group.some((key) => keys.has(key))) continue
+    for (const key of group) keys.add(key)
+  }
+}
+
 async function loadFollowKeys(sb: ReturnType<typeof createServiceSupabase>): Promise<Set<string>> {
   const keys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
   for (const name of EXTRA_FOLLOW_NAMES) {
     const key = normalizeArtistKey(name)
     if (key) keys.add(key)
   }
+  expandFollowAliases(keys)
   return keys
 }
 
