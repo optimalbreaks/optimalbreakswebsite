@@ -987,7 +987,7 @@ function fnHeader(ctx: C, L: FnLayout, lt: number, kicker: string, head: string,
   })
 }
 
-function fnRanking(ctx: C, S: Box, rows: FortnightTrackAnim[], lt: number, t: number, unit: string, accent: string) {
+function fnRanking(ctx: C, S: Box, rows: FortnightTrackAnim[], lt: number, t: number, unit: string, accent: string, startNo = 1) {
   const n = Math.min(5, rows.length)
   const gap = 16
   const rh = (S.h - gap * (n - 1)) / 5
@@ -1003,7 +1003,7 @@ function fnRanking(ctx: C, S: Box, rows: FortnightTrackAnim[], lt: number, t: nu
       ctx.font = HEAD(rh * 0.36)
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(String(i + 1), S.x + 52, y + rh / 2 + 2)
+      ctx.fillText(String(startNo + i), S.x + 52, y + rh / 2 + 2)
       const cs = rh - 28
       const cx = S.x + 100
       ctx.save()
@@ -1575,6 +1575,260 @@ function fnPlayer(ctx: C, x: number, y: number, w: number, h: number, p: NonNull
   ctx.fillStyle = RED
   ctx.fillRect(tx, by, bwid * clamp(t / FORTNIGHT_DUR), 6)
   ctx.restore()
+}
+
+// ===================== ÁLBUM (artículo de blog con tracklist) =====================
+// El mismo molde que la quincena de /topreleases: cinta, escenas, recuadro
+// «LO QUE VES» y, si hay preview, reproductor abajo. El contenido es el disco:
+// portada, orden de Beatport con BPM y muro de carátulas.
+export type AlbumTrackAnim = { title: string; artists: string; bpm: number | null; img: Img | null }
+export type AlbumAnim = {
+  title: string
+  artist: string
+  label: string
+  tracks: AlbumTrackAnim[]
+  playing?: FortnightAnim['playing']
+}
+
+type AlbumScene = { k: 'intro' | 'list' | 'outro'; a: number; b: number; from: number }
+
+function albumScenes(n: number): AlbumScene[] {
+  const chunks = Math.max(1, Math.ceil(Math.max(n, 1) / 5))
+  const weights: AlbumScene['k'][] = ['intro', ...Array.from({ length: chunks }, () => 'list' as const), 'outro']
+  const wOf = (k: AlbumScene['k']) => (k === 'intro' ? 3.2 : k === 'outro' ? 3.4 : 4)
+  const scale = FORTNIGHT_DUR / weights.reduce((s, k) => s + wOf(k), 0)
+  let a = 0
+  let list = 0
+  return weights.map((k) => {
+    const sc: AlbumScene = { k, a, b: a + wOf(k) * scale, from: k === 'list' ? list * 5 : 0 }
+    if (k === 'list') list += 1
+    a = sc.b
+    return sc
+  })
+}
+
+function albumNote(k: AlbumScene['k']): { es: string; en: string } {
+  if (k === 'intro') {
+    return {
+      es: 'La portada del álbum y cuántos cortes trae.',
+      en: 'The album cover and how many cuts it holds.',
+    }
+  }
+  if (k === 'outro') {
+    return {
+      es: 'Todas las carátulas. El artículo está en el enlace.',
+      en: 'Every cover. The article is in the link.',
+    }
+  }
+  return {
+    es: 'El orden del álbum en Beatport, con el BPM de cada corte.',
+    en: 'The Beatport running order, with each cut’s BPM.',
+  }
+}
+
+export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number) {
+  const V = H > W
+  const L: FnLayout = V
+    ? {
+        V, hx: 70, kY: 180, hY: 340, hW: 940,
+        S: { x: 70, y: 590, w: 940, h: 720 },
+        note: { x: 70, y: 1336, w: 940, h: 322 },
+        foot: { x: 70, y: 1682, w: 940, h: 18 },
+      }
+    : {
+        V, hx: 90, kY: 160, hY: 310, hW: 760,
+        S: { x: 940, y: 130, w: 890, h: 850 },
+        note: { x: 90, y: 556, w: 760, h: 304 },
+        foot: { x: 90, y: 880, w: 760, h: 16 },
+      }
+  const S = L.S
+  const tracks = d.tracks
+  const bpms = tracks.map((tr) => tr.bpm).filter((n): n is number => typeof n === 'number' && n > 0)
+  const lo = bpms.length ? Math.min(...bpms) : 0
+  const hi = bpms.length ? Math.max(...bpms) : 0
+  paper(ctx, W, H, '#ece2cf')
+
+  const facts = [
+    'ALBUM',
+    d.artist.toUpperCase(),
+    d.label.toUpperCase(),
+    `${tracks.length} TRACKS`,
+    lo ? (lo === hi ? `${lo} BPM` : `${lo}–${hi} BPM`) : '',
+    d.title.toUpperCase(),
+    '',
+  ].filter((f, i, a) => f || i === a.length - 1).join(' · ')
+  ctx.fillStyle = YELLOW
+  ctx.fillRect(0, 0, W, 70)
+  ctx.fillStyle = INK
+  ctx.font = MONO(24)
+  ctx.textBaseline = 'middle'
+  const fw = spaced(ctx, facts, -1e5, -1000, 4) + 4
+  let fx = -((t * 160) % fw)
+  while (fx < W) {
+    spaced(ctx, facts, fx, 37, 4)
+    fx += fw
+  }
+  hazard(ctx, 70, 26, W)
+  if (V) hazard(ctx, H - 30, 30, W)
+
+  const scenes = albumScenes(tracks.length)
+  const found = scenes.findIndex((s) => t >= s.a && t < s.b)
+  const si = found === -1 ? scenes.length - 1 : found
+  const sc = scenes[si]
+  const lt = t - sc.a
+  const dur = sc.b - sc.a
+  const last = si === scenes.length - 1
+  const ct = lt / FN_PACE
+  const covers = tracks.map((tr) => tr.img)
+
+  ctx.save()
+  if (!last) {
+    const ex = ease(ph(lt, dur - 0.32, 0.32))
+    ctx.translate(-W * 0.35 * ex, 0)
+    ctx.globalAlpha = 1 - ex
+  }
+  fnNote(ctx, L, lt, albumNote(sc.k))
+
+  if (sc.k === 'intro') {
+    const head = (d.artist || d.title).toUpperCase()
+    const sub = [d.label ? `ON ${d.label.toUpperCase()}` : '', `${tracks.length} TRACKS`].filter(Boolean).join(' · ')
+    fnHeader(ctx, L, lt, 'ALBUM', head, sub, RED)
+    const gap = 22
+    const cw = (S.w - gap) / 2
+    const ch = V ? 180 : 220
+    const stats: [string, string, string][] = [
+      [String(tracks.length), 'TRACKS', RED],
+      [lo ? (lo === hi ? String(lo) : `${lo}–${hi}`) : '—', 'BPM', INK],
+    ]
+    stats.forEach(([val, label, col], i) => {
+      const x = S.x + i * (cw + gap)
+      const y = S.y
+      pop(ctx, ph(ct, 0.3 + i * 0.18, 0.45), x + cw / 2, y + ch / 2, () => {
+        box(ctx, x, y, cw, ch, i === 0 ? YELLOW : '#fff', INK, 10, 5)
+        ctx.fillStyle = col
+        ctx.font = HEAD(ch * (val.length > 5 ? 0.32 : 0.46))
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillText(val, x + 28, y + ch * 0.58)
+        ctx.fillStyle = INK
+        ctx.font = MONO(ch * 0.11)
+        spaced(ctx, label, x + 30, y + ch * 0.84, 5)
+      }, (hash(i, 5) - 0.5) * 0.4)
+    })
+    const ry = S.y + ch + 44
+    const cs = V ? 120 : 170
+    slide(ctx, ph(ct, 1.1, 0.5), 0, 80, () => {
+      fnCoverRow(ctx, covers, S.x, ry, S.w, cs, 70, t)
+      fnCoverRow(ctx, [...covers].reverse(), S.x, ry + cs + 22, S.w, cs, -70, t)
+    })
+  } else if (sc.k === 'list') {
+    const slice = tracks.slice(sc.from, sc.from + 5)
+    const rows = slice.map((tr) => ({
+      title: tr.title,
+      artists: tr.artists,
+      value: tr.bpm && tr.bpm > 0 ? tr.bpm : 0,
+      img: tr.img,
+    }))
+    const to = sc.from + slice.length
+    fnHeader(
+      ctx, L, lt,
+      'ALBUM ORDER',
+      `CUTS ${sc.from + 1}–${to}`,
+      slice[0] ? `«${slice[0].title}»` : `${tracks.length} TRACKS`,
+      RED,
+    )
+    fnRanking(ctx, S, rows, ct, t, 'BPM', RED, sc.from + 1)
+  } else {
+    fnHeader(ctx, L, lt, 'READ THE ARTICLE', `${tracks.length} TRACKS`, d.label ? d.label.toUpperCase() : 'OPTIMAL BREAKS', ACID)
+    const cols = 4
+    const gap = 14
+    const cs = Math.min((S.w - gap * (cols - 1)) / cols, (S.h - 150 - gap * 2) / 3)
+    const x0 = S.x + (S.w - (cs * cols + gap * (cols - 1))) / 2
+    covers.filter(Boolean).slice(0, 12).forEach((im, i) => {
+      const x = x0 + (i % cols) * (cs + gap)
+      const y = S.y + Math.floor(i / cols) * (cs + gap)
+      pop(ctx, ph(ct, 0.2 + i * 0.1, 0.4), x + cs / 2, y + cs / 2, () => {
+        ctx.save()
+        const s = 1 + 0.03 * beatPulse(t + i * 0.1)
+        ctx.translate(x + cs / 2, y + cs / 2)
+        ctx.scale(s, s)
+        ctx.translate(-(x + cs / 2), -(y + cs / 2))
+        cover(ctx, im, x, y, cs, 3)
+        ctx.restore()
+      }, (hash(i, 4) - 0.5) * 0.7)
+    })
+    const by = S.y + 3 * (cs + gap) + 30
+    pop(ctx, ph(ct, 1.6, 0.5), S.x + S.w / 2, by + 60, () => {
+      const s = 1 + 0.05 * beatPulse(t)
+      ctx.save()
+      ctx.translate(S.x + S.w / 2, by + 60)
+      ctx.scale(s, s)
+      ctx.translate(-(S.x + S.w / 2), -(by + 60))
+      box(ctx, S.x, by, S.w, 120, RED, INK, 12, 5)
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 36 : 32)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(V ? 'READ IT · LINK IN BIO' : 'READ IT · LINK IN POST', S.x + S.w / 2, by + 62)
+      ctx.restore()
+    })
+  }
+  ctx.restore()
+
+  for (const s of scenes.slice(0, -1)) {
+    const p = (t - (s.b - 0.3)) / 0.6
+    if (p <= 0 || p >= 1) continue
+    const x = -W * 0.6 + W * 2.2 * ease(p)
+    ctx.fillStyle = RED
+    ctx.beginPath()
+    ctx.moveTo(x, 96)
+    ctx.lineTo(x + W * 0.45, 96)
+    ctx.lineTo(x + W * 0.25, H)
+    ctx.lineTo(x - W * 0.2, H)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = INK
+    ctx.fillRect(x + W * 0.45 - 14, 96, 14, 10)
+  }
+
+  const F = L.foot
+  const sw = (F.w - 8 * (scenes.length - 1)) / scenes.length
+  scenes.forEach((s, i) => {
+    const x = F.x + i * (sw + 8)
+    ctx.fillStyle = PAPER2
+    ctx.fillRect(x, F.y, sw, F.h)
+    ctx.fillStyle = i < si ? INK : RED
+    ctx.fillRect(x, F.y, sw * (i < si ? 1 : i === si ? clamp((t - s.a) / (s.b - s.a)) : 0), F.h)
+    ctx.lineWidth = 2
+    ctx.strokeStyle = INK
+    ctx.strokeRect(x, F.y, sw, F.h)
+  })
+  const logo = V ? 46 : 38
+  if (!d.playing) {
+    obHeader(ctx, F.x, F.y + (V ? 110 : 80), logo)
+    ctx.font = MONO(V ? 22 : 19)
+    ctx.fillStyle = MUTED
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    spaced(ctx, 'THE BREAKBEAT ALBUM', F.x, F.y + (V ? 156 : 116), 4)
+    return
+  }
+  const small = V ? 32 : 26
+  ctx.font = HEAD(small)
+  const logoW = ctx.measureText('OPTIMAL ').width + 3 + ctx.measureText('BREAKS').width
+  const tag = 'THE BREAKBEAT ALBUM'
+  ctx.font = MONO(V ? 20 : 16)
+  const tagW = [...tag].reduce((a, c) => a + ctx.measureText(c).width, 0) + 3 * (tag.length - 1)
+  const lx = F.x + F.w - logoW
+  const blockX = F.x + F.w - Math.max(logoW, tagW)
+  const py = F.y + F.h + (V ? 26 : 18)
+  const pH = V ? 128 : 112
+  obHeader(ctx, lx, py + pH * 0.5, small)
+  ctx.font = MONO(V ? 20 : 16)
+  ctx.fillStyle = MUTED
+  ctx.textBaseline = 'alphabetic'
+  spaced(ctx, tag, F.x + F.w, py + pH * 0.5 + (V ? 38 : 30), 3, 'right')
+  fnPlayer(ctx, F.x, py, Math.min(V ? 640 : 470, blockX - F.x - 28), pH, d.playing, t, V)
 }
 
 // ===================== EVENTOS (próximos 14 días) =====================

@@ -17,7 +17,7 @@ import {
   parseBeatportImportLines,
 } from '@/lib/beatport-next-data-tracks'
 import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
-import { createBeatportPageLoader } from '@/lib/beatport-genre-import'
+import { createBeatportPageLoader, findFeaturedIdentityMatch } from '@/lib/beatport-genre-import'
 
 export const maxDuration = 300
 
@@ -315,6 +315,10 @@ export async function POST(request: NextRequest) {
       {
         for (const pick of picked) {
           if (await knownBeatportTrack(sb, beatportTrackId(pick.link_url))) {
+            skipped_dupe.push({ url: pick.link_url, title: pick.title })
+            continue
+          }
+          if (await findFeaturedIdentityMatch(sb, pick)) {
             skipped_dupe.push({ url: pick.link_url, title: pick.title })
             continue
           }

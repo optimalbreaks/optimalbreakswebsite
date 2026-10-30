@@ -3,7 +3,8 @@
 //
 // Solo admins. Mismo motor que los reels de temas (`encodeCanvasVideo` en
 // `reel-renderer.ts`): Canvas 2D + WebCodecs, todo en el navegador. Sin audio,
-// salvo el resumen de /topreleases: suena el n.º 1 de la lista (fragmento elegido).
+// salvo el resumen de /topreleases (n.º 1 de la lista) y el artículo de álbum
+// (primer corte con preview): suena el fragmento elegido.
 // El diseño y la animación están en `page-reel-design.ts`.
 //
 // Las carátulas llegan como URL de origen (Beatport, Supabase…) y el canvas no
@@ -13,7 +14,7 @@
 // piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animBlog, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
+import { animAlbum, animBlog, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
 
 export type EventsReelEvent = {
   name: string
@@ -57,10 +58,15 @@ export type PageReelInput =
       date: string | null
       tags: string[]
       artwork: string | null
-      tracks: { title: string; meta: string; artists?: string }[]
+      tracks: { title: string; meta: string; artists?: string; artwork?: string | null; bpm?: number | null }[]
       artist: string
       label: string
       excerpt: string
+      /**
+       * Artículo con tracklist de álbum: mismo molde que /topreleases (`animAlbum`, 60 s).
+       * Preview del primer corte con audio, para el selector de R/F.
+       */
+      albumAudio?: FortnightReelInput['audio']
       /** Artículo quincenal: vídeo de datos (`animFortnight`) en vez del de artículo. */
       fortnight?: FortnightReelInput
       /** Artículo de agenda: reel de carteles (`animEvents`). */
@@ -228,6 +234,32 @@ export async function renderPageReel(
     return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress, audio)
   } else if (input.agenda) {
     return renderEventsReel(input.agenda, format, onProgress)
+  } else if (input.tracks.length > 0) {
+    const urls = [
+      ...input.tracks.map((t) => t.artwork || null),
+      audio && input.albumAudio ? input.albumAudio.artwork : null,
+    ]
+    const imgs = await loadArtworks(urls)
+    let k = 0
+    const next = () => imgs[k++] ?? null
+    const tracks = input.tracks.map((t) => ({
+      title: t.title,
+      artists: t.artists || input.artist,
+      bpm: t.bpm ?? null,
+      img: next(),
+    }))
+    const playing =
+      audio && input.albumAudio
+        ? {
+            title: input.albumAudio.title,
+            artists: input.albumAudio.artists,
+            img: next(),
+            env: audioEnvelope(audio, FORTNIGHT_DUR, 30),
+          }
+        : null
+    const data = { title: input.title, artist: input.artist, label: input.label, tracks, playing }
+    const draw = (c: CanvasRenderingContext2D, t: number) => animAlbum(c, W, H, data, t)
+    return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress, audio)
   } else {
     const [img] = await loadArtworks([input.artwork])
     const data = {

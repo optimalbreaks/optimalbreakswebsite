@@ -669,6 +669,30 @@ async function editionFor(
   return state
 }
 
+/**
+ * Misma canción ya publicada (título + versión + artistas), aunque Beatport
+ * le haya dado otro id en un álbum. No se crea otra fila y no se mueve la
+ * fecha del primer lanzamiento. Un mix con nombre propio sí es otro corte.
+ */
+export async function findFeaturedIdentityMatch(
+  sb: ReturnType<typeof createServiceSupabase>,
+  pick: { title: string; mix_name?: string | null; artists: unknown },
+): Promise<{ id: string } | null> {
+  const identity = trackDisplayIdentityKey(pick.title, pick.mix_name, pick.artists)
+  const title = String(pick.title || '').trim().replace(/[%_\\]/g, '')
+  if (!identity || !title) return null
+  const { data, error } = await sb
+    .from('chart_featured_tracks')
+    .select('id, title, mix_name, artists')
+    .ilike('title', title)
+    .limit(40)
+  if (error) throw new Error(error.message)
+  const hit = (data || []).find(
+    (row) => trackDisplayIdentityKey(row.title, row.mix_name, row.artists) === identity,
+  )
+  return hit?.id ? { id: String(hit.id) } : null
+}
+
 export async function publishFeaturedPick(
   sb: ReturnType<typeof createServiceSupabase>,
   cache: Map<string, EditionState>,
@@ -679,6 +703,7 @@ export async function publishFeaturedPick(
   const state = await editionFor(sb, cache, week)
   const key = dedupeKeyForFeaturedLink(pick.link_url)
   if (state.keys.has(key)) return { status: 'duplicate' }
+  if (await findFeaturedIdentityMatch(sb, pick)) return { status: 'duplicate' }
   const artists = pick.artists as ChartFeaturedArtist[]
   const { data: inserted, error } = await sb.from('chart_featured_tracks').insert({
     chart_edition_id: state.id,

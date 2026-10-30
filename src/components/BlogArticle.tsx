@@ -348,10 +348,44 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
       title: t.mix_name && !/^original/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title,
       meta: [t.bpm ? `${Math.round(t.bpm)} BPM` : '', t.key || ''].filter(Boolean).join(' · '),
       artists: trackArtists(t),
+      artwork: t.artwork_url,
+      bpm: t.bpm,
     })),
     artist: firstTrack ? trackArtists(firstTrack) : '',
     label: firstTrack?.label || '',
     excerpt: excerpt || '',
+    albumAudio: digest
+      ? undefined
+      : (() => {
+          const srcOf = (t: BeatportTopTrack) => {
+            const full = (t.full_audio_url || '').trim()
+            if (full.startsWith('/')) return full
+            const sample = (t.sample_url || '').trim()
+            if (!sample) return null
+            try {
+              const host = new URL(sample).hostname.toLowerCase()
+              if (host === 'geo-samples.beatport.com' || host === 'geo-media.beatport.com') {
+                return `/api/audio-proxy?url=${encodeURIComponent(sample)}`
+              }
+            } catch {
+              return null
+            }
+            return null
+          }
+          const t = albumTracks.find((row) => srcOf(row))
+          const src = t ? srcOf(t) : null
+          if (!t || !src) return null
+          const name = t.mix_name && !/^original/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title
+          return {
+            src,
+            key: t.beatport_url || `album:${name}`,
+            label: `${name} — ${trackArtists(t)}`,
+            seconds: FORTNIGHT_DUR,
+            title: name,
+            artists: trackArtists(t),
+            artwork: t.artwork_url,
+          }
+        })(),
     fortnight: digest
       ? {
           // share-reel-images solo acepta https: los retratos de /images/... van absolutos.

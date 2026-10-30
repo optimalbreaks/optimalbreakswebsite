@@ -376,7 +376,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           }
           makeVideo={makeVideo}
           makeCaption={makeCaption}
-          audio={pageReel?.fortnight?.audio ?? null}
+          audio={pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
         />
       )}
 
