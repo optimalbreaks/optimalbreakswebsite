@@ -401,6 +401,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `alkimista1974@gmail.com` | MacGroove | `macgroove` | `macgroove` | `2940e39a-bfea-4db1-966d-a46f68d938eb` |
 | `djbrownie@gmail.com` | DJ Brownie | `dj brownie` | `dj-brownie` | `424a70e8-4db6-49b8-9c0a-92bf58d46f8e` |
 | `heythisisbrad@gmail.com` | HEY! THIS IS BRAD | `hey this is brad` | `hey-this-is-brad` | `1b623ca0-c5bf-48f8-b2ce-99aff4bec527` |
+| `danielgalvan31@gmail.com` | Basstyler | `basstyler` | `basstyler` | `f8e316ac-937b-4c1d-926e-a060f6a1c5c6` |
+| `djmight@gmail.com` | Jormek | `jormek` | `jormek` | `1a00e90f-1db8-4825-980d-2d31ca532715` |
 
 **Family marks** (25 Sep 2026; song chart 6 Oct 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board and do not raise that song on the track Top 100. Other credits on the same track still count on the artist board. My Tracks stays. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
 
@@ -481,6 +483,10 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 
 **Audit — HEY! THIS IS BRAD (24 Oct 2026).** `heythisisbrad@gmail.com` (display Brad Cousins; do not guess the email from the name). Signed up the same day, 08:28 UTC. Catalog ficha `/artists/hey-this-is-brad` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. One save, *Dopamean*, credits him. It stays in My Tracks and no longer bumps HEY! THIS IS BRAD or raises that song. A collab name on the same track still counts on the artist board.
 
+**Audit — Basstyler (30 Oct 2026).** `danielgalvan31@gmail.com` (display Basstyler). Signed up the same day, 15:02 UTC, and saved 70 tracks in three minutes, all crediting Basstyler. Catalog ficha `/artists/basstyler` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. Those 70 stay in My Tracks and no longer bump Basstyler or raise those songs. Collab names on the same tracks (Bad Legs 34, The Darrow Chem Syndicate 13, and the rest) still count on the artist board.
+
+**Audit — Jormek (30 Oct 2026).** `djmight@gmail.com` (display Jormek). Signed up the same day, 15:00 UTC, and saved 11 tracks in one minute, all crediting Jormek. Catalog ficha `/artists/jormek` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. Those 11 stay in My Tracks and no longer bump Jormek or raise those songs. A collab name on the same track still counts on the artist board.
+
 ### Periodic cheat-vote audit
 
 Run this when the editor asks for a pass, or when a song sits at the top of `/topalltimes` on a cluster of new accounts. **Report. Do not ficha** until the editor says so. Identity is never inferred from `display_name`, username or email for the ranking. A name match is a hint in the report, not a mark.
@@ -529,6 +535,10 @@ A list that is ~60% one artist **and** has a real rest (other names, not a copy 
 **Load it up, 21 Oct 2026.** The song is public **#1** with **11** votes. Devis Hard, Paqui and Suprime are already out of that 11. Narciso looked at the closest of the 11, Mario (`mariopisote@hotmail.com`): 14 of 22 credit Devis Hard, the Devis saves land a few seconds apart, and the other 8 are other artists. **Leave.** That rest is enough; he is not a family mark. With Mario unmarked, nobody else on this song is a mark. Antonio (`antonioosuna32@hotmail.com`) only shares the surname Osuna; the composer credit on file is **David Carrillo Osuna**, and the ficha `real_name` is still null. Rocío Osuna, Irina, Pedro, PabloCP, Isaías, Ricky B Mixin, Karmic Waves, Optimal Breaks and Mestas stay unmarked. Do not reopen these 11 for *Load it up* unless one library becomes a Devis-only list or a copy of Paqui's.
 
 **22 Oct 2026, daytime pass.** New loud case, **not marked**: `djrueda@hotmail.es` (display HANKOOK) signed up 11:53 UTC and saved **9/9** tracks that credit Hankook (8 of them in 19 seconds at 15:22). Ficha `/artists/hankook` already exists. Same shape as DJ Brownie the same day. Waiting on the editor. Fernando (`fernandorapidote@hotmail.com`, 53 saves in six minutes, biggest name Devis Hard 10/53) and `j.manzano.carrasco@gmail.com` (display Jan-B, 45 saves, biggest name Destroyers 13/45, none of them Jan-B; label **83** is 20/45) stay under the Mario bar. Afghan Headspin's 43 saves that afternoon are 40 on DIRTY KITCHEN RAVE, already skipped. DJ Brownie was marked the same day.
+
+**25 Oct 2026 pass** (saves since 22 Oct 18:00 UTC). One new case, **not marked**: `luis89carrasco@gmail.com` (display Luis) signed up 25 Oct 09:56 UTC and in the next 22 minutes saved 18 tracks, **14 credit Afghan Headspin** (several are the two versions of the same title a few seconds apart). The other four are Aggresivnes, AceNoise and Basstyler (×2). Not a self-vote: the name does not match. Above the Mario bar. Waiting on the editor. Maxuka (`jsrcortegana@hotmail.com`, already marked) saved 71 of his own tracks in five minutes on 24 Oct; those «+» already skip. Hankook added nothing since the 22 Oct note. Kid Ellipsis (`kid_ellipsis@yahoo.com`, display Will G), Urbano, Olivobreaks, DevilBass, Joe Pressa, Obsession and Inner Realms opened accounts and saved nothing.
+
+**30 Oct 2026 pass** (saves since 25 Oct 10:30 UTC). Two new self-dumps the same afternoon. `danielgalvan31@gmail.com` (display Basstyler) signed up 15:02 UTC and in three minutes saved **70/70** tracks that credit Basstyler (34 also credit Bad Legs, 13 The Darrow Chem Syndicate; 31 are Funktasty Crew). `djmight@gmail.com` (display Jormek) signed up two minutes earlier, 15:00 UTC, and in one minute saved **11/11** that credit Jormek. Both were marked the same evening, fase 2, no claim. The first two Basstyler titles (*Braindead*, *Valeria*) are the two Basstyler tracks Luis saved on 25 Oct. Luis and Hankook added nothing in this window and stay unmarked. zarzote and Isaías stayed mixed and under the bar.
 
 ### Artist board — weekly movement (not daily)
 
