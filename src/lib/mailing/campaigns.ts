@@ -254,7 +254,18 @@ function fallbackTemasHtml(): string {
     ${mailButton(`${SITE}/es/topalltimes`, 'IR AL TOP', '#d62828', '#ffffff')}`
 }
 
-type VoteTrack = { titulo: string; artistas: string; url: string; keys: string[] }
+type VoteTrack = {
+  puesto: number
+  titulo: string
+  artistas: string
+  sello: string
+  year: string
+  bpm: string
+  clave: string
+  artwork: string
+  url: string
+  keys: string[]
+}
 
 let voteTopCache: { at: number; rows: VoteTrack[] } | null = null
 
@@ -269,7 +280,22 @@ function voteTrackFromRow(row: unknown): VoteTrack | null {
   if (primary?.source && primary?.id) keys.push(`t:${primary.source}:${primary.id}`)
   const external = normalizeTrackCanonicalUrl(String(r.external_url || ''))
   if (external) keys.push(external)
-  return { titulo: parsed.titulo, artistas: parsed.artistas, url: parsed.url, keys }
+  const rank = Number(r.rank)
+  const bpm = Number(r.bpm)
+  const art = String(r.artwork_url || '').trim()
+  const year = Number(r.year)
+  return {
+    puesto: Number.isFinite(rank) && rank > 0 ? rank : parsed.puesto,
+    titulo: parsed.titulo,
+    artistas: parsed.artistas,
+    sello: String(r.label || '').trim(),
+    year: Number.isFinite(year) && year > 1900 ? String(year) : '',
+    bpm: Number.isFinite(bpm) && bpm > 0 ? String(Math.round(bpm)) : '',
+    clave: String(r.music_key || '').trim(),
+    artwork: /^https:\/\//i.test(art) ? art : '',
+    url: parsed.url,
+    keys,
+  }
 }
 
 async function communityVoteTracks(): Promise<VoteTrack[]> {
@@ -289,22 +315,34 @@ function temasRowsHtml(tracks: VoteTrack[]): string {
     return `<p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;">El top ya está en tu lista. Sigue por las novedades y vota lo que falte.</p>
       ${mailButton(`${SITE}/es/charts`, 'NOVEDADES', '#d62828', '#ffffff')}`
   }
-  const rows = tracks.map((track, index) => {
+  const rows = tracks.map((track) => {
     const href = esc(track.url)
+    const meta = [track.artistas, track.sello, track.year].filter(Boolean).map((part) => esc(part)).join(' <span style="color:#1a1a1a;">|</span> ')
+    const chips: string[] = []
+    if (track.bpm) chips.push(`<td bgcolor="#7b2ff7" style="padding:2px 6px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;color:#ffffff;">${esc(track.bpm)}</td>`)
+    if (track.clave) chips.push(`<td bgcolor="#0891b2" style="padding:2px 6px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;color:#ffffff;">${esc(track.clave)}</td>`)
+    const chipsHtml = chips.length
+      ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px;"><tr>${chips.join('<td width="4" style="font-size:0;line-height:0;">&nbsp;</td>')}</tr></table>`
+      : ''
+    const cover = track.artwork
+      ? `<a href="${href}"><img src="${esc(track.artwork)}" alt="" width="64" height="64" style="display:block;width:64px;height:64px;border:0;"></a>`
+      : '&nbsp;'
     return `<tr>
       <td style="padding:0 0 8px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:3px solid #1a1a1a;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:3px solid #1a1a1a;background:#fffdf8;">
           <tr>
-            <td width="42" align="center" valign="middle" bgcolor="#f7e733" style="border-right:3px solid #1a1a1a;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:900;color:#1a1a1a;">${index + 1}</td>
-            <td valign="middle" style="padding:10px 12px;">
-              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#1a1a1a;text-decoration:none;">${esc(track.titulo)}</a>
-              ${track.artistas ? `<br><span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#4a4238;">${esc(track.artistas)}</span>` : ''}
+            <td width="48" align="center" valign="middle" bgcolor="#f7e733" style="border-right:3px solid #1a1a1a;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:900;color:#1a1a1a;">${track.puesto}</td>
+            <td width="64" valign="middle" bgcolor="#1a1a1a" style="border-right:3px solid #1a1a1a;font-size:0;line-height:0;">${cover}</td>
+            <td valign="middle" style="padding:8px 10px;">
+              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.25;font-weight:bold;color:#1a1a1a;text-decoration:none;">${esc(track.titulo)}</a>
+              ${meta ? `<br><span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.35;color:#4a4238;">${meta}</span>` : ''}
+              ${chipsHtml}
             </td>
-            <td width="68" align="center" valign="middle" bgcolor="#1a1a1a" style="border-left:3px solid #1a1a1a;">
-              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;letter-spacing:0.5px;color:#f7e733;text-decoration:none;">PLAY</a>
+            <td width="40" align="center" valign="middle" bgcolor="#f7e733" style="border-left:3px solid #1a1a1a;">
+              <a href="${href}" title="Play" style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#1a1a1a;text-decoration:none;">&#9654;</a>
             </td>
-            <td width="44" align="center" valign="middle" bgcolor="#d62828" style="border-left:3px solid #1a1a1a;">
-              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#ffffff;text-decoration:none;">+</a>
+            <td width="40" align="center" valign="middle" bgcolor="#ffffff" style="border-left:3px solid #1a1a1a;">
+              <a href="${href}" title="Votar" style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-decoration:none;line-height:1;">+</a>
             </td>
           </tr>
         </table>
