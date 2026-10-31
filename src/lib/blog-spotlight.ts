@@ -3,6 +3,24 @@ import type { BlogPost, Database } from '@/types/database'
 
 export const BLOG_SPOTLIGHT_LIMIT = 3
 
+/**
+ * Tope de `published_at` para lecturas públicas. Un artículo con fecha futura
+ * (se publica el día del lanzamiento) no sale en el listado, el buscador ni
+ * la ficha hasta ese día en Madrid. El instante es el final del día civil
+ * y no cambia en cada visita: la Data Cache de Supabase sigue valiendo.
+ */
+export function blogPublicUntilIso(now = new Date()): string {
+  const day = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+  let t = Date.parse(`${day}T12:00:00Z`)
+  for (let i = 0; i < 36; i++) {
+    const next = t + 3_600_000
+    const nextDay = new Date(next).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+    if (nextDay !== day) return new Date(next - 1).toISOString()
+    t = next
+  }
+  return new Date(t).toISOString()
+}
+
 /** Quincena, mes y trimestre: la ficha pública es /topreleases/<slug>, no /blog/<slug>. */
 export function isReleaseRoundupSlug(slug: string): boolean {
   return slug.startsWith('quincena-breakbeat-') || slug.startsWith('mes-breakbeat-') || slug.startsWith('trimestre-breakbeat-')
@@ -81,6 +99,7 @@ export async function fetchBlogSpotlight(
     .from('blog_posts')
     .select(BLOG_LIST_SELECT)
     .eq('is_published', true)
+    .lte('published_at', blogPublicUntilIso())
     .gt('view_count', 0)
     .order('view_count', { ascending: false })
     .order('published_at', { ascending: false })
@@ -93,6 +112,7 @@ export async function fetchBlogSpotlight(
     .from('blog_posts')
     .select(BLOG_LIST_SELECT)
     .eq('is_published', true)
+    .lte('published_at', blogPublicUntilIso())
     .eq('is_featured', true)
     .order('published_at', { ascending: false })
     .limit(limit)

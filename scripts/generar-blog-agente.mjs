@@ -353,7 +353,11 @@ function normalizePost(obj, expectedSlug, { featured }) {
     author: String(obj.author || 'Optimal Breaks').trim() || 'Optimal Breaks',
     is_published: obj.is_published !== false,
     is_featured: featured || obj.is_featured === true,
-    published_at: new Date().toISOString(),
+    published_at: (() => {
+      const raw = String(obj.published_at || '').trim()
+      const parsed = Date.parse(raw)
+      return raw && Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date().toISOString()
+    })(),
     image_url: String(obj.image_url || '').trim() || null,
     og_image_url: String(obj.og_image_url || '').trim() || null,
     beatport_tracks: Array.isArray(obj.beatport_tracks) ? obj.beatport_tracks : [],

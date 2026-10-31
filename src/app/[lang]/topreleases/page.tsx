@@ -19,6 +19,7 @@ import type { Locale } from '@/lib/i18n-config'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { staticPageMetadata } from '@/lib/seo'
 import { fetchAllPages } from '@/lib/supabase-paginate'
+import { blogPublicUntilIso } from '@/lib/blog-spotlight'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import type { FortnightDigestTrack } from '@/types/database'
 
@@ -194,6 +195,7 @@ export default async function TopReleasesPage({
           'slug, published_at, title_es, title_en, excerpt_es, excerpt_en, kind:digest->>kind, from:digest->>from, until:digest->>until, intro_es:digest->copy->es->>intro, intro_en:digest->copy->en->>intro, played:digest->played->0, voted:digest->voted->0, released:digest->released->0',
         )
         .eq('is_published', true)
+        .lte('published_at', blogPublicUntilIso())
         .not('digest', 'is', null)
         .order('id')
         .range(a, b),

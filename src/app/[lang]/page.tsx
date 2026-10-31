@@ -12,7 +12,7 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { digestCoverUrls, fetchBlogSpotlight, publicArticlePath, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { blogPublicUntilIso, digestCoverUrls, fetchBlogSpotlight, publicArticlePath, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import type { BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
@@ -436,6 +436,7 @@ export default async function HomePage({
       .from('blog_posts')
       .select('slug, published_at, title_es, title_en, from:digest->>from, until:digest->>until')
       .eq('is_published', true)
+      .lte('published_at', blogPublicUntilIso())
       .or('slug.like.quincena-breakbeat-%,slug.like.mes-breakbeat-%')
       .order('published_at', { ascending: false })
       .limit(4),
@@ -445,6 +446,7 @@ export default async function HomePage({
         'slug, title_es, title_en, from:digest->>from, until:digest->>until, totals:digest->totals, picks:digest->picks, released:digest->released',
       )
       .eq('is_published', true)
+      .lte('published_at', blogPublicUntilIso())
       .like('slug', 'proxima-semana-breakbeat-%')
       .order('slug', { ascending: false })
       .limit(1),

@@ -9,7 +9,7 @@ import { createCachedSupabase } from '@/lib/supabase-server'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { extractBeatportTrackId } from '@/lib/share-track'
 import { isGenericVersionMixName } from '@/lib/track-canonical-key'
-import { publicArticlePath } from '@/lib/blog-spotlight'
+import { blogPublicUntilIso, publicArticlePath } from '@/lib/blog-spotlight'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -539,7 +539,8 @@ export async function GET(request: NextRequest) {
       supabase
         .from('blog_posts')
         .select('id, slug, title_en, title_es, image_url, category, published_at, is_published')
-        .eq('is_published', true),
+        .eq('is_published', true)
+        .lte('published_at', blogPublicUntilIso()),
       ['title_en', 'title_es', 'slug'],
       activeTokens,
     )

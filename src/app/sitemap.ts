@@ -17,7 +17,7 @@ import {
 } from '@/lib/index-policy'
 import { isEventCancelled } from '@/types/database'
 import { PUBLIC_PARKINEO_CACHE_TAG } from '@/lib/revalidate-public'
-import { isReleaseRoundup } from '@/lib/blog-spotlight'
+import { blogPublicUntilIso, isReleaseRoundup } from '@/lib/blog-spotlight'
 
 const BASE_URL = 'https://www.optimalbreaks.com'
 
@@ -138,6 +138,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           .from('blog_posts')
           .select('slug, content_es, content_en')
           .eq('is_published', true)
+          .lte('published_at', blogPublicUntilIso())
           .order('id', { ascending: true })
           .range(from, to),
       40,

@@ -33,7 +33,7 @@ import {
   filterArtistSlugMapForNames,
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
-import { digestCoverUrls, isBlogPosterCover, isReleaseRoundup } from '@/lib/blog-spotlight'
+import { blogPublicUntilIso, digestCoverUrls, isBlogPosterCover, isReleaseRoundup } from '@/lib/blog-spotlight'
 import { digestCoverFocuses } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
@@ -84,6 +84,7 @@ export async function generateArticleMetadata({ params }: Props, home: ArticleHo
     .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks, content_es, content_en, covers:digest->covers, agenda_kind:digest->>kind, agenda_from:digest->>from, agenda_until:digest->>until, agenda_places:digest->places')
     .eq('slug', safeSlug)
     .eq('is_published', true)
+    .lte('published_at', blogPublicUntilIso())
     .single()
   const data = raw as BlogSeoRow | null
   if (!data) return { title: safeLang === 'es' ? 'Entrada no encontrada' : 'Post not found', robots: { index: false, follow: true } }
@@ -131,7 +132,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   let rawPost: unknown = null
   if (safeSlug) {
-    const res = await supabase.from('blog_posts').select('*').eq('slug', safeSlug).eq('is_published', true).single()
+    const res = await supabase.from('blog_posts').select('*').eq('slug', safeSlug).eq('is_published', true).lte('published_at', blogPublicUntilIso()).single()
     rawPost = res.data
   }
   const post = rawPost as BlogPost | null

@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
-import { BLOG_LIST_SELECT, digestCoverUrls, fetchBlogSpotlight, isBlogPosterCover, publicArticlePath, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { BLOG_LIST_SELECT, blogPublicUntilIso, digestCoverUrls, fetchBlogSpotlight, isBlogPosterCover, publicArticlePath, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import { digestCoverFocuses, type CoverFocus } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 
@@ -297,6 +297,7 @@ export default async function BlogPage({
     .from('blog_posts')
     .select('*', { count: 'exact', head: true })
     .eq('is_published', true)
+    .lte('published_at', blogPublicUntilIso())
 
   const { posts: featuredRaw, byViews } = await fetchBlogSpotlight(supabase)
   const featured = featuredRaw
@@ -307,6 +308,7 @@ export default async function BlogPage({
     .from('blog_posts')
     .select('*', { count: 'exact', head: true })
     .eq('is_published', true)
+    .lte('published_at', blogPublicUntilIso())
   if (excludeFeatured) {
     restCountQuery = restCountQuery.not('slug', 'in', `(${featuredSlugs.join(',')})`)
   }
@@ -322,6 +324,7 @@ export default async function BlogPage({
     .from('blog_posts')
     .select(BLOG_LIST_SELECT)
     .eq('is_published', true)
+    .lte('published_at', blogPublicUntilIso())
   if (excludeFeatured) {
     restQuery = restQuery.not('slug', 'in', `(${featuredSlugs.join(',')})`)
   }
