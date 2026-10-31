@@ -394,6 +394,9 @@ function CampaignEditor({ id, base }: { id: string; base: string }) {
       {preview && (
         <div className="mb-6">
           <p className="mb-2" style={mono}>Vista previa</p>
+          {html.includes('{{TEMAS}}') && (
+            <p className="admin-muted mb-2">Al enviar, cada persona ve temas del top que aún no tiene en Mis Tracks. Aquí, si no hay audiencia, sale el top tal cual.</p>
+          )}
           <iframe title="Vista previa del correo" sandbox="" srcDoc={preview} className="w-full border-[3px] border-[var(--ink)] bg-[var(--paper)]" style={{ height: 720 }} />
         </div>
       )}

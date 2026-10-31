@@ -7,6 +7,7 @@ import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { editorialCopy, smtpReady } from '@/lib/transactional-mail'
 import { isGpt5Family, openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 import { isAudience, isPreset } from '@/lib/mailing/presets'
+import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import type {
   MailCampaignAudience,
   MailCampaignPreset,
@@ -244,9 +245,92 @@ export async function generateCampaignHtml(briefing: string, preset: MailCampaig
   return html
 }
 
-export function personalize(html: string, opts: { name: string; email: string; saves: number; draft?: boolean }): string {
+function fallbackTemasHtml(): string {
+  return `<p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;">Entra en el top, dale al play y al + en lo que te mueva.</p>
+    <a href="${SITE}/es/topalltimes" style="display:inline-block;padding:10px 16px;background:#d62828;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;">Ir al top</a>`
+}
+
+type VoteTrack = { titulo: string; artistas: string; url: string; keys: string[] }
+
+let voteTopCache: { at: number; rows: VoteTrack[] } | null = null
+
+function voteTrackFromRow(row: unknown): VoteTrack | null {
+  const parsed = asTrack(row, 0)
+  if (!parsed || !row || typeof row !== 'object') return null
+  const r = row as Record<string, unknown>
+  const keys: string[] = []
+  const canonical = String(r.canonical_key || '').trim()
+  if (canonical) keys.push(canonical)
+  const primary = r.primary as { source?: string; id?: string } | undefined
+  if (primary?.source && primary?.id) keys.push(`t:${primary.source}:${primary.id}`)
+  const external = normalizeTrackCanonicalUrl(String(r.external_url || ''))
+  if (external) keys.push(external)
+  return { titulo: parsed.titulo, artistas: parsed.artistas, url: parsed.url, keys }
+}
+
+async function communityVoteTracks(): Promise<VoteTrack[]> {
+  if (voteTopCache && Date.now() - voteTopCache.at < 10 * 60 * 1000) return voteTopCache.rows
+  const res = await fetch(`${SITE}/api/public/charts/community-monthly?limit=30`, {
+    signal: AbortSignal.timeout(90_000),
+  })
+  if (!res.ok) throw new Error(`Top ${res.status}`)
+  const json = await res.json() as { top_tracks?: unknown[] }
+  const rows = (json.top_tracks || []).map(voteTrackFromRow).filter((t): t is VoteTrack => !!t)
+  voteTopCache = { at: Date.now(), rows }
+  return rows
+}
+
+function temasRowsHtml(tracks: VoteTrack[]): string {
+  if (tracks.length === 0) {
+    return `<p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;">El top ya está en tu lista. Sigue por las novedades y vota lo que falte.</p>
+      <a href="${SITE}/es/charts" style="display:inline-block;padding:10px 16px;background:#d62828;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;">Novedades</a>`
+  }
+  const rows = tracks.map((track) => {
+    const href = esc(track.url)
+    return `<tr>
+      <td style="padding:12px 0;border-bottom:2px solid #1a1a1a;">
+        <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#1a1a1a;text-decoration:none;">${esc(track.titulo)}</a>
+        ${track.artistas ? `<br><span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4238;">${esc(track.artistas)}</span>` : ''}
+      </td>
+      <td width="78" align="right" style="padding:12px 6px 12px 8px;border-bottom:2px solid #1a1a1a;">
+        <a href="${href}" style="display:inline-block;padding:8px 10px;background:#f7e733;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;text-decoration:none;">PLAY</a>
+      </td>
+      <td width="46" align="right" style="padding:12px 0;border-bottom:2px solid #1a1a1a;">
+        <a href="${href}" style="display:inline-block;padding:8px 12px;background:#d62828;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;">+</a>
+      </td>
+    </tr>`
+  }).join('')
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`
+}
+
+/** Temas del top que esta persona no tiene en Mis Tracks. Sin userId, el top tal cual (quien no ha votado). */
+export async function temasHtmlForUser(userId: string | null): Promise<string> {
+  try {
+    const tops = await communityVoteTracks()
+    if (!userId) return temasRowsHtml(tops.slice(0, 5))
+    const svc = createServiceSupabase()
+    const saved = await fetchAllRows<{ track_source: string; track_id: string; canonical_url: string | null }>((from, to) =>
+      svc.from('saved_chart_tracks').select('track_source, track_id, canonical_url').eq('user_id', userId).order('id').range(from, to),
+    )
+    if (saved.error) throw new Error(saved.error.message)
+    const mine = new Set<string>()
+    for (const row of saved.data) {
+      mine.add(`t:${row.track_source}:${row.track_id}`)
+      const key = normalizeTrackCanonicalUrl(row.canonical_url)
+      if (key) mine.add(key)
+    }
+    const pending = tops.filter((track) => !track.keys.some((key) => mine.has(key))).slice(0, 5)
+    return temasRowsHtml(pending)
+  } catch (err) {
+    console.warn('[mailing] temas', err instanceof Error ? err.message : err)
+    return fallbackTemasHtml()
+  }
+}
+
+export function personalize(html: string, opts: { name: string; email: string; saves: number; draft?: boolean; temas?: string }): string {
   const nombre = firstName(opts.name) || 'tú'
   let out = html
+    .replaceAll('{{TEMAS}}', opts.temas || fallbackTemasHtml())
     .replaceAll('{{NOMBRE}}', esc(nombre))
     .replaceAll('{{SAVES}}', String(opts.saves))
     .replaceAll('{{BAJA_URL}}', esc(unsubscribeUrl(opts.email)))
@@ -376,7 +460,8 @@ export async function sendOne(opts: {
 export async function sendTest(campaign: MailCampaignRow): Promise<void> {
   const to = (process.env.SMTP_USER || 'contacto@optimalbreaks.com').trim()
   if (!campaign.html_content.trim()) throw new Error('No hay HTML')
-  const html = personalize(campaign.html_content, { name: 'Narciso', email: to, saves: 12, draft: true })
+  const temas = await temasHtmlForUser(null)
+  const html = personalize(campaign.html_content, { name: 'Narciso', email: to, saves: 0, draft: true, temas })
   await sendOne({ to, subject: `[BORRADOR] ${campaign.subject}`, html, draft: true })
 }
 
@@ -427,10 +512,14 @@ export async function tickCampaign(campaignId: string): Promise<{ sent: number; 
     if (!person) continue
     if (i > 0) await sleep(GAP_MS)
     try {
+      const temas = row.html_content.includes('{{TEMAS}}')
+        ? await temasHtmlForUser(person.user_id)
+        : undefined
       const html = personalize(row.html_content, {
         name: person.display_name,
         email: person.email,
         saves: person.save_count,
+        temas,
       })
       await sendOne({ to: person.email, subject: row.subject, html })
       await svc.from('mail_campaign_recipients').update({

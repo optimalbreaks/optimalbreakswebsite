@@ -9,6 +9,7 @@ import {
   personalize,
   recipientCounts,
   sendTest,
+  temasHtmlForUser,
   tickCampaign,
 } from '@/lib/mailing/campaigns'
 import type { MailCampaignRecipientRow, MailCampaignRow } from '@/types/database'
@@ -43,11 +44,15 @@ export async function GET(
     ])
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     const sample = (people || [])[0] as MailCampaignRecipientRow | undefined
+    const temas = campaign.html_content.includes('{{TEMAS}}')
+      ? await temasHtmlForUser(sample?.user_id || null)
+      : undefined
     const preview = campaign.html_content
       ? personalize(campaign.html_content, {
           name: sample?.display_name || 'Narciso',
           email: sample?.email || 'contacto@optimalbreaks.com',
           saves: sample?.save_count ?? 0,
+          temas,
         })
       : ''
     return NextResponse.json({ campaign, counts, recipients: people || [], preview })
