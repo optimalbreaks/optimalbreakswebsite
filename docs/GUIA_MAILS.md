@@ -5,9 +5,9 @@ Punto de partida para **cualquier mail que mandemos** desde Optimal Breaks. Dos 
 | Canal | Quién envía | Para qué | Dónde vive |
 |--------|-------------|----------|------------|
 | **Auth** | Supabase (plantillas del dashboard; SMTP propio opcional) | Confirmar cuenta, recuperar contraseña, magic link, invite | [`mailing/supabase/`](../mailing/supabase/) + [`mailing/supabase/README.md`](../mailing/supabase/README.md) |
-| **Campaña / producto** | Script local + **SMTP OVH** (`contacto@optimalbreaks.com`) | Avisos puntuales a usuarios registrados (Mis Tracks, bookings, etc.) | [`scripts/enviar-campana-mail.mjs`](../scripts/enviar-campana-mail.mjs) + HTML de salida en [`mailing/`](../mailing/) |
+| **Campaña / producto** | Panel **`/[lang]/administrator/mailing`** (SMTP OVH, `contacto@optimalbreaks.com`) | Tops, recordatorios y guías a cuentas confirmadas | Este archivo + `src/lib/mailing/` |
 
-**No hay** Resend, Mailchimp ni panel de campañas. Con ~40 cuentas no hace falta. Un envío masivo = el script, **uno a uno**, tras un `--test` que solo vea `contacto@`.
+**Hay panel de campañas** en `/[lang]/administrator/mailing` (31 oct 2026, código local). Cuatro moldes: Top 10, tops de octubre, recordatorio para montar la lista, funcionalidades de la web. La IA escribe el HTML con el ranking real (sin cifras de votos) y el envío sale por el mismo SMTP, de dos en dos, mientras la página sigue abierta. Prueba siempre a `contacto@` antes de lanzar. Bajas en `mail_suppressions`. El script de abajo sigue sirviendo para una campaña hecha a mano fuera del panel.
 
 ---
 

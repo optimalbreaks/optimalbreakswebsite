@@ -579,6 +579,26 @@ export interface Database {
         Update: never
         Relationships: DbRelationship[]
       }
+      mail_campaigns: {
+        Row: MailCampaignRow
+        Insert: Pick<MailCampaignRow, 'subject'> &
+          Partial<Omit<MailCampaignRow, 'id' | 'subject'>>
+        Update: Partial<Omit<MailCampaignRow, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
+      mail_campaign_recipients: {
+        Row: MailCampaignRecipientRow
+        Insert: Pick<MailCampaignRecipientRow, 'campaign_id' | 'email'> &
+          Partial<Omit<MailCampaignRecipientRow, 'id' | 'campaign_id' | 'email'>>
+        Update: Partial<Pick<MailCampaignRecipientRow, 'status' | 'error_message' | 'sent_at' | 'display_name' | 'save_count'>>
+        Relationships: DbRelationship[]
+      }
+      mail_suppressions: {
+        Row: MailSuppressionRow
+        Insert: Pick<MailSuppressionRow, 'email'> & Partial<Pick<MailSuppressionRow, 'reason'>>
+        Update: Partial<Pick<MailSuppressionRow, 'reason'>>
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -762,6 +782,11 @@ export interface EventRatingRow extends Record<string, unknown> {
 export type MailDispatchKind = 'claim_approved' | 'booking_new' | 'parkineo_published'
 export type MailDispatchStatus = 'sent' | 'failed' | 'skipped'
 
+export type MailCampaignPreset = 'top10' | 'octubre' | 'montar' | 'funciones' | 'libre'
+export type MailCampaignAudience = 'confirmed' | 'sin_lista' | 'lista_corta' | 'con_lista'
+export type MailCampaignStatus = 'draft' | 'sending' | 'sent' | 'archived'
+export type MailRecipientStatus = 'pending' | 'sending' | 'sent' | 'failed' | 'skipped'
+
 /** Sin index signature / `unknown`: rompe el cliente tipado de Supabase (build Vercel → `never`). */
 export type MailDispatchMetadata = {
   source?: string
@@ -789,6 +814,41 @@ export type MailDispatchRow = {
   smtp_message_id: string | null
   error_message: string | null
   metadata: MailDispatchMetadata
+}
+
+export type MailCampaignRow = {
+  id: string
+  created_at: string
+  updated_at: string
+  created_by: string | null
+  preset: MailCampaignPreset
+  subject: string
+  briefing: string
+  html_content: string
+  audience: MailCampaignAudience
+  status: MailCampaignStatus
+  is_paused: boolean
+  started_at: string | null
+  completed_at: string | null
+}
+
+export type MailCampaignRecipientRow = {
+  id: string
+  campaign_id: string
+  user_id: string | null
+  email: string
+  display_name: string
+  save_count: number
+  status: MailRecipientStatus
+  error_message: string | null
+  sent_at: string | null
+  created_at: string
+}
+
+export type MailSuppressionRow = {
+  email: string
+  reason: string
+  created_at: string
 }
 
 export type ArtistClaimKind = 'claim_existing' | 'request_new'

@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { key: 'claims', label: 'Verificaciones', icon: '✔', path: '/claims' },
   { key: 'bookings', label: 'Bookings', icon: '✉', path: '/bookings' },
   { key: 'mails', label: 'Mails', icon: '@', path: '/mails' },
+  { key: 'mailing', label: 'Mailing', icon: '📨', path: '/mailing' },
   { key: 'red', label: 'Red artistas', icon: '💬', path: '/red' },
   { key: 'artists', label: 'Artistas', icon: '♫', path: '/artists' },
   { key: 'labels', label: 'Sellos', icon: '◈', path: '/labels' },

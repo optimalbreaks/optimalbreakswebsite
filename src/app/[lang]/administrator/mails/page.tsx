@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import type { MailDispatchKind, MailDispatchRow, MailDispatchStatus } from '@/types/database'
 
 type AdminMail = MailDispatchRow & {
@@ -46,6 +48,7 @@ function formatWhen(iso: string) {
 }
 
 export default function AdminMailsPage() {
+  const { lang } = useParams<{ lang: string }>()
   const [kind, setKind] = useState('')
   const [status, setStatus] = useState('')
   const [rows, setRows] = useState<AdminMail[]>([])
@@ -68,9 +71,10 @@ export default function AdminMailsPage() {
     <div>
       <h1 className="admin-page-title">Registro de mails</h1>
       <p className="admin-muted mb-4 max-w-2xl">
-        Cada intento transaccional deja fila: ficha verificada y aviso de booking.
+        Cada intento transaccional deja fila: ficha verificada, aviso de booking y Parkineo.
         {' '}<strong>sent</strong> / <strong>failed</strong> / <strong>skipped</strong> (sin SMTP o
-        email sin confirmar). Copia a contacto@ y Message-ID de OVH si el envío salió.
+        email sin confirmar). Las campañas (Top 10, octubre, montar la lista, funciones) se crean en{' '}
+        <Link href={`/${lang}/administrator/mailing`}>Mailing</Link>.
       </p>
 
       <div className="flex flex-wrap gap-2 mb-3">
