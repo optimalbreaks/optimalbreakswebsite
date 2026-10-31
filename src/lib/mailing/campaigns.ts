@@ -245,9 +245,13 @@ export async function generateCampaignHtml(briefing: string, preset: MailCampaig
   return html
 }
 
+function mailButton(href: string, label: string, bg: string, color: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${bg}" style="border:3px solid #1a1a1a;"><a href="${href}" style="display:inline-block;padding:10px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:${color};text-decoration:none;">${label}</a></td></tr></table>`
+}
+
 function fallbackTemasHtml(): string {
   return `<p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;">Entra en el top, dale al play y al + en lo que te mueva.</p>
-    <a href="${SITE}/es/topalltimes" style="display:inline-block;padding:10px 16px;background:#d62828;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;">Ir al top</a>`
+    ${mailButton(`${SITE}/es/topalltimes`, 'IR AL TOP', '#d62828', '#ffffff')}`
 }
 
 type VoteTrack = { titulo: string; artistas: string; url: string; keys: string[] }
@@ -283,20 +287,27 @@ async function communityVoteTracks(): Promise<VoteTrack[]> {
 function temasRowsHtml(tracks: VoteTrack[]): string {
   if (tracks.length === 0) {
     return `<p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45;color:#1a1a1a;">El top ya está en tu lista. Sigue por las novedades y vota lo que falte.</p>
-      <a href="${SITE}/es/charts" style="display:inline-block;padding:10px 16px;background:#d62828;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;">Novedades</a>`
+      ${mailButton(`${SITE}/es/charts`, 'NOVEDADES', '#d62828', '#ffffff')}`
   }
-  const rows = tracks.map((track) => {
+  const rows = tracks.map((track, index) => {
     const href = esc(track.url)
     return `<tr>
-      <td style="padding:12px 0;border-bottom:2px solid #1a1a1a;">
-        <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#1a1a1a;text-decoration:none;">${esc(track.titulo)}</a>
-        ${track.artistas ? `<br><span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4238;">${esc(track.artistas)}</span>` : ''}
-      </td>
-      <td width="78" align="right" style="padding:12px 6px 12px 8px;border-bottom:2px solid #1a1a1a;">
-        <a href="${href}" style="display:inline-block;padding:8px 10px;background:#f7e733;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;text-decoration:none;">PLAY</a>
-      </td>
-      <td width="46" align="right" style="padding:12px 0;border-bottom:2px solid #1a1a1a;">
-        <a href="${href}" style="display:inline-block;padding:8px 12px;background:#d62828;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;">+</a>
+      <td style="padding:0 0 8px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:3px solid #1a1a1a;">
+          <tr>
+            <td width="42" align="center" valign="middle" bgcolor="#f7e733" style="border-right:3px solid #1a1a1a;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:900;color:#1a1a1a;">${index + 1}</td>
+            <td valign="middle" style="padding:10px 12px;">
+              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#1a1a1a;text-decoration:none;">${esc(track.titulo)}</a>
+              ${track.artistas ? `<br><span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#4a4238;">${esc(track.artistas)}</span>` : ''}
+            </td>
+            <td width="68" align="center" valign="middle" bgcolor="#1a1a1a" style="border-left:3px solid #1a1a1a;">
+              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;letter-spacing:0.5px;color:#f7e733;text-decoration:none;">PLAY</a>
+            </td>
+            <td width="44" align="center" valign="middle" bgcolor="#d62828" style="border-left:3px solid #1a1a1a;">
+              <a href="${href}" style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#ffffff;text-decoration:none;">+</a>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>`
   }).join('')
