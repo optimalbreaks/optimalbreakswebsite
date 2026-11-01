@@ -403,6 +403,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `heythisisbrad@gmail.com` | HEY! THIS IS BRAD | `hey this is brad` | `hey-this-is-brad` | `1b623ca0-c5bf-48f8-b2ce-99aff4bec527` |
 | `danielgalvan31@gmail.com` | Basstyler | `basstyler` | `basstyler` | `f8e316ac-937b-4c1d-926e-a060f6a1c5c6` |
 | `djmight@gmail.com` | Jormek | `jormek` | `jormek` | `1a00e90f-1db8-4825-980d-2d31ca532715` |
+| `djguanxe@gmail.com` | Dj Guanxe | `dj guanxe` | `dj-guanxe` | `5da6579f-6367-4404-8e8b-9446e8afbc62` |
 
 **Family marks** (25 Sep 2026; song chart 6 Oct 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board and do not raise that song on the track Top 100. Other credits on the same track still count on the artist board. My Tracks stays. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
 
@@ -487,6 +488,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 
 **Audit — Jormek (30 Oct 2026).** `djmight@gmail.com` (display Jormek). Signed up the same day, 15:00 UTC, and saved 11 tracks in one minute, all crediting Jormek. Catalog ficha `/artists/jormek` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. Those 11 stay in My Tracks and no longer bump Jormek or raise those songs. A collab name on the same track still counts on the artist board.
 
+**Audit — Dj Guanxe (1 Nov 2026).** `djguanxe@gmail.com` (display Dj Guanxe). Signed up the same day, 10:50 UTC, and saved 8 tracks in five minutes, 7 crediting Dj Guanxe. The eighth, *Ready For The Bass*, credits SluG (FL) and DJ Brownie. Catalog ficha `/artists/dj-guanxe` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. The 7 stay in My Tracks and no longer bump Dj Guanxe or raise those songs. *Bigstyle* still credits AndrewFx. *Ready For The Bass* still counts in full. Anubis and AndrewFx stay unmarked; their Dj Guanxe saves still count.
+
 ### Periodic cheat-vote audit
 
 Run this when the editor asks for a pass, or when a song sits at the top of `/topalltimes` on a cluster of new accounts. **Report. Do not ficha** until the editor says so. Identity is never inferred from `display_name`, username or email for the ranking. A name match is a hint in the report, not a mark.
@@ -539,6 +542,8 @@ A list that is ~60% one artist **and** has a real rest (other names, not a copy 
 **25 Oct 2026 pass** (saves since 22 Oct 18:00 UTC). One new case, **not marked**: `luis89carrasco@gmail.com` (display Luis) signed up 25 Oct 09:56 UTC and in the next 22 minutes saved 18 tracks, **14 credit Afghan Headspin** (several are the two versions of the same title a few seconds apart). The other four are Aggresivnes, AceNoise and Basstyler (×2). Not a self-vote: the name does not match. Above the Mario bar. Waiting on the editor. Maxuka (`jsrcortegana@hotmail.com`, already marked) saved 71 of his own tracks in five minutes on 24 Oct; those «+» already skip. Hankook added nothing since the 22 Oct note. Kid Ellipsis (`kid_ellipsis@yahoo.com`, display Will G), Urbano, Olivobreaks, DevilBass, Joe Pressa, Obsession and Inner Realms opened accounts and saved nothing.
 
 **30 Oct 2026 pass** (saves since 25 Oct 10:30 UTC). Two new self-dumps the same afternoon. `danielgalvan31@gmail.com` (display Basstyler) signed up 15:02 UTC and in three minutes saved **70/70** tracks that credit Basstyler (34 also credit Bad Legs, 13 The Darrow Chem Syndicate; 31 are Funktasty Crew). `djmight@gmail.com` (display Jormek) signed up two minutes earlier, 15:00 UTC, and in one minute saved **11/11** that credit Jormek. Both were marked the same evening, fase 2, no claim. The first two Basstyler titles (*Braindead*, *Valeria*) are the two Basstyler tracks Luis saved on 25 Oct. Luis and Hankook added nothing in this window and stay unmarked. zarzote and Isaías stayed mixed and under the bar.
+
+**1 Nov 2026 pass** (saves since 30 Oct 18:40 UTC). Narciso pointed at DJ Guanxe. `djguanxe@gmail.com` (display Dj Guanxe) signed up 1 Nov 10:50 UTC and in five minutes saved 8 tracks, **7 credit Dj Guanxe** (6 are Zyn Records). The eighth is *Ready For The Bass* (SluG (FL), DJ Brownie). Above the Mario bar. Marked the same evening, fase 2, no claim. Ficha `/artists/dj-guanxe` exists, `claimed_by` null. Two other accounts also saved him and stay unmarked: Anubis (`fabianarossmarin@gmail.com`, signed up 31 Oct 21:41 UTC, 5/13 credit Dj Guanxe, then AndrewFx and Evil Crew) and AndrewFx (`andrewfx@outlook.es`, already claimed, 114 saves, 5 Dj Guanxe on 31 Oct inside a mixed list). Those votes still count. Inner Realms (`innerrealms.bookings@gmail.com`) dumped 21 of his own tracks in one minute on 31 Oct; the ficha is already claimed by that same account, so those 21 already skip. Thumtakk3 (4/13 Huda Hudia) stays under the bar.
 
 ### Artist board — weekly movement (not daily)
 
