@@ -713,7 +713,8 @@ export function DigestTrackRows({
           key={group.spot}
           className={group.tone === 'pick' ? 'mt-8 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/40 p-3 sm:p-4' : 'mt-8'}
         >
-          <h2 className="text-xl sm:text-2xl font-black leading-tight mb-3" style={display}>{group.title}</h2>
+          <h2 className="mb-2 text-2xl font-black leading-none sm:text-3xl" style={display}>{group.title}</h2>
+          <div className={`mb-4 h-[6px] w-20 border-2 border-[var(--ink)] ${group.tone === 'pick' ? 'bg-[var(--ink)]' : 'bg-[var(--yellow)]'}`} />
           <RankedTracks tracks={group.tracks} spot={group.spot} unit="" lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} plain />
         </section>
       ))}
@@ -762,7 +763,7 @@ function monthTitle(ym: string, lang: Locale): string {
 
 /** Calendario del artículo. No es el del navegador: naranja claro, días en rojo, borde negro. */
 export function DayReleaseDate({
-  lang, day, today, year, label, articlePath, headline, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
+  lang, day, today, year, label, articlePath, headline, kicker, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
 }: {
   lang: Locale
   day: string
@@ -771,8 +772,10 @@ export function DayReleaseDate({
   label: string
   /** Prefijo `/es/topreleases/dia`: elegir un día abre `${articlePath}/${día}`. */
   articlePath?: string
-  /** Fecha larga, encima de las flechas. También abre el calendario. */
+  /** Fecha larga. Es el H1 y también abre el calendario. */
   headline: string
+  /** Pastilla encima del título, como «Nuevos lanzamientos» en /charts. */
+  kicker: string
   todayBadge?: string | null
   prevHref?: string | null
   nextHref?: string | null
@@ -815,21 +818,28 @@ export function DayReleaseDate({
   return (
     <div ref={wrapRef} className="relative">
       {year ? <input type="hidden" name="year" value={year} /> : null}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {todayBadge ? (
-          <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
-            {todayBadge}
+      <div className="mb-4">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="inline-block border-2 border-[var(--ink)] bg-[var(--cyan)] px-2 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white" style={mono}>
+            {kicker}
           </span>
-        ) : null}
-        <button
-          type="button"
-          onClick={openCalendar}
-          aria-expanded={open}
-          className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-bold uppercase text-[var(--ink)] underline decoration-dotted underline-offset-4 hover:text-[var(--red)]"
-          style={mono}
-        >
-          {headline}
-        </button>
+          {todayBadge ? (
+            <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
+              {todayBadge}
+            </span>
+          ) : null}
+        </div>
+        <h1 className="mb-4">
+          <button
+            type="button"
+            onClick={openCalendar}
+            aria-expanded={open}
+            className="cursor-pointer border-0 bg-transparent p-0 text-left text-[2.35rem] font-black leading-[0.92] text-[var(--ink)] hover:text-[var(--red)] sm:text-6xl"
+            style={display}
+          >
+            {headline}
+          </button>
+        </h1>
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {prevHref ? (

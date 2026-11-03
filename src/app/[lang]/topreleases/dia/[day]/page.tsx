@@ -8,6 +8,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { CoverThirds } from '@/components/CardThumbnail'
 import { DayReleaseDate, DigestTrackRows } from '@/components/FortnightDigest'
 import ShareButtons from '@/components/ShareButtons'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
@@ -128,6 +129,32 @@ export const dynamic = 'force-dynamic'
 
 function todayMadrid(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+}
+
+function DayCovers({ tracks, stamp }: { tracks: FortnightDigestTrack[]; stamp: string }) {
+  const srcs: string[] = []
+  const seen = new Set<string>()
+  for (const t of tracks) {
+    if (!t.artwork_url || seen.has(t.artwork_url)) continue
+    seen.add(t.artwork_url)
+    srcs.push(t.artwork_url)
+    if (srcs.length === 3) break
+  }
+  if (!srcs.length) return null
+  return (
+    <div className="relative -mx-4 mb-6 border-y-[3px] border-[var(--ink)] sm:mx-0 sm:border-[3px]">
+      <CoverThirds
+        srcs={srcs}
+        alt=""
+        aspectClass="aspect-[3/1]"
+        frameClass="border-0"
+        sizes="(max-width: 640px) 34vw, 270px"
+      />
+      <div className="absolute bottom-3 left-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 py-1 text-[13px] font-black sm:text-[15px]" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+        {stamp}
+      </div>
+    </div>
+  )
 }
 
 function trackLine(t: FortnightDigestTrack): string {
@@ -259,6 +286,7 @@ export default async function DayReleaseArticlePage({
           {copy.back}
         </Link>
         <article>
+          <DayCovers tracks={picks.length ? picks : rest} stamp={copy.section} />
           <DayReleaseDate
             lang={lang}
             day={day}
@@ -266,14 +294,31 @@ export default async function DayReleaseArticlePage({
             label={copy.pick}
             articlePath={`/${lang}/topreleases/dia`}
             headline={longReleaseDay(day, lang)}
+            kicker={copy.section}
             todayBadge={day === today ? copy.today : null}
             prevHref={prev >= MIN_RELEASE_DAY ? `/${lang}/topreleases/dia/${prev}` : null}
             nextHref={day < today ? `/${lang}/topreleases/dia/${next}` : null}
             prevLabel={copy.prev}
             nextLabel={copy.next}
           />
-          <h1 className="text-3xl sm:text-5xl font-black leading-[0.95] mb-3" style={display}>{copy.title}</h1>
-          <div className="mb-5">
+          <p className="mb-5 max-w-2xl text-[18px] leading-relaxed sm:text-[20px]" style={{ fontFamily: "'Special Elite', monospace" }}>
+            {dayReleaseBlurb(lang, picks.length, rest.length)}
+          </p>
+          <div className="mb-6 grid max-w-md grid-cols-2 gap-3">
+            <div className="border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 py-3 shadow-[4px_4px_0_var(--ink)]">
+              <div className="text-3xl font-black leading-none" style={display}>{picks.length}</div>
+              <div className="mt-1 text-[11px] font-black uppercase tracking-[0.12em]" style={mono}>
+                {lang === 'es' ? 'En la selección' : 'In the pick'}
+              </div>
+            </div>
+            <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] px-3 py-3 shadow-[4px_4px_0_var(--ink)]">
+              <div className="text-3xl font-black leading-none" style={display}>{picks.length + rest.length}</div>
+              <div className="mt-1 text-[11px] font-black uppercase tracking-[0.12em]" style={mono}>
+                {lang === 'es' ? 'Ese día' : 'That day'}
+              </div>
+            </div>
+          </div>
+          <div className="mb-2">
             <ShareButtons
               url={`/${lang}/topreleases/dia/${day}`}
               title={`${articleTitle} | Optimal Breaks`}
@@ -281,14 +326,6 @@ export default async function DayReleaseArticlePage({
               pageReel={dayReelOf(lang, day, articleTitle, articleBlurb, picks, rest, mentions)}
             />
           </div>
-          <p className="text-[16px] leading-relaxed mb-2" style={{ fontFamily: "'Special Elite', monospace" }}>
-            {dayReleaseBlurb(lang, picks.length, rest.length)}
-          </p>
-          {named.length > 0 ? (
-            <p className="text-[15px] leading-relaxed text-[var(--ink)]/80 mb-6" style={{ fontFamily: "'Special Elite', monospace" }}>
-              {pickSentence}.
-            </p>
-          ) : null}
 
           <DigestTrackRows
             groupKey={`topreleases:day:${day}`}
