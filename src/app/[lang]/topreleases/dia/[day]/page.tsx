@@ -22,6 +22,8 @@ import {
 } from '@/lib/fortnight-live'
 import type { Locale } from '@/lib/i18n-config'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
+import { blogPostingJsonLd, breadcrumbJsonLd, detailPageMetadata, SITE_URL, siteNameForLang } from '@/lib/seo'
+import { publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import type { FortnightDigestTrack } from '@/types/database'
@@ -48,10 +50,35 @@ export async function generateMetadata({
 }: {
   params: Promise<{ lang: Locale; day: string }>
 }): Promise<Metadata> {
-  const { lang, day } = await params
+  const { lang, day: raw } = await params
   const copy = DAY_COPY[lang === 'en' ? 'en' : 'es']
-  const when = /^\d{4}-\d{2}-\d{2}$/.test(day) ? longReleaseDay(day, lang === 'en' ? 'en' : 'es') : day
-  return { title: `${copy.title} · ${when}` }
+  const safeLang = lang === 'en' ? 'en' : 'es'
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return { title: copy.title, robots: { index: false, follow: true } }
+  }
+  const today = todayMadrid()
+  const day = clampReleaseDay(raw, today)
+  const when = longReleaseDay(day, safeLang)
+  const title = `${copy.title} · ${when}`
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
+  const { picks, rest } = await loadDayReleases(supabase, day)
+  const blurb = dayReleaseBlurb(safeLang, picks.length, rest.length)
+  const named = [...picks, ...rest].slice(0, 4).map(trackLine)
+  const description = named.length ? `${blurb} ${joinList(named, safeLang)}.` : blurb
+  const image = publicOgThirdsUrl([...picks, ...rest].map((t) => t.artwork_url))
+  const names = [...picks, ...rest].flatMap((t) => splitArtistDisplayLine(t.artists))
+  return detailPageMetadata(
+    safeLang,
+    `/topreleases/dia/${day}`,
+    await siteNameForLang(safeLang),
+    title,
+    description,
+    'article',
+    image,
+    [copy.title, 'breakbeat', when, ...names.slice(0, 12)],
+    false,
+    { 'article:published_time': `${day}T12:00:00+01:00` },
+  )
 }
 
 export default async function DayReleaseArticlePage({
@@ -99,9 +126,37 @@ export default async function DayReleaseArticlePage({
     : joinList(named, lang)
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
+  const when = longReleaseDay(day, lang)
+  const articleTitle = `${copy.title} · ${when}`
+  const articleBlurb = dayReleaseBlurb(lang, picks.length, rest.length)
+  const articleDescription = named.length ? `${articleBlurb} ${pickSentence}.` : articleBlurb
+  const articleImage = publicOgThirdsUrl(dayTracks.map((t) => t.artwork_url))
+  const articleLd = blogPostingJsonLd(
+    {
+      slug: `dia/${day}`,
+      title: articleTitle,
+      description: articleDescription,
+      datePublished: `${day}T12:00:00+01:00`,
+      dateModified: `${day}T12:00:00+01:00`,
+      authorName: 'Optimal Breaks',
+      imageUrl: articleImage,
+      category: copy.section,
+      tags: [...artistNames].slice(0, 12),
+      inLanguage: lang,
+      section: 'topreleases',
+    },
+    lang,
+  )
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: lang === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
+    { name: lang === 'es' ? 'Novedades' : 'Releases', url: `${SITE_URL}/${lang}/topreleases` },
+    { name: articleTitle, url: `${SITE_URL}/${lang}/topreleases/dia/${day}` },
+  ])
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10">
         <Link href={back} className="inline-flex mb-4 text-[12px] font-black tracking-wider text-[var(--ink)] no-underline hover:text-[var(--red)]" style={mono}>
           {copy.back}
