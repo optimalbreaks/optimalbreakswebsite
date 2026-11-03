@@ -2204,8 +2204,8 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 }
 
 // ===================== DÍA (artículo /topreleases/dia) =====================
-// Primero el texto («lanzamientos de hoy»). Luego una card por tema de la
-// selección (hasta 5). El audio son los trozos elegidos, uno por card.
+// Primero el texto («lanzamientos de hoy»), ya con el tema más destacado
+// sonando. Luego una card por tema. El último sigue hasta el final del vídeo.
 export const DAY_INTRO = 5
 export const DAY_REST = 5.4
 export const DAY_OUTRO = 4.6
@@ -2213,6 +2213,27 @@ export const DAY_OUTRO = 4.6
 export function dayCardSeconds(n: number): number {
   if (n <= 1) return 12
   return 10
+}
+
+/**
+ * Dónde suena cada tema con preview. El primero arranca en el segundo 0
+ * (cubre la entrada) y el último llega hasta el final (carátulas y despedida).
+ * Entre medias no queda un hueco mudo: cada uno llega hasta el siguiente.
+ */
+export function dayAudioSlots(
+  count: number,
+  audible: number[],
+  cardSec: number,
+  hasRest: boolean,
+): { i: number; at: number; seconds: number }[] {
+  if (!audible.length || count <= 0) return []
+  const total = dayReelDuration(count, hasRest)
+  return audible.map((i, k) => {
+    const at = k === 0 ? 0 : DAY_INTRO + i * cardSec
+    const next = audible[k + 1]
+    const end = next == null ? total : DAY_INTRO + next * cardSec
+    return { i, at, seconds: Math.max(0.2, end - at) }
+  })
 }
 
 export function dayReelDuration(cards: number, hasRest: boolean): number {
@@ -2233,7 +2254,7 @@ export type DayAnim = {
   outCount: number
   cards: DayCardAnim[]
   rest: (Img | null)[]
-  /** Fragmentos elegidos, cada uno mientras su card está en pantalla. */
+  /** Fragmentos elegidos. El primero cubre la entrada y el último, el final. */
   sound: {
     env: Float32Array | null
     cues: { a: number; b: number; title: string; artists: string; img: Img | null }[]

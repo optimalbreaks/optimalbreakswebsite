@@ -17,29 +17,31 @@ import {
 } from '@/lib/share-track'
 import { aiShareCaption, buildPageVideoCaption, prependInstagramMentions, type SharePlatform } from '@/lib/share-caption'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
-import { DAY_INTRO, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
+import { dayAudioSlots, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
 import type { ShareAudioSegment } from '@/lib/share-audio'
 type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
 
-/** Hasta 5 destacados con preview: un selector por tema, el trozo cabe en su card. */
+/** Hasta 5 destacados con preview. El primero suena desde el segundo 0. */
 function dayShareClips(day: DayReelInput) {
   const picks = day.picks.slice(0, 5)
   const cardSec = dayCardSeconds(picks.length)
-  const total = dayReelDuration(picks.length, day.rest.length > 0)
-  const clips: { src: string; key: string; label: string; seconds: number; at: number; total: number }[] = []
-  picks.forEach((p, i) => {
-    if (!p.audio) return
-    clips.push({
-      src: p.audio,
-      key: `day:${day.date}:${i}:${p.audio}`,
+  const hasRest = day.rest.length > 0
+  const total = dayReelDuration(picks.length, hasRest)
+  const audible = picks.flatMap((p, i) => (p.audio ? [i] : []))
+  const slots = dayAudioSlots(picks.length, audible, cardSec, hasRest)
+  if (!slots.length) return null
+  return slots.map((slot) => {
+    const p = picks[slot.i]
+    return {
+      src: p.audio as string,
+      key: `day:${day.date}:${slot.i}:${p.audio}`,
       label: `${p.title} — ${p.artists}`,
-      seconds: cardSec,
-      at: DAY_INTRO + i * cardSec,
+      seconds: slot.seconds,
+      at: slot.at,
       total,
-    })
+    }
   })
-  return clips.length ? clips : null
 }
 /** JSON de `/api/og/story?play=mix:…&format=json`. */
 type SetVideoData = ReelData & { eventName?: string | null; place?: string | null }

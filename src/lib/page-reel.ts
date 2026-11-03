@@ -14,7 +14,7 @@
 // piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animAlbum, animBlog, animDay, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DAY_INTRO, dayCardSeconds, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
+import { animAlbum, animBlog, animDay, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, dayAudioSlots, dayCardSeconds, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
 
 export type EventsReelEvent = {
   name: string
@@ -228,17 +228,18 @@ async function renderDayReel(
     img: imgs[i] ?? null,
   }))
   const restImgs = rest.map((_, i) => imgs[picks.length + i] ?? null)
-  const cues = picks.flatMap((p, i) => (
-    p.audio
-      ? [{
-          a: DAY_INTRO + i * cardSec,
-          b: DAY_INTRO + (i + 1) * cardSec,
-          title: p.title,
-          artists: p.artists,
-          img: imgs[i] ?? null,
-        }]
-      : []
-  ))
+  const audible = picks.flatMap((p, i) => (p.audio ? [i] : []))
+  const slots = dayAudioSlots(picks.length, audible, cardSec, rest.length > 0)
+  const cues = slots.map((slot) => {
+    const p = picks[slot.i]
+    return {
+      a: slot.at,
+      b: slot.at + slot.seconds,
+      title: p.title,
+      artists: p.artists,
+      img: imgs[slot.i] ?? null,
+    }
+  })
   const data = {
     es: day.es,
     date: day.date,
