@@ -2313,39 +2313,61 @@ function dayCoverStrip(
   })
 }
 
-function dayHookCard(
-  ctx: C, x: number, y: number, w: number, h: number, es: boolean, outCount: number, shown: number,
+function dayOpeningList(
+  ctx: C, x: number, y: number, w: number, h: number,
+  es: boolean, outCount: number, cards: DayCardAnim[], wide: boolean,
 ) {
   box(ctx, x, y, w, h, YELLOW, INK, 12, 6)
-  const pad = 36
+  const pad = wide ? 28 : 32
   const maxW = w - pad * 2
-  let cy = y + Math.min(72, h * 0.16)
+  let cy = y + (wide ? 36 : 44)
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = RED
-  ctx.font = MONO(Math.min(28, Math.max(16, h * 0.07)))
-  spaced(ctx, 'BREAKBEAT', x + pad, cy, 4)
-  const lines = es ? [`${outCount} LANZAMIENTOS`, 'SALEN HOY'] : [`${outCount} RELEASES`, 'OUT TODAY']
-  let qs = Math.min(h > 500 ? 84 : 64, h * 0.2)
-  for (const line of lines) {
-    ctx.font = HEAD(qs)
-    while (ctx.measureText(line).width > maxW && qs > 28) {
-      qs -= 2
-      ctx.font = HEAD(qs)
-    }
-  }
+  ctx.font = MONO(wide ? 18 : 22)
+  spaced(ctx, 'BREAKBEAT', x + pad, cy, 3)
+  cy += wide ? 8 : 10
+  const head = es ? `${outCount} LANZAMIENTOS SALEN HOY` : `${outCount} RELEASES OUT TODAY`
+  let hs = wide ? 32 : 40
   ctx.fillStyle = INK
-  for (const line of lines) {
-    cy += qs * 1.12
-    ctx.font = HEAD(qs)
-    ctx.fillText(line, x + pad, cy)
+  ctx.font = HEAD(hs)
+  while (ctx.measureText(head).width > maxW && hs > 20) {
+    hs -= 2
+    ctx.font = HEAD(hs)
   }
-  const loop = shown > 0 && shown < outCount
-    ? (es ? `OYES ${shown}. AL FINAL, EL RESTO.` : `YOU HEAR ${shown}. THE REST IS AT THE END.`)
-    : (es ? 'AL FINAL, DÓNDE OÍRLOS TODOS.' : 'AT THE END, WHERE TO HEAR THEM ALL.')
-  ctx.font = MONO(Math.min(26, Math.max(16, h * 0.06)))
-  ctx.fillStyle = INK
-  ctx.fillText(fit(ctx, loop, (z) => MONO(z), maxW, 26, 14), x + pad, Math.min(cy + 64, y + h - 36))
+  cy += hs
+  ctx.fillText(head, x + pad, cy)
+  const rows = cards.slice(0, 5)
+  const extra = Math.max(0, outCount - rows.length)
+  const foot = extra > 0 ? (wide ? 28 : 36) : 8
+  const top = cy + (wide ? 16 : 22)
+  const bottom = y + h - pad - foot
+  const gap = wide ? 8 : 12
+  const rowH = rows.length ? Math.floor((bottom - top - gap * (rows.length - 1)) / rows.length) : 0
+  rows.forEach((card, i) => {
+    const ry = top + i * (rowH + gap)
+    const cs = Math.max(36, Math.min(rowH - 4, wide ? 72 : 96))
+    const iy = ry + Math.max(0, (rowH - cs) / 2)
+    cover(ctx, card.img, x + pad, iy, cs, 3)
+    const tx = x + pad + cs + 14
+    const tw = Math.max(40, w - pad - (tx - x))
+    const base = iy + Math.max(16, cs * 0.32)
+    ctx.fillStyle = RED
+    ctx.font = MONO(wide ? 13 : 15)
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    spaced(ctx, String(i + 1).padStart(2, '0'), tx, base, 2)
+    ctx.fillStyle = INK
+    ctx.fillText(fit(ctx, card.title.toUpperCase(), HEAD, tw, wide ? 20 : 26, 12), tx, base + (wide ? 22 : 28))
+    ctx.fillText(fit(ctx, card.artists, (z) => MONO(z), tw, wide ? 14 : 16, 11), tx, base + (wide ? 42 : 52))
+  })
+  if (extra > 0) {
+    ctx.fillStyle = INK
+    ctx.font = MONO(wide ? 16 : 20)
+    ctx.textAlign = 'left'
+    const more = es ? `Y ${extra} MÁS EN LA WEB` : `AND ${extra} MORE ON THE SITE`
+    ctx.fillText(more, x + pad, y + h - pad)
+  }
 }
 
 /** Cartel final. Logo y «mándaselo» solo aquí: el gancho no lleva marca. */
@@ -2505,16 +2527,16 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
     const bottom = L.foot.y - 20
     const count = Math.max(d.outCount, n)
     if (V) {
-      const cs = Math.min(860, Math.floor((bottom - top) * 0.48))
+      const cs = Math.min(520, Math.floor((bottom - top) * 0.34))
       const cx = (W - cs) / 2
       cover(ctx, hero?.img ?? null, cx, top, cs, 8)
-      const y2 = top + cs + 24
-      dayHookCard(ctx, 120, y2, 840, Math.max(180, bottom - y2), es, count, n)
+      const y2 = top + cs + 20
+      dayOpeningList(ctx, 70, y2, 940, Math.max(220, bottom - y2), es, count, d.cards, false)
     } else {
-      const cs = Math.min(680, bottom - top)
+      const cs = Math.min(520, bottom - top)
       const cy = top + Math.max(0, (bottom - top - cs) / 2)
       cover(ctx, hero?.img ?? null, 80, cy, cs, 8)
-      dayHookCard(ctx, 80 + cs + 36, top, W - 196 - cs, bottom - top, es, count, n)
+      dayOpeningList(ctx, 80 + cs + 28, top, W - 188 - cs, bottom - top, es, count, d.cards, true)
     }
   } else if (sc.k === 'card') {
     const card = d.cards[sc.i]
