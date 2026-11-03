@@ -55,7 +55,7 @@ const KIND_ES: Record<Kind, string> = {
     'Cierra preguntando cuál fue su tema del periodo o si falta alguno.',
   ].join('\n'),
   day: [
-    'El artículo de los lanzamientos de un día concreto (Optimal Breaks, /topreleases/dia). El vídeo abre con el texto «lanzamientos de hoy» y la fecha. Luego, una card por tema de la selección de Optimal Breaks (los que la casa ha guardado con «+»), y suena ese tema. Si no hay selección, las cards son los temas que salen ese día. Al final, las carátulas del resto.',
+    'El artículo de los lanzamientos de un día concreto (Optimal Breaks, /topreleases/dia). El vídeo abre con el texto «lanzamientos de hoy» y la fecha. Luego, una card por tema de la selección de Optimal Breaks (hasta 5; los que la casa ha guardado con «+»), y suena un trozo de cada uno. El sexto, si lo hay, no entra en el vídeo. Si no hay selección, las cards son los temas que salen ese día. Al final, las carátulas del resto.',
     'Nombra la fecha y los temas de `picks` con su artista y sello. Di cuántos salen en total (`outToday`). Si `selection` es false, no digas que hay una selección de la casa. Cierra preguntando cuál meterían en un set.',
   ].join('\n'),
 }
@@ -80,7 +80,7 @@ const KIND_EN: Record<Kind, string> = {
     'Close by asking what their track of the period was or what is missing.',
   ].join('\n'),
   day: [
-    "The article for one day's releases (Optimal Breaks, /topreleases/dia). The video opens with the words “today's releases” and the date. Then one card per track in the Optimal Breaks selection (the ones the house saved with «+»), and that track plays. If there is no selection, the cards are the tracks out that day. The other covers close the video.",
+    "The article for one day's releases (Optimal Breaks, /topreleases/dia). The video opens with the words “today's releases” and the date. Then one card per track in the Optimal Breaks selection (up to 5; the ones the house saved with «+»), and a slice of each one plays. A sixth, if there is one, stays out of the video. If there is no selection, the cards are the tracks out that day. The other covers close the video.",
     'Name the date and the `picks` with artist and label. Say how many are out in total (`outToday`). If `selection` is false, do not claim there is a house selection. Close by asking which one they would put in a set.',
   ].join('\n'),
 }

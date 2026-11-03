@@ -15,11 +15,11 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { copyShareLink } from '@/lib/share-track'
 import type { ReelFormat, ReelResult } from '@/lib/reel-renderer'
 import type { SharePlatform } from '@/lib/share-caption'
-import type { ShareAudioSegment } from '@/lib/share-audio'
+import { stitchShareSegments, type ShareAudioSegment } from '@/lib/share-audio'
 import type { Locale } from '@/lib/i18n-config'
 import AudioSegmentPicker from './AudioSegmentPicker'
 
@@ -38,7 +38,12 @@ export interface VideoShareButtonsProps {
   /** Tema que suena (URL del mismo origen) y segundos = duración del vídeo. Abre el selector. */
   audio?: { src: string; key: string; label: string; seconds: number } | null
   /**
-   * El vídeo ya lleva audio propio (el del día lo cose por temas). No abre el selector.
+   * Varios temas, un selector detrás de otro (el día, hasta 5 destacados).
+   * Cada `seconds` es el trozo de esa card; `at` es el segundo en que entra en el vídeo.
+   */
+  clips?: { src: string; key: string; label: string; seconds: number; at: number; total: number }[] | null
+  /**
+   * El vídeo ya lleva audio propio. No abre el selector.
    * Sustituye el aviso «sin audio».
    */
   audioHint?: { es: string; en: string } | null
@@ -46,9 +51,12 @@ export interface VideoShareButtonsProps {
   tone?: 'dark' | 'light'
 }
 
-export default function VideoShareButtons({ lang, title, fileBase, what, makeVideo, makeCaption, audio, audioHint, tone = 'dark' }: VideoShareButtonsProps) {
+export default function VideoShareButtons({ lang, title, fileBase, what, makeVideo, makeCaption, audio, clips, audioHint, tone = 'dark' }: VideoShareButtonsProps) {
   const es = lang === 'es'
+  const queue = clips && clips.length > 0 ? clips : null
   const [picker, setPicker] = useState<'reel' | 'fb' | null>(null)
+  const [clipAt, setClipAt] = useState(0)
+  const pickedRef = useRef<(ShareAudioSegment | null)[]>([])
   const [reelState, setReelState] = useState<VideoState>('idle')
   const [reelPct, setReelPct] = useState(0)
   const [reelFile, setReelFile] = useState<File | null>(null)
@@ -57,8 +65,10 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
   const [fbPct, setFbPct] = useState(0)
   const busy = reelState === 'busy' || fbState === 'busy' || picker != null
   const whatTxt = es ? what.es : what.en
-  const audioTxt = audio
-    ? (es ? 'con el audio que elijas' : 'with the audio you pick')
+  const audioTxt = audio || queue
+    ? (queue && queue.length > 1
+        ? (es ? `eliges el fragmento de hasta ${queue.length} temas` : `you pick a fragment of up to ${queue.length} tracks`)
+        : (es ? 'con el audio que elijas' : 'with the audio you pick'))
     : audioHint
       ? (es ? audioHint.es : audioHint.en)
       : es ? 'sin audio' : 'no audio'
@@ -116,6 +126,11 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
       finish(setReelState)
       return
     }
+    if (queue) {
+      pickedRef.current = []
+      setClipAt(0)
+      return setPicker('reel')
+    }
     if (audio) return setPicker('reel')
     await renderReel(null)
   }
@@ -147,6 +162,11 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
 
   const onFacebook = async () => {
     if (busy) return
+    if (queue) {
+      pickedRef.current = []
+      setClipAt(0)
+      return setPicker('fb')
+    }
     if (audio) return setPicker('fb')
     await renderFacebook(null)
   }
@@ -167,13 +187,45 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
     }
   }
 
+  const finishQueue = (kind: 'reel' | 'fb', taken: (ShareAudioSegment | null)[]) => {
+    const stitched = queue
+      ? stitchShareSegments(queue[0].total, queue.map((c) => ({ at: c.at, seconds: c.seconds })), taken)
+      : taken[0] ?? null
+    setPicker(null)
+    setClipAt(0)
+    if (kind === 'reel') void renderReel(stitched)
+    else void renderFacebook(stitched)
+  }
+
   /** «Generar» en el selector: sigue el botón que lo abrió, con ese fragmento. */
   const onPickerConfirm = (segment: ShareAudioSegment | null) => {
     const kind = picker
+    if (!kind) return
+    if (queue) {
+      const taken = [...pickedRef.current, segment]
+      pickedRef.current = taken
+      if (taken.length < queue.length) {
+        setClipAt(taken.length)
+        return
+      }
+      finishQueue(kind, taken)
+      return
+    }
     setPicker(null)
     if (kind === 'reel') void renderReel(segment)
-    else if (kind === 'fb') void renderFacebook(segment)
+    else void renderFacebook(segment)
   }
+
+  const closePicker = () => {
+    pickedRef.current.forEach((s) => {
+      if (s?.ctx) void s.ctx.close().catch(() => undefined)
+    })
+    pickedRef.current = []
+    setClipAt(0)
+    setPicker(null)
+  }
+
+  const activeClip = queue?.[clipAt]
 
   const cls = (st: VideoState) =>
     `inline-flex items-center justify-center h-9 min-w-9 px-3 border-2 transition-all duration-150 cursor-pointer disabled:cursor-wait ${
@@ -244,16 +296,27 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
       >
         {fbState === 'busy' ? `${fbPct}%` : fbState === 'done' ? '✓ F' : fbState === 'error' ? '✕' : 'F'}
       </button>
-      {picker && audio ? (
+      {picker && (activeClip || audio) ? (
         <AudioSegmentPicker
+          key={activeClip ? `${activeClip.key}:${clipAt}` : audio?.key}
           lang={(es ? 'es' : 'en') as Locale}
-          audioUrl={audio.src}
-          segmentKey={audio.key}
-          segmentSec={audio.seconds}
-          trackTitle={audio.label}
-          confirmLabel={picker === 'reel' ? (es ? 'Generar reel' : 'Generate reel') : es ? 'Generar vídeo' : 'Generate video'}
+          audioUrl={(activeClip ?? audio)!.src}
+          segmentKey={(activeClip ?? audio)!.key}
+          segmentSec={(activeClip ?? audio)!.seconds}
+          trackTitle={
+            activeClip && queue && queue.length > 1
+              ? `${clipAt + 1}/${queue.length} · ${activeClip.label}`
+              : (activeClip ?? audio)!.label
+          }
+          confirmLabel={
+            activeClip && queue && clipAt < queue.length - 1
+              ? (es ? `Siguiente (${clipAt + 1}/${queue.length})` : `Next (${clipAt + 1}/${queue.length})`)
+              : picker === 'reel'
+                ? (es ? 'Generar reel' : 'Generate reel')
+                : es ? 'Generar vídeo' : 'Generate video'
+          }
           onConfirm={onPickerConfirm}
-          onCancel={() => setPicker(null)}
+          onCancel={closePicker}
         />
       ) : null}
     </>

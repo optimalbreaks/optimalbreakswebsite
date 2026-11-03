@@ -14,7 +14,7 @@
 // piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animAlbum, animBlog, animDay, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
+import { animAlbum, animBlog, animDay, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DAY_INTRO, dayCardSeconds, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
 
 export type EventsReelEvent = {
   name: string
@@ -215,6 +215,7 @@ async function renderDayReel(
   await loadFonts()
   const picks = day.picks.slice(0, 5)
   const rest = day.rest.slice(0, 8)
+  const cardSec = dayCardSeconds(picks.length)
   const total = dayReelDuration(picks.length, rest.length > 0)
   const urls = [...picks.map((p) => p.artwork), ...rest.map((r) => r.artwork)]
   const imgs = await loadArtworks(urls)
@@ -225,8 +226,17 @@ async function renderDayReel(
     img: imgs[i] ?? null,
   }))
   const restImgs = rest.map((_, i) => imgs[picks.length + i] ?? null)
-  const lead = picks.find((p) => p.audio) ?? picks[0]
-  const leadImg = imgs[Math.max(0, picks.findIndex((p) => p === lead))] ?? null
+  const cues = picks.flatMap((p, i) => (
+    p.audio
+      ? [{
+          a: DAY_INTRO + i * cardSec,
+          b: DAY_INTRO + (i + 1) * cardSec,
+          title: p.title,
+          artists: p.artists,
+          img: imgs[i] ?? null,
+        }]
+      : []
+  ))
   const data = {
     es: day.es,
     date: day.date,
@@ -234,9 +244,7 @@ async function renderDayReel(
     outCount: day.outCount,
     cards,
     rest: restImgs,
-    sound: audio && lead
-      ? { title: lead.title, artists: lead.artists, img: leadImg, env: audioEnvelope(audio, total, 30) }
-      : null,
+    sound: audio && cues.length ? { env: audioEnvelope(audio, total, 30), cues } : null,
   }
   return encodeCanvasVideo(W, H, total, 30, (c, t) => animDay(c, W, H, data, t), onProgress, audio)
 }

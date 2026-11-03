@@ -17,21 +17,29 @@ import {
 } from '@/lib/share-track'
 import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
-import { dayReelDuration } from '@/lib/page-reel-design'
+import { DAY_INTRO, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
 import type { ShareAudioSegment } from '@/lib/share-audio'
 type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
 
-/** Igual que el audio de un mes: un tema, el fragmento lo elige R/F. */
-function dayShareAudio(day: DayReelInput) {
-  const pick = day.picks.find((p) => p.audio)
-  if (!pick?.audio) return null
-  return {
-    src: pick.audio,
-    key: `day:${day.date}:${pick.audio}`,
-    label: `${pick.title} — ${pick.artists}`,
-    seconds: dayReelDuration(Math.min(day.picks.length, 5), day.rest.length > 0),
-  }
+/** Hasta 5 destacados con preview: un selector por tema, el trozo cabe en su card. */
+function dayShareClips(day: DayReelInput) {
+  const picks = day.picks.slice(0, 5)
+  const cardSec = dayCardSeconds(picks.length)
+  const total = dayReelDuration(picks.length, day.rest.length > 0)
+  const clips: { src: string; key: string; label: string; seconds: number; at: number; total: number }[] = []
+  picks.forEach((p, i) => {
+    if (!p.audio) return
+    clips.push({
+      src: p.audio,
+      key: `day:${day.date}:${i}:${p.audio}`,
+      label: `${p.title} — ${p.artists}`,
+      seconds: cardSec,
+      at: DAY_INTRO + i * cardSec,
+      total,
+    })
+  })
+  return clips.length ? clips : null
 }
 /** JSON de `/api/og/story?play=mix:…&format=json`. */
 type SetVideoData = ReelData & { eventName?: string | null; place?: string | null }
@@ -422,7 +430,8 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           }
           makeVideo={makeVideo}
           makeCaption={makeCaption}
-          audio={pageReel?.day ? dayShareAudio(pageReel.day) : pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
+          audio={pageReel?.day ? null : pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
+          clips={pageReel?.day ? dayShareClips(pageReel.day) : null}
         />
       )}
 

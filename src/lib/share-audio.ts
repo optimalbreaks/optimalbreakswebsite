@@ -175,6 +175,53 @@ export function segmentChannels(buffer: AudioBuffer, start: number, durationSec:
   return out
 }
 
+/**
+ * Pega varios fragmentos ya elegidos en un solo audio, cada uno en su segundo
+ * `at`. El codificador de R/F solo admite un buffer: esto es ese buffer.
+ * El `ctx` que se conserva es el del último toque (el de «Generar»), el mismo
+ * que usa el resto de vídeos si hay que grabar en tiempo real.
+ */
+export function stitchShareSegments(
+  totalSec: number,
+  slots: { at: number; seconds: number }[],
+  segments: (ShareAudioSegment | null)[],
+): ShareAudioSegment | null {
+  const first = segments.find((s): s is ShareAudioSegment => !!s?.buffer)
+  if (!first || !(totalSec > 0)) return null
+  const sr = first.buffer.sampleRate
+  const length = Math.max(1, Math.round(totalSec * sr))
+  const master = new OfflineAudioContext(2, 1, sr).createBuffer(2, length, sr)
+  const fadeInN = Math.round(0.05 * sr)
+  const fadeOutN = Math.round(0.12 * sr)
+  slots.forEach((slot, i) => {
+    const seg = segments[i]
+    if (!seg?.buffer) return
+    const srcSr = seg.buffer.sampleRate
+    const from = Math.round(Math.max(0, seg.start) * srcSr)
+    const n = Math.round(slot.seconds * sr)
+    const at = Math.round(Math.max(0, slot.at) * sr)
+    for (let c = 0; c < 2; c++) {
+      const src = seg.buffer.getChannelData(Math.min(c, seg.buffer.numberOfChannels - 1))
+      const dst = master.getChannelData(c)
+      const len = Math.min(n, Math.max(0, dst.length - at))
+      for (let j = 0; j < len; j++) {
+        const si = srcSr === sr ? from + j : from + Math.floor((j * srcSr) / sr)
+        if (si < 0 || si >= src.length) continue
+        let g = 1
+        if (j < fadeInN) g *= j / Math.max(1, fadeInN)
+        const tail = len - 1 - j
+        if (tail < fadeOutN) g *= tail / Math.max(1, fadeOutN)
+        dst[at + j] = src[si] * g
+      }
+    }
+  })
+  const ctx = [...segments].reverse().find((s) => s?.ctx)?.ctx ?? null
+  segments.forEach((s) => {
+    if (s?.ctx && s.ctx !== ctx) void s.ctx.close().catch(() => undefined)
+  })
+  return { buffer: master, start: 0, ctx }
+}
+
 function floatToI16(x: number): number {
   const s = x < -1 ? -1 : x > 1 ? 1 : x
   return s < 0 ? Math.round(s * 32768) : Math.round(s * 32767)
