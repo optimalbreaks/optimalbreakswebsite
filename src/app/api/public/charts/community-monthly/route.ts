@@ -52,6 +52,7 @@ import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import {
   buildFullArtistSlugMap,
   normalizeArtistKey,
+  splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { countryIsoCodesFromCode } from '@/lib/seo'
@@ -340,6 +341,30 @@ function artistsToString(a: unknown): string {
     .map((x) => (x && typeof x === 'object' ? (x as { name?: string }).name : x))
     .filter(Boolean)
     .join(', ')
+}
+
+/** Une créditos sin duplicar (el primer save ya no tapa un collab que llega después). */
+function unionArtistCredit(current: string, extra: string): string {
+  const seen = new Set<string>()
+  const out: string[] = []
+  const push = (name: string) => {
+    const n = name.trim()
+    const key = normalizeArtistKey(n)
+    if (!n || !key || seen.has(key)) return
+    seen.add(key)
+    out.push(n)
+  }
+  for (const name of splitArtistDisplayLine(current)) push(name)
+  for (const name of splitArtistDisplayLine(extra)) push(name)
+  return out.join(', ')
+}
+
+/**
+ * Línea visible del tema: artistas de la fila más el remixer de `mix_name`.
+ * Un snapshot del Top 10 a veces guarda solo al dueño de la ficha.
+ */
+function displayArtistCredit(artists: string, mixName: string | null): string {
+  return unionArtistCredit(artists, extractRemixerNames(mixName).join(', '))
 }
 
 function normalizeUrl(u: string | null | undefined): string {
@@ -868,13 +893,18 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     )
     const existing = countOnSongChart ? aggByKey.get(key) : undefined
     if (!countOnSongChart) {
-      // El save no entra en el Top de temas. El bucle de artistas sigue.
+      // El save no entra en el Top de temas. Si la fila ya existe, sí completa
+      // el crédito visible (un «+» propio no debe tapar al collab).
+      const row = aggByKey.get(key)
+      if (row) {
+        row.artists = unionArtistCredit(row.artists, displayArtistCredit(meta.artists, meta.mix_name))
+      }
     } else if (!existing) {
       aggByKey.set(key, {
         canonical_key: key,
         title: meta.title,
         mix_name: meta.mix_name,
-        artists: meta.artists,
+        artists: displayArtistCredit(meta.artists, meta.mix_name),
         label: meta.label,
         year: meta.year,
         release_date: meta.release_date,
@@ -909,6 +939,10 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
         if (!existing.first_saved_at || created < existing.first_saved_at) existing.first_saved_at = created
         if (!existing.last_saved_at || created > existing.last_saved_at) existing.last_saved_at = created
       }
+      existing.artists = unionArtistCredit(
+        existing.artists,
+        displayArtistCredit(meta.artists, meta.mix_name),
+      )
       if (!existing.mix_name && meta.mix_name) existing.mix_name = meta.mix_name
       if (!existing.label && meta.label) existing.label = meta.label
       if (!existing.artwork_url && meta.artwork_url) existing.artwork_url = meta.artwork_url

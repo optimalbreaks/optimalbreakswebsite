@@ -485,7 +485,7 @@ function TopStarsRows({ stars, lang }: { stars: Digest['top100']; lang: Locale }
                     <div className="min-w-0 flex-1">
                       <div className="text-[12px] sm:text-[13px] font-bold leading-tight truncate" style={mono}>{trackName(tr)}</div>
                       <div className="text-[10px] sm:text-[11px] text-[var(--dim)] truncate" style={mono}>
-                        {[tr.artists !== a.name ? tr.artists : '', tr.label, tr.release_date ? shortDate(tr.release_date, lang) : ''].filter(Boolean).join(' · ')}
+                        {[tr.artists, tr.label, tr.release_date ? shortDate(tr.release_date, lang) : ''].filter(Boolean).join(' · ')}
                       </div>
                     </div>
                     <SaveButton track={tr} lang={lang} className="shrink-0 !h-[32px] !w-[32px]" />

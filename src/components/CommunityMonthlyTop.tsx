@@ -717,10 +717,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       const isOn = activeArtistRowKey === rowKey && previewPlaying
                       const fallbackHref = t.youtube_url || t.external_url
                       const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? t.mix_name : ''
-                      const subline = [
-                        t.artists !== a.name ? t.artists : '',
-                        t.label,
-                      ].filter(Boolean).join(' · ')
+                      const subline = [t.artists, t.label].filter(Boolean).join(' · ')
                       return (
                         <li
                           key={rowKey}
