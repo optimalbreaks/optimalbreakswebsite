@@ -2313,6 +2313,99 @@ function dayCoverStrip(
   })
 }
 
+function dayHookCard(
+  ctx: C, x: number, y: number, w: number, h: number, es: boolean, outCount: number, shown: number,
+) {
+  box(ctx, x, y, w, h, YELLOW, INK, 12, 6)
+  const pad = 36
+  const maxW = w - pad * 2
+  let cy = y + Math.min(72, h * 0.16)
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = RED
+  ctx.font = MONO(Math.min(28, Math.max(16, h * 0.07)))
+  spaced(ctx, 'BREAKBEAT', x + pad, cy, 4)
+  const lines = es ? [`${outCount} LANZAMIENTOS`, 'SALEN HOY'] : [`${outCount} RELEASES`, 'OUT TODAY']
+  let qs = Math.min(h > 500 ? 84 : 64, h * 0.2)
+  for (const line of lines) {
+    ctx.font = HEAD(qs)
+    while (ctx.measureText(line).width > maxW && qs > 28) {
+      qs -= 2
+      ctx.font = HEAD(qs)
+    }
+  }
+  ctx.fillStyle = INK
+  for (const line of lines) {
+    cy += qs * 1.12
+    ctx.font = HEAD(qs)
+    ctx.fillText(line, x + pad, cy)
+  }
+  const loop = shown > 0 && shown < outCount
+    ? (es ? `OYES ${shown}. AL FINAL, EL RESTO.` : `YOU HEAR ${shown}. THE REST IS AT THE END.`)
+    : (es ? 'AL FINAL, DÓNDE OÍRLOS TODOS.' : 'AT THE END, WHERE TO HEAR THEM ALL.')
+  ctx.font = MONO(Math.min(26, Math.max(16, h * 0.06)))
+  ctx.fillStyle = INK
+  ctx.fillText(fit(ctx, loop, (z) => MONO(z), maxW, 26, 14), x + pad, Math.min(cy + 64, y + h - 36))
+}
+
+/** Cartel final. Logo y «mándaselo» solo aquí: el gancho no lleva marca. */
+function dayEndPoster(ctx: C, x: number, y: number, w: number, h: number, es: boolean) {
+  box(ctx, x, y, w, h, YELLOW, INK, 14, 6)
+  const pad = Math.max(32, Math.min(56, w * 0.05))
+  const maxW = w - pad * 2
+  let cy = y + Math.min(88, h * 0.1)
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = RED
+  ctx.font = MONO(Math.min(26, h * 0.04))
+  spaced(ctx, es ? 'BREAKBEAT · HOY' : 'BREAKBEAT · TODAY', x + pad, cy, 4)
+  const question = es
+    ? ['¿QUIERES ESCUCHAR', 'TODOS LOS LANZAMIENTOS', 'DE HOY?']
+    : ['WANT TO HEAR', 'EVERY RELEASE', 'OUT TODAY?']
+  let qs = Math.min(h > 900 ? 78 : 58, h * 0.09)
+  for (const line of question) {
+    ctx.font = HEAD(qs)
+    while (ctx.measureText(line).width > maxW && qs > 26) {
+      qs -= 2
+      ctx.font = HEAD(qs)
+    }
+  }
+  ctx.fillStyle = INK
+  for (const line of question) {
+    cy += qs * 1.08
+    ctx.font = HEAD(qs)
+    ctx.fillText(line, x + pad, cy)
+  }
+  cy += Math.min(40, h * 0.04)
+  const barH = Math.min(110, Math.max(72, h * 0.1))
+  const web = es ? 'VISITA NUESTRA WEB' : 'VISIT OUR SITE'
+  const bio = 'LINK EN BIO'
+  box(ctx, x + pad, cy, maxW, barH, RED, INK, 8, 4)
+  ctx.fillStyle = '#fff'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = HEAD(Math.min(42, barH * 0.4))
+  ctx.fillText(fit(ctx, web, HEAD, maxW - 36, 42, 20), x + w / 2, cy + barH / 2)
+  cy += barH + 18
+  box(ctx, x + pad, cy, maxW, barH, INK, RED, 8, 4)
+  ctx.fillStyle = YELLOW
+  ctx.fillText(fit(ctx, bio, HEAD, maxW - 36, 48, 22), x + w / 2, cy + barH / 2)
+  cy += barH + Math.min(48, h * 0.05)
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = INK
+  ctx.font = MONO(Math.min(26, h * 0.035))
+  const send = es ? 'MÁNDASELO A QUIEN PINCHA BREAKBEAT' : 'SEND IT TO WHOEVER PLAYS BREAKBEAT'
+  ctx.fillText(fit(ctx, send, (z) => MONO(z), maxW, 26, 13), x + pad, cy + 28)
+  const brand = es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE'
+  const by = y + h - Math.min(72, h * 0.1)
+  obHeader(ctx, x + pad, by, Math.min(36, h * 0.045))
+  ctx.font = MONO(Math.min(20, h * 0.028))
+  ctx.fillStyle = INK
+  ctx.textAlign = 'left'
+  spaced(ctx, brand, x + pad, by + 34, 3)
+}
+
 function dayLayout(V: boolean): FnLayout {
   return V
     ? {
@@ -2407,48 +2500,22 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
 
   ctx.save()
   if (sc.k === 'intro') {
-    fnHeader(
-      ctx, L, lt,
-      d.date,
-      es ? 'LANZAMIENTOS\nDE HOY' : "TODAY'S\nRELEASES",
-      d.selection
-        ? (es ? 'LA SELECCIÓN DE OPTIMAL BREAKS' : 'THE OPTIMAL BREAKS SELECTION')
-        : (es ? 'LO QUE SALE HOY' : 'OUT TODAY'),
-      RED,
-    )
-    const gap = 22
-    const cw = (L.S.w - gap) / 2
-    const ch = V ? 220 : 200
-    const tiles: [string, string, string][] = [
-      [String(d.selection ? d.cards.length : d.outCount), d.selection ? (es ? 'EN LA SELECCIÓN' : 'IN THE PICK') : (es ? 'TEMAS' : 'TRACKS'), RED],
-      [String(d.outCount), es ? 'SALEN HOY' : 'OUT TODAY', INK],
-    ]
-    tiles.forEach(([val, label, col], i) => {
-      const x = L.S.x + i * (cw + gap)
-      const y = L.S.y
-      pop(ctx, ph(lt, 0.45 + i * 0.16, 0.45), x + cw / 2, y + ch / 2, () => {
-        box(ctx, x, y, cw, ch, i === 0 ? YELLOW : '#fff', INK, 10, 5)
-        ctx.fillStyle = col
-        ctx.font = HEAD(ch * 0.42)
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'alphabetic'
-        ctx.fillText(val, x + 28, y + ch * 0.58)
-        ctx.fillStyle = INK
-        ctx.font = MONO(ch * 0.1)
-        spaced(ctx, label, x + 30, y + ch * 0.82, 4)
-      }, (hash(i, 3) - 0.5) * 0.35)
-    })
-    const stripTop = V ? L.S.y + ch + 36 : 530
-    dayCoverStrip(
-      ctx,
-      d.cards.map((c) => c.img),
-      V ? L.S.x : 80,
-      stripTop,
-      V ? L.S.w : W - 160,
-      L.foot.y - 28 - stripTop,
-      !V,
-      lt,
-    )
+    const hero = d.cards[0]
+    const top = V ? 112 : 100
+    const bottom = L.foot.y - 20
+    const count = Math.max(d.outCount, n)
+    if (V) {
+      const cs = Math.min(860, Math.floor((bottom - top) * 0.48))
+      const cx = (W - cs) / 2
+      cover(ctx, hero?.img ?? null, cx, top, cs, 8)
+      const y2 = top + cs + 24
+      dayHookCard(ctx, 120, y2, 840, Math.max(180, bottom - y2), es, count, n)
+    } else {
+      const cs = Math.min(680, bottom - top)
+      const cy = top + Math.max(0, (bottom - top - cs) / 2)
+      cover(ctx, hero?.img ?? null, 80, cy, cs, 8)
+      dayHookCard(ctx, 80 + cs + 36, top, W - 196 - cs, bottom - top, es, count, n)
+    }
   } else if (sc.k === 'card') {
     const card = d.cards[sc.i]
     if (card) {
@@ -2502,49 +2569,10 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
     const stripTop = V ? 540 : 560
     dayCoverStrip(ctx, d.rest.slice(0, 8), V ? L.hx : 80, stripTop, V ? L.hW : W - 160, L.foot.y - 28 - stripTop, !V, lt)
   } else {
-    fnHeader(
-      ctx, L, lt,
-      d.date,
-      es ? 'LÉELO\nHOY' : 'READ IT\nTODAY',
-      es ? 'EL ARTÍCULO DE LAS NOVEDADES' : "TODAY'S RELEASES ARTICLE",
-      RED,
-    )
-    const S = L.S
-    pop(ctx, ph(lt, 0.35, 0.5), S.x + S.w / 2, S.y + 80, () => {
-      const pulse = 1 + 0.04 * beatPulse(t)
-      ctx.save()
-      ctx.translate(S.x + S.w / 2, S.y + 70)
-      ctx.scale(pulse, pulse)
-      ctx.translate(-(S.x + S.w / 2), -(S.y + 70))
-      box(ctx, S.x, S.y, S.w, V ? 140 : 120, RED, INK, 10, 5)
-      ctx.fillStyle = '#fff'
-      ctx.font = HEAD(V ? 36 : 30)
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      const cta = V
-        ? es ? 'VER EL DÍA · ENLACE EN LA BIO' : 'SEE THE DAY · LINK IN BIO'
-        : es ? 'VER EL DÍA · ENLACE EN EL POST' : 'SEE THE DAY · LINK IN POST'
-      ctx.fillText(fit(ctx, cta, HEAD, S.w - 48, V ? 36 : 30, 16), S.x + S.w / 2, S.y + (V ? 72 : 62))
-      ctx.restore()
-    })
-    const stripTop = S.y + (V ? 190 : 170)
-    const stripH = L.foot.y - 72 - stripTop
-    dayCoverStrip(
-      ctx,
-      d.cards.map((c) => c.img),
-      V ? L.hx : 80,
-      stripTop,
-      V ? L.hW : W - 160,
-      stripH,
-      !V,
-      lt,
-      true,
-    )
-    ctx.font = MONO(V ? 26 : 22)
-    ctx.fillStyle = INK
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'alphabetic'
-    spaced(ctx, 'OPTIMALBREAKS.COM', V ? L.hx : 80, L.foot.y - 36, 4)
+    const top = V ? 118 : 108
+    const x = 120
+    const w = V ? 840 : 1680
+    dayEndPoster(ctx, x, top, w, L.foot.y - 20 - top, es)
   }
   ctx.restore()
 

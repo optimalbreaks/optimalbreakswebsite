@@ -221,11 +221,11 @@ export function buildPageVideoCaption(
         ? (es ? `La selección de Optimal Breaks: ${d.excerpt}.` : `The Optimal Breaks selection: ${d.excerpt}.`)
         : (es ? `Hoy salen ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks are out today.`),
       d.first && d.excerpt ? (es ? `Abre con ${d.first}.` : `It opens with ${d.first}.`) : '',
-      es ? '¿Cuál metes en el set? 👇' : 'Which one goes in the set? 👇',
+      es ? 'Mándaselo a quien pincha breakbeat. Link en la bio.' : 'Send it to whoever plays breakbeat. Link in bio.',
       '',
       link,
       '',
-      '#breakbeat #newmusic #newreleases #breaks #electronicmusic',
+      '#breakbeat #breaks #ukbreaks #breakbeatmusic #newreleases',
     ]
       .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
       .join('\n')
