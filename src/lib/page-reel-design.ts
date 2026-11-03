@@ -2566,52 +2566,76 @@ function daySlashDate(iso: string, es: boolean): string {
   return es ? `${m[3]}/${m[2]}/${m[1]}` : `${m[2]}/${m[3]}/${m[1]}`
 }
 
-/** Letras blancas torcidas sobre negro. El mismo carácter no se mueve entre fotogramas. */
-function dayPunkLine(ctx: C, text: string, cx: number, cy: number, size: number, seed: number) {
-  ctx.font = HEAD(size)
-  ctx.fillStyle = '#fff'
-  ctx.textBaseline = 'middle'
-  const chars = [...text]
-  const widths = chars.map((c) => ctx.measureText(c).width)
-  const track = size * 0.06
-  const total = widths.reduce((a, b) => a + b, 0) + track * Math.max(0, chars.length - 1)
-  let x = cx - total / 2
-  chars.forEach((c, i) => {
-    const j = hash(seed * 17 + i, size)
-    const w = widths[i]
-    ctx.save()
-    ctx.translate(x + w / 2, cy + (j - 0.5) * size * 0.28)
-    ctx.rotate((hash(i, seed + 9) - 0.5) * 0.28)
-    ctx.textAlign = 'center'
-    ctx.fillText(c, 0, 0)
-    ctx.restore()
-    x += w + track
-  })
+const STAMP = (s: number) => `400 ${Math.round(s)}px 'Bebas Neue', 'Arial Black', sans-serif`
+
+function dayStampLines(es: boolean, iso: string): string[] {
+  return es
+    ? ['EL', 'BREAKBEAT', 'DEL DIA', daySlashDate(iso, true)]
+    : ['THE', 'BREAKBEAT', 'OF THE DAY', daySlashDate(iso, false)]
 }
 
+/** Agujeros estables: el mismo píxel no cambia entre fotogramas. */
+function distressStamp(ctx: C, W: number, H: number) {
+  const img = ctx.getImageData(0, 0, W, H)
+  const d = img.data
+  const orig = new Uint8ClampedArray(d)
+  const stride = W * 4
+  for (let y = 2; y < H - 2; y++) {
+    for (let x = 2; x < W - 2; x++) {
+      const i = y * stride + x * 4
+      if (orig[i] < 150) continue
+      const n = hash(x, y)
+      const n2 = hash(Math.floor(x / 3), Math.floor(y / 3))
+      const edge = orig[i - 8] < 80 || orig[i + 8] < 80 || orig[i - stride * 2] < 80 || orig[i + stride * 2] < 80
+      if ((edge && n < 0.42) || (!edge && n2 > 0.97 && n > 0.6)) {
+        d[i] = d[i + 1] = d[i + 2] = 0
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+}
+
+let stampCache: { key: string; canvas: HTMLCanvasElement } | null = null
+
 function dayPunkTitle(ctx: C, W: number, H: number, es: boolean, iso: string) {
-  const V = H > W
-  ctx.fillStyle = '#000'
-  ctx.fillRect(0, 0, W, H)
-  const lines = es
-    ? ['EL BREAKBEAT', 'DEL DÍA', daySlashDate(iso, true)]
-    : ['THE BREAKBEAT', 'OF THE DAY', daySlashDate(iso, false)]
-  const maxW = W - (V ? 160 : 240)
-  const sizes = lines.map((line, i) => {
-    let s = i === 2 ? (V ? 78 : 64) : (V ? 108 : 86)
-    ctx.font = HEAD(s)
-    const chars = [...line]
-    const raw = chars.reduce((a, c) => a + ctx.measureText(c).width, 0) + s * 0.06 * Math.max(0, chars.length - 1)
-    if (raw > maxW) s = Math.max(36, Math.floor(s * maxW / raw))
-    return s
-  })
-  const gap = V ? 36 : 22
-  const block = sizes.reduce((a, s) => a + s, 0) + gap * (lines.length - 1)
-  let y = (H - block) / 2 + sizes[0] * 0.55
-  lines.forEach((line, i) => {
-    dayPunkLine(ctx, line, W / 2, y, sizes[i], i + 1)
-    y += sizes[i] + gap
-  })
+  const lines = dayStampLines(es, iso)
+  const key = `${W}x${H}|${lines.join('|')}`
+  if (!stampCache || stampCache.key !== key) {
+    const canvas = document.createElement('canvas')
+    canvas.width = W
+    canvas.height = H
+    const g = canvas.getContext('2d')
+    if (!g) return
+    g.fillStyle = '#000'
+    g.fillRect(0, 0, W, H)
+    const pad = Math.round(W * (H > W ? 0.026 : 0.04))
+    const maxW = W - pad * 2
+    let size = 200
+    g.font = STAMP(size)
+    let widest = 1
+    for (const line of lines) widest = Math.max(widest, g.measureText(line).width)
+    size = Math.min(H * 0.28, size * (maxW / Math.max(1, widest)))
+    g.font = STAMP(size)
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.lineJoin = 'round'
+    g.miterLimit = 2
+    g.lineWidth = Math.max(2, size * 0.05)
+    g.strokeStyle = '#fff'
+    g.fillStyle = '#fff'
+    const lineH = size * 0.86
+    const gap = size * 0.02
+    const block = lineH * lines.length + gap * (lines.length - 1)
+    let y = (H - block) / 2 + lineH / 2
+    for (const line of lines) {
+      g.strokeText(line, W / 2, y)
+      g.fillText(line, W / 2, y)
+      y += lineH + gap
+    }
+    distressStamp(g, W, H)
+    stampCache = { key, canvas }
+  }
+  ctx.drawImage(stampCache.canvas, 0, 0)
 }
 
 export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {

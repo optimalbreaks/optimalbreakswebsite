@@ -182,10 +182,17 @@ async function loadArtworks(urls: (string | null)[], mode: 'cover' | 'poster' = 
 
 async function loadFonts() {
   if (typeof document === 'undefined' || !document.fonts) return
+  try {
+    if (!document.fonts.check("400 80px 'Bebas Neue'")) {
+      const face = new FontFace('Bebas Neue', 'url(/fonts/BebasNeue-Regular.ttf)')
+      document.fonts.add(await face.load())
+    }
+  } catch { /* Arial Black si la fuente no llega */ }
   await Promise.all([
     document.fonts.load("900 60px Unbounded"),
     document.fonts.load("700 30px 'Courier Prime'"),
     document.fonts.load("400 30px 'Courier Prime'"),
+    document.fonts.load("400 200px 'Bebas Neue'"),
   ]).catch(() => undefined)
 }
 
