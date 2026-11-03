@@ -15,7 +15,7 @@ import {
   copyShareLink,
   openFacebookShareDialog,
 } from '@/lib/share-track'
-import { aiShareCaption, buildPageVideoCaption, dayReelTense, prependInstagramMentions, type SharePlatform } from '@/lib/share-caption'
+import { aiShareCaption, appendInstagramMentions, buildPageVideoCaption, dayReelTense, type SharePlatform } from '@/lib/share-caption'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
 import { dayAudioSlots, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
@@ -206,7 +206,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           alsoOut: d.rest.length,
         },
       }).then((text) => (
-        platform === 'instagram' && d.selection ? prependInstagramMentions(text, d.mentions ?? []) : text
+        platform === 'instagram' && d.selection ? appendInstagramMentions(text, d.mentions ?? []) : text
       ))
     }
     if (pageReel?.agenda) {

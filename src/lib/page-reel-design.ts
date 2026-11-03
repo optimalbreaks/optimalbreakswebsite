@@ -2389,63 +2389,80 @@ function dayEndPoster(
   ctx: C, x: number, y: number, w: number, h: number, es: boolean,
   tense: { today: boolean; when: string },
 ) {
-  box(ctx, x, y, w, h, YELLOW, INK, 14, 6)
-  const pad = Math.max(32, Math.min(56, w * 0.05))
-  const maxW = w - pad * 2
-  let cy = y + Math.min(88, h * 0.1)
-  ctx.textAlign = 'left'
-  ctx.textBaseline = 'alphabetic'
-  ctx.fillStyle = RED
-  ctx.font = MONO(Math.min(26, h * 0.04))
+  const tall = h > 900
+  const cardW = Math.min(w - 8, tall ? 820 : 1040)
+  const pad = tall ? 52 : 40
+  const inner = cardW - pad * 2
   const kicker = tense.today
     ? (es ? 'BREAKBEAT · HOY' : 'BREAKBEAT · TODAY')
     : `BREAKBEAT · ${tense.when}`
-  spaced(ctx, kicker, x + pad, cy, 4)
   const question = es
     ? ['¿QUIERES ESCUCHAR', 'TODOS LOS LANZAMIENTOS', tense.today ? 'DE HOY?' : `DEL ${tense.when}?`]
     : ['WANT TO HEAR', 'EVERY RELEASE', tense.today ? 'OUT TODAY?' : `FROM ${tense.when}?`]
-  let qs = Math.min(h > 900 ? 78 : 58, h * 0.09)
+  let qs = tall ? 64 : 48
   for (const line of question) {
     ctx.font = HEAD(qs)
-    while (ctx.measureText(line).width > maxW && qs > 26) {
+    while (ctx.measureText(line).width > inner && qs > 22) {
       qs -= 2
       ctx.font = HEAD(qs)
     }
   }
+  const barH = tall ? 88 : 72
+  const logo = tall ? 36 : 28
+  const block =
+    pad + 34 + 36
+    + question.length * qs * 1.12
+    + 40
+    + barH + 16 + barH
+    + 48
+    + 34
+    + 40
+    + logo + 36
+    + pad
+  const cardH = Math.min(h - 8, block)
+  const cardX = x + (w - cardW) / 2
+  const cardY = y + Math.max(0, (h - cardH) / 2)
+  box(ctx, cardX, cardY, cardW, cardH, YELLOW, INK, 14, 6)
+  const cx = cardX + cardW / 2
+  let cy = cardY + pad + 28
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = RED
+  ctx.font = MONO(tall ? 22 : 18)
+  spaced(ctx, kicker, cx, cy, 4, 'center')
+  cy += 36
   ctx.fillStyle = INK
   for (const line of question) {
-    cy += qs * 1.08
+    cy += qs * 1.12
     ctx.font = HEAD(qs)
-    ctx.fillText(line, x + pad, cy)
+    ctx.fillText(line, cx, cy)
   }
-  cy += Math.min(40, h * 0.04)
-  const barH = Math.min(110, Math.max(72, h * 0.1))
+  cy += 40
   const web = es ? 'VISITA NUESTRA WEB' : 'VISIT OUR SITE'
   const bio = 'LINK EN BIO'
-  box(ctx, x + pad, cy, maxW, barH, RED, INK, 8, 4)
+  const barX = cardX + pad
+  box(ctx, barX, cy, inner, barH, RED, INK, 8, 4)
   ctx.fillStyle = '#fff'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.font = HEAD(Math.min(42, barH * 0.4))
-  ctx.fillText(fit(ctx, web, HEAD, maxW - 36, 42, 20), x + w / 2, cy + barH / 2)
-  cy += barH + 18
-  box(ctx, x + pad, cy, maxW, barH, INK, RED, 8, 4)
+  ctx.fillText(fit(ctx, web, HEAD, inner - 36, tall ? 36 : 30, 18), cx, cy + barH / 2)
+  cy += barH + 16
+  box(ctx, barX, cy, inner, barH, INK, RED, 8, 4)
   ctx.fillStyle = YELLOW
-  ctx.fillText(fit(ctx, bio, HEAD, maxW - 36, 48, 22), x + w / 2, cy + barH / 2)
-  cy += barH + Math.min(48, h * 0.05)
-  ctx.textAlign = 'left'
+  ctx.fillText(fit(ctx, bio, HEAD, inner - 36, tall ? 40 : 32, 18), cx, cy + barH / 2)
+  cy += barH + 48
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = INK
-  ctx.font = MONO(Math.min(26, h * 0.035))
   const send = es ? 'MÁNDASELO A QUIEN PINCHA BREAKBEAT' : 'SEND IT TO WHOEVER PLAYS BREAKBEAT'
-  ctx.fillText(fit(ctx, send, (z) => MONO(z), maxW, 26, 13), x + pad, cy + 28)
-  const brand = es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE'
-  const by = y + h - Math.min(72, h * 0.1)
-  obHeader(ctx, x + pad, by, Math.min(36, h * 0.045))
-  ctx.font = MONO(Math.min(20, h * 0.028))
+  ctx.fillText(fit(ctx, send, (z) => MONO(z), inner, tall ? 22 : 18, 13), cx, cy)
+  cy += 56
+  ctx.font = HEAD(logo)
+  const mark = ctx.measureText('OPTIMAL ').width + ctx.measureText('BREAKS').width + 3
+  obHeader(ctx, cx - mark / 2, cy, logo)
+  ctx.font = MONO(tall ? 18 : 16)
   ctx.fillStyle = INK
-  ctx.textAlign = 'left'
-  spaced(ctx, brand, x + pad, by + 34, 3)
+  ctx.textAlign = 'center'
+  spaced(ctx, es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE', cx, cy + logo + 8, 3, 'center')
 }
 
 function dayLayout(V: boolean): FnLayout {

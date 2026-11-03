@@ -57,13 +57,20 @@ export function dayReelTense(iso: string, es: boolean): { today: boolean; when: 
   }
 }
 
-/** La primera línea del pie de Instagram, para que el artista reciba la mención. */
-export function prependInstagramMentions(caption: string, mentions: string[]): string {
-  const line = [...new Set(mentions.map((m) => m.trim()).filter((m) => /^@[A-Za-z0-9._]{1,30}$/.test(m)))].join(' ')
+/** Las menciones van al final del pie, una por línea, para que el artista las reciba. */
+export function appendInstagramMentions(caption: string, mentions: string[]): string {
+  const handles = [...new Set(mentions.map((m) => m.trim()).filter((m) => /^@[A-Za-z0-9._]{1,30}$/.test(m)))]
   const text = caption.trim()
-  if (!line) return text
-  if (text.toLowerCase().startsWith(line.toLowerCase())) return text
-  return `${line}\n\n${text}`
+  if (!handles.length) return text
+  const set = new Set(handles.map((h) => h.toLowerCase()))
+  const lines = text.split('\n')
+  const first = lines[0]?.trim().split(/\s+/).filter(Boolean) ?? []
+  if (first.length && first.every((part) => set.has(part.toLowerCase()))) {
+    lines.shift()
+    while (lines[0] === '') lines.shift()
+  }
+  const body = lines.filter((line) => !set.has(line.trim().toLowerCase())).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  return `${body}\n\n${handles.join('\n')}`
 }
 
 export async function aiShareCaption(opts: {
