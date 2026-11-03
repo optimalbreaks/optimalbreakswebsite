@@ -8,9 +8,11 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { DAY_COPY, DayReleaseDate, DigestTrackStrip, dayReleaseBlurb } from '@/components/FortnightDigest'
+import { DayReleaseDate, DigestTrackStrip } from '@/components/FortnightDigest'
 import {
+  DAY_COPY,
   clampReleaseDay,
+  dayReleaseBlurb,
   loadDayReleases,
   longReleaseDay,
   MIN_RELEASE_DAY,
@@ -65,7 +67,7 @@ export default async function DayReleaseArticlePage({
   const { picks, rest } = await loadDayReleases(supabase, day)
   const prev = shiftReleaseDay(day, -1)
   const next = shiftReleaseDay(day, 1)
-  const back = day === today ? `/${lang}/topreleases` : `/${lang}/topreleases?day=${day}`
+  const back = `/${lang}/topreleases`
   const named = picks.slice(0, 4).map(trackLine)
   const extra = picks.length - named.length
   const pickSentence = extra > 0

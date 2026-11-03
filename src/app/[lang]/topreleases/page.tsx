@@ -1,8 +1,9 @@
 // ============================================
 // OPTIMAL BREAKS — Top novedades
 // ----------------------------------------------
-// Dos secciones. Arriba, el lanzamiento del día: un resumen y el botón al
-// artículo (`/topreleases/dia/YYYY-MM-DD`). La lista de temas vive ahí, no aquí.
+// Dos secciones. Arriba, el lanzamiento de hoy: un resumen, una lista corta
+// y el botón al artículo (`/topreleases/dia/YYYY-MM-DD`). El calendario y
+// la lista entera viven en el artículo, no aquí.
 // Debajo, los meses (antes, quincenas) y las temporadas, que nacen en el blog.
 // Arriba el último mes (suena ahí mismo), debajo una tarjeta por temporada
 // con sus meses dentro. `?year=` cambia de año cuando hay más de uno. Las
@@ -11,12 +12,11 @@
 // ============================================
 
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import CardThumbnail from '@/components/CardThumbnail'
-import { DAY_COPY, DayReleaseDate, DigestTrackStrip, dayReleaseBlurb } from '@/components/FortnightDigest'
+import { DigestTrackStrip } from '@/components/FortnightDigest'
 import { getDictionary } from '@/lib/dictionaries'
-import { clampReleaseDay, getFortnightLive, loadDayReleases, longReleaseDay, MIN_RELEASE_DAY, shiftReleaseDay, type FortnightLive } from '@/lib/fortnight-live'
+import { DAY_COPY, dayReleaseBlurb, getFortnightLive, loadDayReleases, longReleaseDay, type FortnightLive } from '@/lib/fortnight-live'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import type { Locale } from '@/lib/i18n-config'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
@@ -138,18 +138,6 @@ function todayMadrid(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 }
 
-function firstParam(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value || '').trim()
-}
-
-function dayHref(lang: Locale, d: string, today: string, year?: string): string {
-  const q = new URLSearchParams()
-  if (year) q.set('year', year)
-  if (d !== today) q.set('day', d)
-  const s = q.toString()
-  return s ? `/${lang}/topreleases?${s}` : `/${lang}/topreleases`
-}
-
 function periodLabel(from: string, until: string, lang: Locale): string {
   const fmt = (ymd: string) =>
     new Date(`${ymd}T12:00:00Z`)
@@ -193,22 +181,14 @@ export default async function TopReleasesPage({
   searchParams,
 }: {
   params: Promise<{ lang: Locale }>
-  searchParams?: Promise<{ year?: string | string[]; day?: string | string[] }>
+  searchParams?: Promise<{ year?: string | string[] }>
 }) {
   const { lang } = await params
-  const sp = await (searchParams ?? Promise.resolve({} as { year?: string | string[]; day?: string | string[] }))
+  const sp = await (searchParams ?? Promise.resolve({} as { year?: string | string[] }))
   await getDictionary(lang)
   const t = COPY[lang]
   const today = todayMadrid()
-  const rawDay = firstParam(sp.day)
-  const day = clampReleaseDay(rawDay, today)
-  const yearRaw = firstParam(sp.year)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(rawDay.slice(0, 10)) && rawDay.slice(0, 10) >= today) {
-    const q = new URLSearchParams()
-    if (/^\d{4}$/.test(yearRaw)) q.set('year', yearRaw)
-    const s = q.toString()
-    redirect(s ? `/${lang}/topreleases?${s}` : `/${lang}/topreleases`)
-  }
+  const day = today
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const dayTracksPromise = loadDayReleases(supabase, day)
 
@@ -255,10 +235,8 @@ export default async function TopReleasesPage({
   const live = new Map(liveTargets.map((p, i) => [p.slug, liveRows[i]]))
   const dayGroups = await dayTracksPromise
   const dayCopy = DAY_COPY[lang]
-  const yearInUrl = years.includes(asked) ? String(asked) : undefined
-  const prevDay = shiftReleaseDay(day, -1)
-  const nextDay = shiftReleaseDay(day, 1)
-  const arrowClass = 'inline-flex h-10 w-10 items-center justify-center border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] text-lg font-black no-underline hover:bg-[var(--red)] hover:text-white'
+  const dayPreview = [...dayGroups.picks, ...dayGroups.rest].slice(0, 5)
+  const dayTotal = dayGroups.picks.length + dayGroups.rest.length
   const heroLabel = (p: Post) => (p.month ? (p.until >= today ? t.thisMonth : t.latestMonth) : t.latest)
 
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
@@ -348,7 +326,7 @@ export default async function TopReleasesPage({
               {years.map((y) => (
                 <Link
                   key={y}
-                  href={dayHref(lang, day, today, y === years[0] ? undefined : String(y))}
+                  href={y === years[0] ? `/${lang}/topreleases` : `/${lang}/topreleases?year=${y}`}
                   aria-current={y === year ? 'page' : undefined}
                   className={`px-2.5 py-1 text-[12px] font-black border-2 border-[var(--ink)] no-underline ${y === year ? 'bg-[var(--ink)] text-[var(--paper)]' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
                   style={mono}
@@ -374,24 +352,24 @@ export default async function TopReleasesPage({
               <span className="text-[11px] font-bold uppercase" style={mono}>{longReleaseDay(day, lang)}</span>
             </div>
             <div className="p-3 sm:p-5">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                {prevDay >= MIN_RELEASE_DAY ? (
-                  <Link href={dayHref(lang, prevDay, today, yearInUrl)} aria-label={dayCopy.prev} className={arrowClass} style={mono}>←</Link>
-                ) : (
-                  <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>←</span>
-                )}
-                <DayReleaseDate lang={lang} day={day} today={today} year={yearInUrl} label={dayCopy.pick} />
-                {day < today ? (
-                  <Link href={dayHref(lang, nextDay, today, yearInUrl)} aria-label={dayCopy.next} className={arrowClass} style={mono}>→</Link>
-                ) : (
-                  <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>→</span>
-                )}
-              </div>
               <h3 className="text-2xl sm:text-3xl font-black leading-tight mb-2" style={display}>{dayCopy.title}</h3>
               <p className="text-[14px] leading-relaxed text-[var(--ink)]/70 mb-3" style={mono}>
                 {dayReleaseBlurb(lang, dayGroups.picks.length, dayGroups.rest.length)}
               </p>
-              {dayGroups.picks.length + dayGroups.rest.length > 0 ? (
+              {dayPreview.length > 0 ? (
+                <ul className="list-none m-0 p-0 mb-1">
+                  {dayPreview.map((track, i) => {
+                    const pick = i < dayGroups.picks.length
+                    const mix = track.mix_name && !/^original mix$/i.test(track.mix_name) ? ` (${track.mix_name})` : ''
+                    return (
+                      <li key={track.featured_id || `${track.artists}-${track.title}-${i}`} className={`py-1 border-b border-[var(--ink)]/15 text-[13px] truncate ${pick ? 'bg-[var(--yellow)] px-1' : ''}`} style={mono}>
+                        <span className="font-black">{track.artists}</span> — {track.title}{mix}
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : null}
+              {dayTotal > 0 ? (
                 <Link
                   href={`/${lang}/topreleases/dia/${day}`}
                   className="inline-flex mt-4 min-h-[40px] items-center px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] no-underline hover:bg-[var(--red)] hover:text-white"

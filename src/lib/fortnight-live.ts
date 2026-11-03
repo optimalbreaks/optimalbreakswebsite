@@ -13,6 +13,7 @@ import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self
 import { fetchAllPages, fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import { articleFreeze, frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
+import type { Locale } from '@/lib/i18n-config'
 import type { Database, FortnightDigest, FortnightDigestTrack } from '@/types/database'
 
 /** Cabecera del artículo: los temas más escuchados. Sin mezclar votos. */
@@ -529,6 +530,64 @@ export async function loadPeriodStats(from: string, until: string, prevFrom: str
     debut: debutantes.slice(0, 24).map((name) => ({ name, slug: slugOf(name) })),
     debut_total: debutantes.length,
   }
+}
+
+/** Textos del artículo del día. Viven aquí, no en el componente de cliente: el servidor los lee. */
+export const DAY_COPY = {
+  es: {
+    section: 'Lanzamientos del día',
+    all: 'Todas las novedades',
+    title: 'Novedades',
+    read: 'VER EL ARTÍCULO →',
+    back: '← Volver a Novedades',
+    empty: 'Este día no hay lanzamientos en la web.',
+    today: 'HOY',
+    prev: 'Día anterior',
+    next: 'Día siguiente',
+    pick: 'Elegir un día',
+    picksTitle: 'La selección de Optimal Breaks',
+    restTitle: 'El resto del día',
+    onlyPicks: (n: number) => (n === 1 ? 'Optimal Breaks destaca el tema de este día.' : `Optimal Breaks destaca los ${n} temas de este día.`),
+    onlyRest: (n: number) => (n === 1 ? 'Sale 1 tema. Optimal Breaks no ha destacado ninguno.' : `Salen ${n} temas. Optimal Breaks no ha destacado ninguno.`),
+    both: (picks: number, rest: number) => {
+      const a = picks === 1 ? 'Optimal Breaks destaca 1 tema.' : `Optimal Breaks destaca ${picks} temas.`
+      const b = rest === 1 ? 'Sale 1 más.' : `Salen ${rest} más.`
+      return `${a} ${b}`
+    },
+    playPicks: '▶ ESCUCHAR LA SELECCIÓN · {n} TEMAS',
+    playRest: '▶ ESCUCHAR EL RESTO · {n} TEMAS',
+  },
+  en: {
+    section: 'Releases of the day',
+    all: 'All the releases',
+    title: 'Top releases day',
+    read: 'READ THE ARTICLE →',
+    back: '← Back to Releases',
+    empty: 'No releases on the site for this day.',
+    today: 'TODAY',
+    prev: 'Previous day',
+    next: 'Next day',
+    pick: 'Pick a day',
+    picksTitle: 'The Optimal Breaks selection',
+    restTitle: 'The rest of the day',
+    onlyPicks: (n: number) => (n === 1 ? 'Optimal Breaks highlights the track of this day.' : `Optimal Breaks highlights the ${n} tracks of this day.`),
+    onlyRest: (n: number) => (n === 1 ? '1 track is out. Optimal Breaks has not highlighted any.' : `${n} tracks are out. Optimal Breaks has not highlighted any.`),
+    both: (picks: number, rest: number) => {
+      const a = picks === 1 ? 'Optimal Breaks highlights 1 track.' : `Optimal Breaks highlights ${picks} tracks.`
+      const b = rest === 1 ? '1 more is out.' : `${rest} more are out.`
+      return `${a} ${b}`
+    },
+    playPicks: '▶ PLAY THE SELECTION · {n} TRACKS',
+    playRest: '▶ PLAY THE REST · {n} TRACKS',
+  },
+} as const
+
+export function dayReleaseBlurb(lang: Locale, picks: number, rest: number): string {
+  const c = DAY_COPY[lang]
+  if (picks + rest === 0) return c.empty
+  if (picks > 0 && rest === 0) return c.onlyPicks(picks)
+  if (picks === 0) return c.onlyRest(rest)
+  return c.both(picks, rest)
 }
 
 /** null si la BD falla: la página se queda con las cifras guardadas en el digest. */
