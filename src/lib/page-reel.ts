@@ -14,7 +14,7 @@
 // piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animAlbum, animBlog, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
+import { animAlbum, animBlog, animDay, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, dayCardSeconds, dayReelDuration, DAY_INTRO, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
 
 export type EventsReelEvent = {
   name: string
@@ -35,7 +35,7 @@ export type EventsReelInput = {
   events: EventsReelEvent[]
 }
 import { encodeCanvasVideo, type ReelFormat, type ReelResult } from './reel-renderer'
-import type { ShareAudioSegment } from './share-audio'
+import { loadShareAudio, SHARE_AUDIO_RATE, suggestSegmentStart, type ShareAudioSegment } from './share-audio'
 
 export type PageReelKind = 'top100' | 'week' | 'blog'
 
@@ -71,7 +71,28 @@ export type PageReelInput =
       fortnight?: FortnightReelInput
       /** Artículo de agenda: reel de carteles (`animEvents`). */
       agenda?: EventsReelInput
+      /** Artículo del día: texto de entrada y una card por tema de la selección, sonando. */
+      day?: DayReelInput
     }
+
+export type DayReelTrack = {
+  title: string
+  artists: string
+  label: string
+  artwork: string | null
+  /** URL del mismo origen. Vacío = la card sale muda. */
+  audio: string | null
+}
+export type DayReelInput = {
+  es: boolean
+  /** «3 NOV 2026», ya formateado. */
+  date: string
+  /** true = `picks` es la selección editorial. false = son los temas del día. */
+  selection: boolean
+  outCount: number
+  picks: DayReelTrack[]
+  rest: { artwork: string | null }[]
+}
 
 type FortnightReelTrack = { title: string; artists: string; value: number; artwork: string | null }
 export type FortnightReelInput = {
@@ -183,6 +204,96 @@ function dedupeReleases<T extends { title: string; label: string }>(tracks: T[])
   })
 }
 
+function writeAudioWindow(dest: AudioBuffer, destAt: number, src: AudioBuffer, startSec: number, dur: number) {
+  const sr = dest.sampleRate
+  const from = Math.round(Math.max(0, startSec) * src.sampleRate)
+  const n = Math.round(dur * sr)
+  const fadeIn = Math.round(0.08 * sr)
+  const fadeOut = Math.round(0.35 * sr)
+  const at = Math.round(destAt * sr)
+  for (let c = 0; c < dest.numberOfChannels; c++) {
+    const s = src.getChannelData(Math.min(c, src.numberOfChannels - 1))
+    const d = dest.getChannelData(c)
+    const len = Math.min(n, Math.max(0, s.length - from), Math.max(0, d.length - at))
+    for (let i = 0; i < len; i++) {
+      let g = 1
+      if (i < fadeIn) g *= i / fadeIn
+      const tail = len - 1 - i
+      if (tail < fadeOut) g *= tail / Math.max(1, fadeOut)
+      d[at + i] = s[from + i] * g
+    }
+  }
+}
+
+/** Une el tramo más alto de cada tema de la selección, uno detrás de otro, tras la intro muda. */
+async function stitchDayAudio(picks: DayReelTrack[], intro: number, cardSec: number, total: number): Promise<{
+  segment: ShareAudioSegment | null
+  envs: (Float32Array | null)[]
+}> {
+  const envs: (Float32Array | null)[] = picks.map(() => null)
+  const loaded: ({ buffer: AudioBuffer; start: number } | null)[] = []
+  let any = false
+  for (const p of picks) {
+    if (!p.audio || !p.audio.startsWith('/')) {
+      loaded.push(null)
+      continue
+    }
+    try {
+      const buffer = await loadShareAudio(p.audio)
+      loaded.push({ buffer, start: suggestSegmentStart(buffer, cardSec) })
+      any = true
+    } catch {
+      loaded.push(null)
+    }
+  }
+  if (!any) return { segment: null, envs }
+  const ctx = new AudioContext({ sampleRate: SHARE_AUDIO_RATE })
+  void ctx.resume()
+  const buffer = ctx.createBuffer(2, Math.max(1, Math.ceil(total * SHARE_AUDIO_RATE)), SHARE_AUDIO_RATE)
+  loaded.forEach((clip, i) => {
+    if (!clip) return
+    writeAudioWindow(buffer, intro + i * cardSec, clip.buffer, clip.start, cardSec)
+    envs[i] = audioEnvelope({ buffer: clip.buffer, start: clip.start }, cardSec, 30)
+  })
+  return { segment: { buffer, start: 0, ctx }, envs }
+}
+
+async function renderDayReel(
+  day: DayReelInput,
+  format: ReelFormat,
+  onProgress?: (ratio: number) => void,
+): Promise<ReelResult> {
+  const W = format === 'horizontal' ? 1920 : 1080
+  const H = format === 'horizontal' ? 1080 : 1920
+  await loadFonts()
+  const picks = day.picks.slice(0, 5)
+  const rest = day.rest.slice(0, 8)
+  const cardSec = dayCardSeconds(picks.length)
+  const total = dayReelDuration(picks.length, rest.length > 0)
+  const urls = [...picks.map((p) => p.artwork), ...rest.map((r) => r.artwork)]
+  const [imgs, audio] = await Promise.all([
+    loadArtworks(urls),
+    stitchDayAudio(picks, DAY_INTRO, cardSec, total),
+  ])
+  const cards = picks.map((p, i) => ({
+    title: p.title,
+    artists: p.artists,
+    label: p.label,
+    img: imgs[i] ?? null,
+    env: audio.envs[i] ?? null,
+  }))
+  const restImgs = rest.map((_, i) => imgs[picks.length + i] ?? null)
+  const data = {
+    es: day.es,
+    date: day.date,
+    selection: day.selection,
+    outCount: day.outCount,
+    cards,
+    rest: restImgs,
+  }
+  return encodeCanvasVideo(W, H, total, 30, (c, t) => animDay(c, W, H, data, t), onProgress, audio.segment)
+}
+
 export async function renderPageReel(
   input: PageReelInput,
   format: ReelFormat,
@@ -206,6 +317,8 @@ export async function renderPageReel(
     const tracks = uniq.map((t, i) => ({ title: t.title, artists: t.artists, label: t.label, img: imgs[i] }))
     const week = reelDateLabel(input.weekDate)
     draw = (c, t) => animWeek(c, W, H, { week, count: input.count, tracks }, t)
+  } else if (input.day && input.day.picks.length > 0) {
+    return renderDayReel(input.day, format, onProgress)
   } else if (input.fortnight) {
     const f = input.fortnight
     const urls = [

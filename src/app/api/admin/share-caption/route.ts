@@ -3,7 +3,7 @@
 // Admin: todos los tipos. Artista con ficha reclamada: solo tema y sesión.
 //
 // POST { kind, platform, lang, url, context } → { caption }
-//   kind: 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest'
+//   kind: 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day'
 //   platform: 'instagram' (enlace en la bio) | 'facebook' (URL en el texto)
 //
 // Lo escribe GPT‑5.6 (OPENAI_SHARE_CAPTION_MODEL u OPENAI_MODEL) con un tono
@@ -26,8 +26,8 @@ import { madridCalendarDate } from '@/lib/share-track'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest'
-const KINDS: readonly Kind[] = ['track', 'set', 'top100', 'week', 'blog', 'events', 'digest']
+type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day'
+const KINDS: readonly Kind[] = ['track', 'set', 'top100', 'week', 'blog', 'events', 'digest', 'day']
 type Platform = 'instagram' | 'facebook'
 
 const KIND_ES: Record<Kind, string> = {
@@ -54,6 +54,10 @@ const KIND_ES: Record<Kind, string> = {
     'Cuenta los datos reales del contexto: el #1 en escuchas y el #1 en guardados con su artista, el volumen y si sube o baja, el artista y el sello más activos, el BPM medio y la tonalidad más usada si están. Explica en una frase que las escuchas son solo las de optimalbreaks.com y que cada «+» es un voto. Si `period` es WEEK, son los temas que salen la semana que viene (adelantos): no hables de escuchas pasadas.',
     'Cierra preguntando cuál fue su tema del periodo o si falta alguno.',
   ].join('\n'),
+  day: [
+    'El artículo de los lanzamientos de un día concreto (Optimal Breaks, /topreleases/dia). El vídeo abre con el texto «lanzamientos de hoy» y la fecha. Luego, una card por tema de la selección de Optimal Breaks (los que la casa ha guardado con «+»), y suena ese tema. Si no hay selección, las cards son los temas que salen ese día. Al final, las carátulas del resto.',
+    'Nombra la fecha y los temas de `picks` con su artista y sello. Di cuántos salen en total (`outToday`). Si `selection` es false, no digas que hay una selección de la casa. Cierra preguntando cuál meterían en un set.',
+  ].join('\n'),
 }
 const KIND_EN: Record<Kind, string> = {
   track: [
@@ -75,6 +79,10 @@ const KIND_EN: Record<Kind, string> = {
     'Tell the real facts from the context: the #1 by plays and the #1 by saves with their artist, the volume and whether it is up or down, the busiest artist and label, the average BPM and top key if present. Explain in one sentence that plays only count on optimalbreaks.com and every «+» is a vote. If `period` is WEEK, these are next week’s releases (previews): do not talk about past plays.',
     'Close by asking what their track of the period was or what is missing.',
   ].join('\n'),
+  day: [
+    "The article for one day's releases (Optimal Breaks, /topreleases/dia). The video opens with the words “today's releases” and the date. Then one card per track in the Optimal Breaks selection (the ones the house saved with «+»), and that track plays. If there is no selection, the cards are the tracks out that day. The other covers close the video.",
+    'Name the date and the `picks` with artist and label. Say how many are out in total (`outToday`). If `selection` is false, do not claim there is a house selection. Close by asking which one they would put in a set.',
+  ].join('\n'),
 }
 
 const DEFAULT_TAGS: Record<Kind, string[]> = {
@@ -85,6 +93,7 @@ const DEFAULT_TAGS: Record<Kind, string[]> = {
   blog: ['#breakbeat', '#breaks', '#electronicmusic', '#musicnews', '#dj'],
   events: ['#breakbeat', '#rave', '#electronicmusic', '#festival', '#dj'],
   digest: ['#breakbeat', '#breaks', '#newreleases', '#newmusic', '#electronicmusic'],
+  day: ['#breakbeat', '#newmusic', '#newreleases', '#breaks', '#electronicmusic'],
 }
 
 function norm(s: string): string {
@@ -116,7 +125,7 @@ function bannedNames(ctx: Record<string, unknown>): string[] {
       add(o.label)
     }
   }
-  for (const k of ['artists', 'artist', 'label', 'labels', 'festival', 'edition', 'eventName', 'tracks', 'rows', 'highlights', 'events', 'lineup', 'place', 'names', 'mostPlayed', 'mostSaved', 'topArtists', 'topLabels', 'communityStars', 'newToCatalogue']) add(ctx[k])
+  for (const k of ['artists', 'artist', 'label', 'labels', 'festival', 'edition', 'eventName', 'tracks', 'rows', 'highlights', 'events', 'lineup', 'place', 'names', 'mostPlayed', 'mostSaved', 'topArtists', 'topLabels', 'communityStars', 'newToCatalogue', 'picks']) add(ctx[k])
   return [...out]
 }
 

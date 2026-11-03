@@ -2202,3 +2202,316 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
   ctx.textBaseline = 'alphabetic'
   spaced(ctx, es ? 'LOS PRÓXIMOS 14 DÍAS' : 'THE NEXT 14 DAYS', F.x, F.y + (V ? 118 : 84), 3)
 }
+
+// ===================== DÍA (artículo /topreleases/dia) =====================
+// Primero el texto («lanzamientos de hoy»). Luego una card por tema de la
+// selección, y suena ese tema. Al final, las carátulas del resto del día.
+export const DAY_INTRO = 5
+export const DAY_REST = 5.4
+export const DAY_OUTRO = 4.6
+
+export function dayCardSeconds(n: number): number {
+  if (n <= 1) return 12
+  if (n === 2) return 9
+  return 7.2
+}
+
+export function dayReelDuration(cards: number, hasRest: boolean): number {
+  const n = Math.max(0, cards)
+  return DAY_INTRO + n * dayCardSeconds(n) + (hasRest ? DAY_REST : 0) + DAY_OUTRO
+}
+
+export type DayCardAnim = {
+  title: string
+  artists: string
+  label: string
+  img: Img | null
+  /** Volumen por fotograma (30 fps) solo de esta card. */
+  env: Float32Array | null
+}
+export type DayAnim = {
+  es: boolean
+  date: string
+  selection: boolean
+  outCount: number
+  cards: DayCardAnim[]
+  rest: (Img | null)[]
+}
+
+type DayScene = { k: 'intro' | 'card' | 'rest' | 'outro'; i: number; a: number; b: number }
+
+function dayScenes(n: number, rest: boolean, cardSec: number): DayScene[] {
+  const out: DayScene[] = [{ k: 'intro', i: -1, a: 0, b: DAY_INTRO }]
+  for (let i = 0; i < n; i++) {
+    const a = DAY_INTRO + i * cardSec
+    out.push({ k: 'card', i, a, b: a + cardSec })
+  }
+  let a = DAY_INTRO + n * cardSec
+  if (rest) {
+    out.push({ k: 'rest', i: -1, a, b: a + DAY_REST })
+    a += DAY_REST
+  }
+  out.push({ k: 'outro', i: -1, a, b: a + DAY_OUTRO })
+  return out
+}
+
+function dayLayout(V: boolean): FnLayout {
+  return V
+    ? {
+        V, hx: 70, kY: 168, hY: 310, hW: 940,
+        S: { x: 70, y: 560, w: 940, h: 980 },
+        foot: { x: 70, y: 1688, w: 940, h: 16 },
+      }
+    : {
+        V, hx: 80, kY: 150, hY: 270, hW: 820,
+        S: { x: 980, y: 140, w: 860, h: 760 },
+        foot: { x: 80, y: 900, w: 820, h: 14 },
+      }
+}
+
+function dayPlayer(ctx: C, x: number, y: number, w: number, h: number, card: DayCardAnim, local: number, dur: number, V: boolean) {
+  box(ctx, x, y, w, h, INK, RED, 6, 3)
+  const pad = 12
+  const s = h - pad * 2
+  cover(ctx, card.img, x + pad, y + pad, s, 2)
+  const bars = 5
+  const bw = V ? 9 : 8
+  const gap = V ? 6 : 5
+  const eqW = bars * bw + (bars - 1) * gap
+  const ex = x + w - pad - eqW
+  const eh = s * 0.62
+  const ey = y + pad + 8 + eh
+  const f = Math.floor(local * 30)
+  ctx.fillStyle = YELLOW
+  for (let i = 0; i < bars; i++) {
+    const v = card.env ? card.env[Math.max(0, Math.min(card.env.length - 1, f - i * 2))] : 0.35
+    const wob = 0.55 + 0.45 * Math.abs(Math.sin(i * 1.7 + local * 9))
+    const bh = Math.max(4, eh * Math.min(1, v * wob * 1.15))
+    ctx.fillRect(ex + i * (bw + gap), ey - bh, bw, bh)
+  }
+  const tx = x + pad + s + 16
+  const tw = ex - 14 - tx
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = YELLOW
+  ctx.font = MONO(V ? 16 : 14)
+  spaced(ctx, 'SUENA', tx, y + pad + (V ? 22 : 18), 3)
+  ctx.fillStyle = '#fff'
+  ctx.fillText(fit(ctx, card.title.toUpperCase(), HEAD, tw, V ? 26 : 22, 13), tx, y + (V ? 62 : 52))
+  ctx.fillStyle = 'rgba(255,255,255,0.72)'
+  ctx.font = MONO(V ? 18 : 16)
+  ctx.fillText(fit(ctx, card.artists, (z) => MONO(z), tw, V ? 18 : 16, 11), tx, y + (V ? 92 : 78))
+  const by = y + h - pad - 6
+  const bwid = x + w - pad - tx
+  ctx.fillStyle = 'rgba(255,255,255,0.22)'
+  ctx.fillRect(tx, by, bwid, 6)
+  ctx.fillStyle = RED
+  ctx.fillRect(tx, by, bwid * clamp(local / Math.max(0.01, dur)), 6)
+}
+
+export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
+  const V = H > W
+  const es = d.es
+  const L = dayLayout(V)
+  const n = d.cards.length
+  const cardSec = dayCardSeconds(n)
+  const scenes = dayScenes(n, d.rest.length > 0, cardSec)
+  const total = scenes[scenes.length - 1]?.b ?? DAY_INTRO + DAY_OUTRO
+  const found = scenes.findIndex((s) => t >= s.a && t < s.b)
+  const si = found === -1 ? scenes.length - 1 : found
+  const sc = scenes[si]
+  const lt = t - sc.a
+  const dur = sc.b - sc.a
+
+  paper(ctx, W, H, '#ece2cf')
+  const ticker = [
+    es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES",
+    d.date,
+    d.selection ? (es ? 'SELECCIÓN OPTIMAL BREAKS' : 'OPTIMAL BREAKS SELECTION') : (es ? 'NOVEDADES' : 'NEW RELEASES'),
+    '',
+  ].join(' · ')
+  ctx.fillStyle = YELLOW
+  ctx.fillRect(0, 0, W, V ? 64 : 56)
+  ctx.fillStyle = INK
+  ctx.font = MONO(V ? 22 : 20)
+  ctx.textBaseline = 'middle'
+  const fw = spaced(ctx, ticker, -1e5, -1000, 4) + 4
+  let fx = -((t * 140) % fw)
+  while (fx < W) {
+    spaced(ctx, ticker, fx, V ? 32 : 28, 4)
+    fx += fw
+  }
+  hazard(ctx, V ? 64 : 56, 22, W)
+
+  ctx.save()
+  if (sc.k !== 'outro') {
+    const ex = ease(ph(lt, dur - 0.32, 0.32))
+    ctx.translate(-W * 0.35 * ex, 0)
+    ctx.globalAlpha = 1 - ex
+  }
+
+  if (sc.k === 'intro') {
+    fnHeader(
+      ctx, L, lt,
+      d.date,
+      es ? 'LANZAMIENTOS\nDE HOY' : "TODAY'S\nRELEASES",
+      d.selection
+        ? (es ? 'LA SELECCIÓN DE OPTIMAL BREAKS' : 'THE OPTIMAL BREAKS SELECTION')
+        : (es ? 'LO QUE SALE HOY' : 'OUT TODAY'),
+      RED,
+    )
+    const gap = 22
+    const cw = (L.S.w - gap) / 2
+    const ch = V ? 220 : 200
+    const tiles: [string, string, string][] = [
+      [String(d.selection ? d.cards.length : d.outCount), d.selection ? (es ? 'EN LA SELECCIÓN' : 'IN THE PICK') : (es ? 'TEMAS' : 'TRACKS'), RED],
+      [String(d.outCount), es ? 'SALEN HOY' : 'OUT TODAY', INK],
+    ]
+    tiles.forEach(([val, label, col], i) => {
+      const x = L.S.x + i * (cw + gap)
+      const y = L.S.y
+      pop(ctx, ph(lt, 0.45 + i * 0.16, 0.45), x + cw / 2, y + ch / 2, () => {
+        box(ctx, x, y, cw, ch, i === 0 ? YELLOW : '#fff', INK, 10, 5)
+        ctx.fillStyle = col
+        ctx.font = HEAD(ch * 0.42)
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillText(val, x + 28, y + ch * 0.58)
+        ctx.fillStyle = INK
+        ctx.font = MONO(ch * 0.1)
+        spaced(ctx, label, x + 30, y + ch * 0.82, 4)
+      }, (hash(i, 3) - 0.5) * 0.35)
+    })
+  } else if (sc.k === 'card') {
+    const card = d.cards[sc.i]
+    if (card) {
+      fnHeader(
+        ctx, L, lt,
+        d.selection ? (es ? 'SELECCIÓN' : 'THE PICK') : (es ? 'HOY' : 'TODAY'),
+        card.title,
+        card.artists,
+        RED,
+      )
+      const S = L.S
+      const cs = Math.min(V ? 820 : 640, S.w - 40, S.h - (V ? 24 : 20))
+      const cx = S.x + (S.w - cs) / 2
+      const cy = V ? S.y + S.h - cs - 16 : S.y + Math.max(0, (S.h - cs) / 2)
+      pop(ctx, ph(lt, 0.15, 0.45), cx + cs / 2, cy + cs / 2, () => {
+        const s = 1 + 0.035 * beatPulse(t)
+        ctx.save()
+        ctx.translate(cx + cs / 2, cy + cs / 2)
+        ctx.scale(s, s)
+        ctx.translate(-(cx + cs / 2), -(cy + cs / 2))
+        cover(ctx, card.img, cx, cy, cs, 8)
+        ctx.restore()
+        if (d.selection) {
+          ctx.save()
+          ctx.translate(cx + cs - 36, cy + 54)
+          ctx.rotate(-0.08)
+          box(ctx, -150, -28, 300, 56, YELLOW, INK, 6, 3)
+          ctx.fillStyle = INK
+          ctx.font = MONO(18)
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          spaced(ctx, es ? 'SELECCIÓN' : 'THE PICK', 0, 2, 3, 'center')
+          ctx.restore()
+        }
+        if (card.label) {
+          ctx.font = MONO(V ? 22 : 20)
+          const lab = card.label.toUpperCase()
+          const tw = ctx.measureText(lab).width + 36
+          const lx = cx
+          const ly = cy + cs - 64
+          box(ctx, lx, ly, Math.min(tw, cs - 24), 52, '#fff', INK, 5, 3)
+          ctx.fillStyle = INK
+          ctx.textAlign = 'left'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(fit(ctx, lab, (z) => MONO(z), Math.min(tw, cs - 24) - 28, V ? 22 : 20, 12), lx + 16, ly + 26)
+        }
+      }, (hash(sc.i, 6) - 0.5) * 0.25)
+    }
+  } else if (sc.k === 'rest') {
+    fnHeader(
+      ctx, L, lt,
+      es ? 'TAMBIÉN' : 'ALSO',
+      es ? 'EL RESTO\nDEL DÍA' : 'THE REST\nOF THE DAY',
+      es ? `${d.rest.length} MÁS EN EL ARTÍCULO` : `${d.rest.length} MORE IN THE ARTICLE`,
+      INK,
+    )
+    const S = L.S
+    const cols = V ? 4 : 4
+    const gap = 16
+    const cs = Math.min((S.w - gap * (cols - 1)) / cols, V ? 210 : 170)
+    d.rest.slice(0, 8).forEach((im, i) => {
+      const x = S.x + (i % cols) * (cs + gap)
+      const y = S.y + Math.floor(i / cols) * (cs + gap)
+      pop(ctx, ph(lt, 0.2 + i * 0.08, 0.4), x + cs / 2, y + cs / 2, () => {
+        cover(ctx, im, x, y, cs, 4)
+      }, (hash(i, 8) - 0.5) * 0.5)
+    })
+  } else {
+    fnHeader(
+      ctx, L, lt,
+      d.date,
+      es ? 'LÉELO\nHOY' : 'READ IT\nTODAY',
+      es ? 'EL ARTÍCULO DE LAS NOVEDADES' : "TODAY'S RELEASES ARTICLE",
+      RED,
+    )
+    const S = L.S
+    pop(ctx, ph(lt, 0.35, 0.5), S.x + S.w / 2, S.y + 80, () => {
+      const pulse = 1 + 0.04 * beatPulse(t)
+      ctx.save()
+      ctx.translate(S.x + S.w / 2, S.y + 70)
+      ctx.scale(pulse, pulse)
+      ctx.translate(-(S.x + S.w / 2), -(S.y + 70))
+      box(ctx, S.x, S.y, S.w, V ? 140 : 120, RED, INK, 10, 5)
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 36 : 30)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      const cta = V
+        ? es ? 'VER EL DÍA · ENLACE EN LA BIO' : 'SEE THE DAY · LINK IN BIO'
+        : es ? 'VER EL DÍA · ENLACE EN EL POST' : 'SEE THE DAY · LINK IN POST'
+      ctx.fillText(fit(ctx, cta, HEAD, S.w - 48, V ? 36 : 30, 16), S.x + S.w / 2, S.y + (V ? 72 : 62))
+      ctx.restore()
+    })
+  }
+  ctx.restore()
+
+  for (const s of scenes.slice(0, -1)) {
+    const p = (t - (s.b - 0.28)) / 0.55
+    if (p <= 0 || p >= 1) continue
+    const x = -W * 0.6 + W * 2.2 * ease(p)
+    ctx.fillStyle = RED
+    ctx.beginPath()
+    ctx.moveTo(x, V ? 100 : 86)
+    ctx.lineTo(x + W * 0.45, V ? 100 : 86)
+    ctx.lineTo(x + W * 0.25, H)
+    ctx.lineTo(x - W * 0.2, H)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  const F = L.foot
+  ctx.fillStyle = PAPER2
+  ctx.fillRect(F.x, F.y, F.w, F.h)
+  ctx.fillStyle = RED
+  ctx.fillRect(F.x, F.y, F.w * clamp(t / total), F.h)
+  ctx.lineWidth = 3
+  ctx.strokeStyle = INK
+  ctx.strokeRect(F.x + 1.5, F.y + 1.5, F.w - 3, F.h - 3)
+
+  const card = sc.k === 'card' ? d.cards[sc.i] : null
+  if (card) {
+    const py = F.y + F.h + (V ? 22 : 16)
+    const pH = V ? 132 : 110
+    dayPlayer(ctx, F.x, py, V ? 940 : 820, pH, card, lt, dur, V)
+  } else {
+    obHeader(ctx, F.x, F.y + (V ? 86 : 56), V ? 40 : 30)
+    ctx.font = MONO(V ? 20 : 16)
+    ctx.fillStyle = MUTED
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    spaced(ctx, es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES", F.x, F.y + (V ? 126 : 90), 3)
+  }
+}

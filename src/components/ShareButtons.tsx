@@ -149,6 +149,37 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
   }
 
   const makeCaption = async (platform: SharePlatform) => {
+    if (pageReel?.day && pageReel.day.picks.length > 0) {
+      const d = pageReel.day
+      const name = (t?: { title: string; artists: string }) => (t ? `${t.artists} — ${t.title}` : undefined)
+      return aiShareCaption({
+        kind: 'day',
+        platform,
+        lang,
+        url: fullUrl,
+        fallback: (l) =>
+          buildPageVideoCaption(
+            'day',
+            {
+              title: l === lang ? pageReel.title : undefined,
+              weekLabel: d.date,
+              count: d.outCount,
+              first: name(d.picks[0]),
+              excerpt: d.selection
+                ? d.picks.map((t) => `${t.artists} — ${t.title}`).join(', ')
+                : undefined,
+            },
+            { lang: l, url: fullUrl, platform },
+          ),
+        context: {
+          date: d.date,
+          selection: d.selection,
+          outToday: d.outCount,
+          picks: d.picks.map((t) => ({ title: t.title, artists: t.artists, label: t.label })),
+          alsoOut: d.rest.length,
+        },
+      })
+    }
     if (pageReel?.agenda) {
       const a = pageReel.agenda
       const shown = a.events.length + a.extra
@@ -366,17 +397,26 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         <VideoShareButtons
           lang={lang}
           title={title}
-          fileBase={pageReel?.agenda ? 'agenda' : pageReel ? 'blog' : 'set'}
+          fileBase={pageReel?.day ? 'dia' : pageReel?.agenda ? 'agenda' : pageReel ? 'blog' : 'set'}
           what={
-            pageReel?.agenda
-              ? { es: 'de la agenda', en: 'of the agenda' }
-              : pageReel
-                ? { es: 'del artículo', en: 'of this article' }
-                : { es: 'de la sesión', en: 'of this set' }
+            pageReel?.day
+              ? { es: 'de los lanzamientos de hoy', en: "of today's releases" }
+              : pageReel?.agenda
+                ? { es: 'de la agenda', en: 'of the agenda' }
+                : pageReel
+                  ? { es: 'del artículo', en: 'of this article' }
+                  : { es: 'de la sesión', en: 'of this set' }
           }
           makeVideo={makeVideo}
           makeCaption={makeCaption}
-          audio={pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
+          audio={pageReel?.day ? null : pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
+          audioHint={
+            pageReel?.day
+              ? pageReel.day.selection
+                ? { es: 'con la selección sonando', en: 'with the selection playing' }
+                : { es: 'con los temas del día sonando', en: "with today's tracks playing" }
+              : null
+          }
         />
       )}
 

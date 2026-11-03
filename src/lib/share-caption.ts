@@ -10,7 +10,7 @@
 
 import type { Locale } from '@/lib/i18n-config'
 
-export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest'
+export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day'
 export type SharePlatform = 'instagram' | 'facebook'
 
 export async function aiShareCaption(opts: {
@@ -94,7 +94,7 @@ export function bilingualCaption(
 
 /** Plantilla (sin IA) de los vídeos de página. Máx. 5 hashtags genéricos. */
 export function buildPageVideoCaption(
-  kind: 'top100' | 'week' | 'blog' | 'events' | 'digest',
+  kind: 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day',
   d: {
     title?: string
     count?: number
@@ -182,6 +182,22 @@ export function buildPageVideoCaption(
       '#breakbeat #breaks #newreleases #newmusic #electronicmusic',
     ]
       .filter((l): l is string => l !== null)
+      .join('\n')
+  }
+  if (kind === 'day') {
+    return [
+      es ? `🆕 Lanzamientos de hoy${d.weekLabel ? `, ${d.weekLabel}` : ''}.` : `🆕 Today's releases${d.weekLabel ? `, ${d.weekLabel}` : ''}.`,
+      d.excerpt
+        ? (es ? `La selección de Optimal Breaks: ${d.excerpt}.` : `The Optimal Breaks selection: ${d.excerpt}.`)
+        : (es ? `Hoy salen ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks are out today.`),
+      d.first && d.excerpt ? (es ? `Abre con ${d.first}.` : `It opens with ${d.first}.`) : '',
+      es ? '¿Cuál metes en el set? 👇' : 'Which one goes in the set? 👇',
+      '',
+      link,
+      '',
+      '#breakbeat #newmusic #newreleases #breaks #electronicmusic',
+    ]
+      .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
       .join('\n')
   }
   return [

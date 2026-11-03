@@ -35,13 +35,18 @@ export interface VideoShareButtonsProps {
   what: { es: string; en: string }
   makeVideo: (format: ReelFormat, onProgress: (ratio: number) => void, audio: ShareAudioSegment | null) => Promise<ReelResult>
   makeCaption: (platform: SharePlatform) => Promise<string>
-  /** Tema que suena (URL del mismo origen) y segundos = duración del vídeo. */
+  /** Tema que suena (URL del mismo origen) y segundos = duración del vídeo. Abre el selector. */
   audio?: { src: string; key: string; label: string; seconds: number } | null
+  /**
+   * El vídeo ya lleva audio propio (el del día lo cose por temas). No abre el selector.
+   * Sustituye el aviso «sin audio».
+   */
+  audioHint?: { es: string; en: string } | null
   /** `light` = sobre papel claro (borde de tinta). Por defecto, botón oscuro como el resto de compartir. */
   tone?: 'dark' | 'light'
 }
 
-export default function VideoShareButtons({ lang, title, fileBase, what, makeVideo, makeCaption, audio, tone = 'dark' }: VideoShareButtonsProps) {
+export default function VideoShareButtons({ lang, title, fileBase, what, makeVideo, makeCaption, audio, audioHint, tone = 'dark' }: VideoShareButtonsProps) {
   const es = lang === 'es'
   const [picker, setPicker] = useState<'reel' | 'fb' | null>(null)
   const [reelState, setReelState] = useState<VideoState>('idle')
@@ -52,7 +57,11 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
   const [fbPct, setFbPct] = useState(0)
   const busy = reelState === 'busy' || fbState === 'busy' || picker != null
   const whatTxt = es ? what.es : what.en
-  const audioTxt = audio ? (es ? 'con el audio que elijas' : 'with the audio you pick') : es ? 'sin audio' : 'no audio'
+  const audioTxt = audio
+    ? (es ? 'con el audio que elijas' : 'with the audio you pick')
+    : audioHint
+      ? (es ? audioHint.es : audioHint.en)
+      : es ? 'sin audio' : 'no audio'
 
   /** Aviso si el vídeo salió mudo. Después de compartir: el cuadro se come el gesto. */
   const warnIfMuted = (muted?: boolean) => {

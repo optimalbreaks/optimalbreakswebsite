@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { DayReleaseDate, DigestTrackRows } from '@/components/FortnightDigest'
+import ShareButtons from '@/components/ShareButtons'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames, splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import {
@@ -26,7 +27,67 @@ import { blogPostingJsonLd, breadcrumbJsonLd, detailPageMetadata, SITE_URL, site
 import { publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createCachedSupabase } from '@/lib/supabase-server'
+import type { DayReelInput } from '@/lib/page-reel'
 import type { FortnightDigestTrack } from '@/types/database'
+
+const REEL_MONTHS = {
+  es: ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'],
+  en: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
+} as const
+
+function reelDayLabel(day: string, lang: Locale): string {
+  const month = Number(day.slice(5, 7))
+  const months = REEL_MONTHS[lang === 'en' ? 'en' : 'es']
+  return `${Number(day.slice(8, 10))} ${months[month - 1] || ''} ${day.slice(0, 4)}`
+}
+
+function reelAudio(src: string | null | undefined): string | null {
+  return src && src.startsWith('/') ? src : null
+}
+
+function reelTitle(t: FortnightDigestTrack): string {
+  const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? ` (${t.mix_name})` : ''
+  return `${t.title}${mix}`
+}
+
+function dayReelOf(
+  lang: Locale,
+  day: string,
+  title: string,
+  excerpt: string,
+  picks: FortnightDigestTrack[],
+  rest: FortnightDigestTrack[],
+) {
+  const sounding = (picks.length ? picks : rest).slice(0, 5)
+  if (!sounding.length) return undefined
+  const shelf = (picks.length ? rest : rest.slice(sounding.length)).slice(0, 8)
+  const dayReel: DayReelInput = {
+    es: lang !== 'en',
+    date: reelDayLabel(day, lang),
+    selection: picks.length > 0,
+    outCount: picks.length + rest.length,
+    picks: sounding.map((t) => ({
+      title: reelTitle(t),
+      artists: t.artists,
+      label: t.label || '',
+      artwork: t.artwork_url,
+      audio: reelAudio(t.audio_src),
+    })),
+    rest: shelf.map((t) => ({ artwork: t.artwork_url })),
+  }
+  return {
+    kind: 'blog' as const,
+    title,
+    date: `${day}T12:00:00+01:00`,
+    tags: [] as string[],
+    artwork: null,
+    tracks: [] as { title: string; meta: string }[],
+    artist: '',
+    label: '',
+    excerpt,
+    day: dayReel,
+  }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -176,6 +237,14 @@ export default async function DayReleaseArticlePage({
             nextLabel={copy.next}
           />
           <h1 className="text-3xl sm:text-5xl font-black leading-[0.95] mb-3" style={display}>{copy.title}</h1>
+          <div className="mb-5">
+            <ShareButtons
+              url={`/${lang}/topreleases/dia/${day}`}
+              title={`${articleTitle} | Optimal Breaks`}
+              lang={lang}
+              pageReel={dayReelOf(lang, day, articleTitle, articleBlurb, picks, rest)}
+            />
+          </div>
           <p className="text-[16px] leading-relaxed mb-2" style={{ fontFamily: "'Special Elite', monospace" }}>
             {dayReleaseBlurb(lang, picks.length, rest.length)}
           </p>
