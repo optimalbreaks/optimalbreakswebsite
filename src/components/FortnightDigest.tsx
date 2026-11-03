@@ -13,7 +13,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createContext, useCallback, useContext, useMemo, useRef, type MouseEvent, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { useAuth } from '@/components/AuthProvider'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
@@ -721,14 +721,46 @@ export function DigestTrackRows({
   )
 }
 
-/** Español: día/mes/año. Inglés: mes/día/año. El input nativo sigue el idioma del navegador. */
+/** Español: día/mes/año. Inglés: mes/día/año. */
 function arrowDayLabel(ymd: string, lang: Locale): string {
   const [year, month, day] = ymd.split('-')
   if (!year || !month || !day) return ymd
   return lang === 'es' ? `${day}/${month}/${year}` : `${month}/${day}/${year}`
 }
 
-/** Calendario del artículo del día. La fecha escrita y la de las flechas abren el selector. */
+const MIN_CAL_MONTH = '1990-01'
+
+function shiftCalendarMonth(ym: string, delta: number): string {
+  const [y, m] = ym.split('-').map(Number)
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1))
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+/** Lunes primero. Huecos al principio y al final para cerrar la semana. */
+function monthCells(ym: string): (string | null)[] {
+  const [y, m] = ym.split('-').map(Number)
+  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay()
+  const pad = (firstDow + 6) % 7
+  const count = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  const cells: (string | null)[] = Array.from({ length: pad }, () => null)
+  for (let d = 1; d <= count; d++) {
+    cells.push(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`)
+  }
+  while (cells.length % 7 !== 0) cells.push(null)
+  return cells
+}
+
+function monthTitle(ym: string, lang: Locale): string {
+  const [y, m] = ym.split('-').map(Number)
+  const text = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** Calendario del artículo. No es el del navegador: naranja, días en rojo, borde negro. */
 export function DayReleaseDate({
   lang, day, today, year, label, articlePath, headline, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
 }: {
@@ -737,7 +769,7 @@ export function DayReleaseDate({
   today: string
   year?: string
   label: string
-  /** Prefijo `/es/topreleases/dia`: el calendario abre `${articlePath}/${día}`. */
+  /** Prefijo `/es/topreleases/dia`: elegir un día abre `${articlePath}/${día}`. */
   articlePath?: string
   /** Fecha larga, encima de las flechas. También abre el calendario. */
   headline: string
@@ -748,33 +780,40 @@ export function DayReleaseDate({
   nextLabel: string
 }) {
   const router = useRouter()
-  const inputRef = useRef<HTMLInputElement>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [view, setView] = useState(day.slice(0, 7))
   const openCalendar = () => {
-    const el = inputRef.current
-    if (!el) return
-    try {
-      el.showPicker()
-    } catch {
-      el.focus()
-    }
+    setView(day.slice(0, 7))
+    setOpen((v) => !v)
   }
   const go = (next: string) => {
-    if (!next) return
-    if (articlePath) {
-      router.push(`${articlePath}/${next}`)
-      return
-    }
-    inputRef.current?.form?.requestSubmit()
+    if (!next || next > today || next < '1990-01-01') return
+    setOpen(false)
+    if (articlePath) router.push(`${articlePath}/${next}`)
   }
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+  const cells = useMemo(() => monthCells(view), [view])
+  const week = lang === 'es' ? ['L', 'M', 'X', 'J', 'V', 'S', 'D'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  const maxMonth = today.slice(0, 7)
   const arrowClass = 'inline-flex h-10 w-10 items-center justify-center border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] text-lg font-black no-underline hover:bg-[var(--red)] hover:text-white'
+  const monthBtn = 'inline-flex h-8 w-8 items-center justify-center border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] text-sm font-black hover:bg-[var(--red)] hover:text-white'
   return (
-    <form
-      action={`/${lang}/topreleases`}
-      method="get"
-      onSubmit={(e) => {
-        if (articlePath) e.preventDefault()
-      }}
-    >
+    <div ref={wrapRef} className="relative">
       {year ? <input type="hidden" name="year" value={year} /> : null}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {todayBadge ? (
@@ -785,6 +824,7 @@ export function DayReleaseDate({
         <button
           type="button"
           onClick={openCalendar}
+          aria-expanded={open}
           className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-bold uppercase text-[var(--ink)] underline decoration-dotted underline-offset-4 hover:text-[var(--red)]"
           style={mono}
         >
@@ -797,37 +837,80 @@ export function DayReleaseDate({
         ) : (
           <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>←</span>
         )}
-        <span className="relative inline-flex">
-          <button
-            type="button"
-            onClick={openCalendar}
-            aria-label={label}
-            className="inline-flex h-10 cursor-pointer items-center border-2 border-[var(--ink)] bg-[var(--paper)] px-3 text-[13px] font-black text-[var(--ink)] hover:bg-[var(--yellow)]"
-            style={mono}
-          >
-            {arrowDayLabel(day, lang)}
-          </button>
-          <input
-            ref={inputRef}
-            key={day}
-            type="date"
-            name="day"
-            defaultValue={day}
-            min="1990-01-01"
-            max={today}
-            tabIndex={-1}
-            aria-hidden
-            onChange={(e) => go(e.currentTarget.value)}
-            className="pointer-events-none absolute inset-0 opacity-0"
-          />
-        </span>
+        <button
+          type="button"
+          onClick={openCalendar}
+          aria-label={label}
+          aria-expanded={open}
+          className="inline-flex h-10 cursor-pointer items-center border-2 border-[var(--ink)] bg-[var(--paper)] px-3 text-[13px] font-black text-[var(--ink)] hover:bg-[var(--yellow)]"
+          style={mono}
+        >
+          {arrowDayLabel(day, lang)}
+        </button>
         {nextHref ? (
           <Link href={nextHref} aria-label={nextLabel} className={arrowClass} style={mono}>→</Link>
         ) : (
           <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>→</span>
         )}
       </div>
-    </form>
+      {open ? (
+        <div
+          role="dialog"
+          aria-label={label}
+          className="absolute left-0 top-full z-30 w-[292px] border-[3px] border-[var(--ink)] bg-[var(--orange)] p-2 shadow-[6px_6px_0_var(--ink)]"
+        >
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              className={`${monthBtn} ${view <= MIN_CAL_MONTH ? 'pointer-events-none opacity-30' : ''}`}
+              style={mono}
+              aria-label={prevLabel}
+              onClick={() => setView((v) => (v <= MIN_CAL_MONTH ? v : shiftCalendarMonth(v, -1)))}
+            >
+              ←
+            </button>
+            <span className="text-[13px] font-black uppercase leading-none" style={display}>{monthTitle(view, lang)}</span>
+            <button
+              type="button"
+              className={`${monthBtn} ${view >= maxMonth ? 'pointer-events-none opacity-30' : ''}`}
+              style={mono}
+              aria-label={nextLabel}
+              onClick={() => setView((v) => (v >= maxMonth ? v : shiftCalendarMonth(v, 1)))}
+            >
+              →
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {week.map((w, i) => (
+              <span key={`${w}-${i}`} className="text-center text-[10px] font-black text-[var(--ink)]" style={mono}>{w}</span>
+            ))}
+            {cells.map((cell, i) => {
+              if (!cell) return <span key={`e-${i}`} />
+              const future = cell > today
+              const selected = cell === day
+              return (
+                <button
+                  key={cell}
+                  type="button"
+                  disabled={future}
+                  onClick={() => go(cell)}
+                  className={`h-8 border-2 border-[var(--ink)] text-[13px] font-black leading-none ${
+                    selected
+                      ? 'bg-[var(--ink)] text-[var(--yellow)]'
+                      : future
+                        ? 'cursor-not-allowed border-[var(--ink)]/30 bg-transparent text-[var(--ink)]/35'
+                        : 'bg-transparent text-[var(--red)] hover:bg-[var(--red)] hover:text-white'
+                  }`}
+                  style={display}
+                >
+                  {Number(cell.slice(8, 10))}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
