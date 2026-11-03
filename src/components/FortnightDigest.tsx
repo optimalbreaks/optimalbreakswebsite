@@ -655,6 +655,135 @@ export function DigestTrackStrip({
   )
 }
 
+/** Lista del día en /topreleases: no es un ranking, suenan todos en la misma cola. */
+export function DayReleaseList({ tracks, lang, day }: { tracks: FortnightDigestTrack[]; lang: Locale; day: string }) {
+  const pathname = usePathname()
+  const spot = 'day'
+  const groupKey = `topreleases:day:${day}`
+  const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
+  const queue = useMemo(() => {
+    const seen = new Set<string>()
+    const out: PreviewTrack[] = []
+    for (const t of tracks) {
+      const key = rowKeyOf(t)
+      if (!t.audio_src || seen.has(key)) continue
+      seen.add(key)
+      out.push(queueItem(t, spot, pathname))
+    }
+    return out
+  }, [tracks, pathname])
+  const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const play = useCallback(
+    (rowKey: string) => {
+      if (current === rowKey) {
+        togglePreview()
+        return
+      }
+      const idx = queue.findIndex((q) => q.rowKey === rowKey)
+      if (idx >= 0) playPreviewQueue(queue, idx, groupKey)
+    },
+    [current, queue, groupKey, playPreviewQueue, togglePreview],
+  )
+  const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
+  const cardPlay = cardPlayWith(play)
+  const chip = 'inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5'
+  if (tracks.length === 0) return null
+  return (
+    <PlayCtx.Provider value={playCtx}>
+      {queue.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => (current ? togglePreview() : playPreviewQueue(queue, 0, groupKey))}
+          className="w-full mb-3 bg-[var(--red)] text-white border-[3px] border-[var(--ink)] font-black tracking-wider hover:bg-[var(--ink)] transition-colors shadow-[4px_4px_0_var(--ink)] px-4 py-3 text-[14px] sm:text-[16px]"
+          style={display}
+        >
+          {current && previewPlaying ? '❚❚' : (lang === 'es' ? `▶ ESCUCHAR EL DÍA · ${queue.length} TEMAS` : `▶ PLAY THE DAY · ${queue.length} TRACKS`)}
+        </button>
+      ) : null}
+      <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
+        {tracks.map((t) => {
+          const on = current === rowKeyOf(t) && previewPlaying
+          const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? t.mix_name : ''
+          const beatport = !!(t.external_url && /beatport\.com/i.test(t.external_url))
+          return (
+            <div
+              key={rowKeyOf(t)}
+              id={spotId(spot, t)}
+              onClick={cardPlay(t, spot)}
+              className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-2 py-3 px-3 sm:px-4 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+            >
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-12 sm:w-14 shrink-0">
+                  <Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="56px" frameClass="border-[3px] border-[var(--ink)]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm sm:text-base font-black leading-snug sm:truncate" style={display}>
+                    {t.title}
+                    {mix ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mix}</span> : null}
+                  </div>
+                  <div className="text-xs sm:text-sm mt-0.5 break-words" style={mono}>
+                    <ArtistNames artists={splitArtistDisplayLine(t.artists).map((name) => ({ name }))} mixName={t.mix_name} lang={lang} />
+                    {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} lang={lang} /></> : null}
+                  </div>
+                </div>
+              </div>
+              <div className="track-action-bar sm:!justify-start sm:!self-start sm:pl-[68px]">
+                {t.audio_src ? (
+                  <PlayButton
+                    track={t}
+                    spot={spot}
+                    className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
+                  />
+                ) : null}
+                {t.bpm != null && t.bpm > 0 ? <span className={`${chip} bg-[var(--uv)]`} style={mono}>{Math.round(t.bpm)}</span> : null}
+                {(t.music_key || '').trim() ? <span className={`${chip} bg-[var(--cyan)] whitespace-nowrap`} style={mono}>{(t.music_key || '').trim()}</span> : null}
+                <SaveButton track={t} lang={lang} />
+                {t.featured_id ? (
+                  <TrackShareButton source="featured" trackId={t.featured_id} weekDate={t.week_date || ''} lang={lang} shareTitle={`${t.title} — ${t.artists}`} />
+                ) : null}
+                <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists)} lang={lang} />
+                <TidalLinkButton url={t.tidal_url} lang={lang} />
+                {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </PlayCtx.Provider>
+  )
+}
+
+/** Calendario del artículo del día. Al elegir una fecha, el formulario abre ese día. */
+export function DayReleaseDate({
+  lang, day, today, year, label,
+}: {
+  lang: Locale
+  day: string
+  today: string
+  year?: string
+  label: string
+}) {
+  return (
+    <form action={`/${lang}/topreleases`} method="get" className="inline-flex">
+      {year ? <input type="hidden" name="year" value={year} /> : null}
+      <input
+        key={day}
+        type="date"
+        name="day"
+        defaultValue={day}
+        min="1990-01-01"
+        max={today}
+        aria-label={label}
+        onChange={(e) => {
+          if (e.currentTarget.value) e.currentTarget.form?.requestSubmit()
+        }}
+        className="h-10 border-2 border-[var(--ink)] bg-[var(--paper)] px-2 text-[13px] font-black text-[var(--ink)]"
+        style={mono}
+      />
+    </form>
+  )
+}
+
 export default function FortnightDigest({
   digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, frozenUntil = null, heroFocus, playedArtists = [],
 }: {

@@ -5,6 +5,7 @@
  * claims y familiares fuera). Caché 5 min: la página no golpea la BD en cada visita.
  */
 import { unstable_cache } from 'next/cache'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
@@ -12,7 +13,7 @@ import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self
 import { fetchAllPages, fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import { articleFreeze, frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
-import type { FortnightDigest, FortnightDigestTrack } from '@/types/database'
+import type { Database, FortnightDigest, FortnightDigestTrack } from '@/types/database'
 
 /** Cabecera del artículo: los temas más escuchados. Sin mezclar votos. */
 const RELEASED_N = 20
@@ -73,6 +74,55 @@ function audioSrc(f: FeatRow): string | null {
     }
   } catch { /* url cruda */ }
   return f.sample_url
+}
+
+type DayFeat = FeatRow & {
+  chart_editions: { week_date: string; is_published: boolean } | { week_date: string; is_published: boolean }[] | null
+}
+
+function editionOf(row: DayFeat): { week_date: string } | null {
+  const embedded = row.chart_editions
+  if (!embedded) return null
+  return Array.isArray(embedded) ? embedded[0] ?? null : embedded
+}
+
+/** Canciones de la web con esa fecha de salida (ediciones publicadas). Un día, no un ranking. */
+export async function loadDayReleases(sb: SupabaseClient<Database>, day: string): Promise<FortnightDigestTrack[]> {
+  let rows: DayFeat[]
+  try {
+    rows = await fetchAllPages<DayFeat>((a, b) =>
+      sb
+        .from('chart_featured_tracks')
+        .select(
+          'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url, chart_editions!inner(week_date, is_published)',
+        )
+        .eq('release_date', day)
+        .eq('chart_editions.is_published', true)
+        .order('id', { ascending: true })
+        .range(a, b),
+    )
+  } catch (err) {
+    console.warn('[day-releases]', err instanceof Error ? err.message : err)
+    return []
+  }
+  const out: FortnightDigestTrack[] = []
+  const seen = new Set<string>()
+  for (const row of rows) {
+    const edition = editionOf(row)
+    const key = normalizeTrackCanonicalUrl(row.link_url) || row.id
+    if (seen.has(key)) continue
+    seen.add(key)
+    const weekBy = new Map<string, string>()
+    if (row.chart_edition_id && edition?.week_date) weekBy.set(row.chart_edition_id, edition.week_date)
+    out.push(digestTrack(row, 0, weekBy))
+  }
+  out.sort(
+    (a, b) =>
+      a.artists.localeCompare(b.artists, 'es') ||
+      a.title.localeCompare(b.title, 'es') ||
+      (a.mix_name || '').localeCompare(b.mix_name || '', 'es'),
+  )
+  return out
 }
 
 function digestTrack(f: FeatRow, value: number, weekBy: Map<string, string>): FortnightDigestTrack {
