@@ -760,7 +760,7 @@ function monthTitle(ym: string, lang: Locale): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-/** Calendario del artículo. No es el del navegador: naranja, días en rojo, borde negro. */
+/** Calendario del artículo. No es el del navegador: naranja claro, días en rojo, borde negro. */
 export function DayReleaseDate({
   lang, day, today, year, label, articlePath, headline, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
 }: {
@@ -857,7 +857,7 @@ export function DayReleaseDate({
         <div
           role="dialog"
           aria-label={label}
-          className="absolute left-0 top-full z-30 w-[292px] border-[3px] border-[var(--ink)] bg-[var(--orange)] p-2 shadow-[6px_6px_0_var(--ink)]"
+          className="absolute left-0 top-full z-30 w-[292px] border-[3px] border-[var(--ink)] bg-[#ffc14d] p-2 shadow-[6px_6px_0_var(--ink)]"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
             <button
