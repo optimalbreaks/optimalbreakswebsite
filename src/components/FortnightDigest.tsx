@@ -13,7 +13,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createContext, useCallback, useContext, useMemo, type MouseEvent, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef, type MouseEvent, type ReactNode } from 'react'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { useAuth } from '@/components/AuthProvider'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
@@ -728,9 +728,9 @@ function arrowDayLabel(ymd: string, lang: Locale): string {
   return lang === 'es' ? `${day}/${month}/${year}` : `${month}/${day}/${year}`
 }
 
-/** Calendario del artículo del día. Al elegir una fecha, el formulario abre ese día. */
+/** Calendario del artículo del día. La fecha escrita y la de las flechas abren el selector. */
 export function DayReleaseDate({
-  lang, day, today, year, label, articlePath,
+  lang, day, today, year, label, articlePath, headline, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
 }: {
   lang: Locale
   day: string
@@ -739,42 +739,94 @@ export function DayReleaseDate({
   label: string
   /** Prefijo `/es/topreleases/dia`: el calendario abre `${articlePath}/${día}`. */
   articlePath?: string
+  /** Fecha larga, encima de las flechas. También abre el calendario. */
+  headline: string
+  todayBadge?: string | null
+  prevHref?: string | null
+  nextHref?: string | null
+  prevLabel: string
+  nextLabel: string
 }) {
   const router = useRouter()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const openCalendar = () => {
+    const el = inputRef.current
+    if (!el) return
+    try {
+      el.showPicker()
+    } catch {
+      el.focus()
+    }
+  }
+  const go = (next: string) => {
+    if (!next) return
+    if (articlePath) {
+      router.push(`${articlePath}/${next}`)
+      return
+    }
+    inputRef.current?.form?.requestSubmit()
+  }
+  const arrowClass = 'inline-flex h-10 w-10 items-center justify-center border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] text-lg font-black no-underline hover:bg-[var(--red)] hover:text-white'
   return (
     <form
       action={`/${lang}/topreleases`}
       method="get"
-      className="inline-flex"
       onSubmit={(e) => {
         if (articlePath) e.preventDefault()
       }}
     >
       {year ? <input type="hidden" name="year" value={year} /> : null}
-      <label className="relative inline-flex h-10 cursor-pointer items-center border-2 border-[var(--ink)] bg-[var(--paper)]">
-        <span className="pointer-events-none px-3 text-[13px] font-black text-[var(--ink)]" style={mono}>
-          {arrowDayLabel(day, lang)}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        {todayBadge ? (
+          <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
+            {todayBadge}
+          </span>
+        ) : null}
+        <button
+          type="button"
+          onClick={openCalendar}
+          className="cursor-pointer border-0 bg-transparent p-0 text-[12px] font-bold uppercase text-[var(--ink)] underline decoration-dotted underline-offset-4 hover:text-[var(--red)]"
+          style={mono}
+        >
+          {headline}
+        </button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {prevHref ? (
+          <Link href={prevHref} aria-label={prevLabel} className={arrowClass} style={mono}>←</Link>
+        ) : (
+          <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>←</span>
+        )}
+        <span className="relative inline-flex">
+          <button
+            type="button"
+            onClick={openCalendar}
+            aria-label={label}
+            className="inline-flex h-10 cursor-pointer items-center border-2 border-[var(--ink)] bg-[var(--paper)] px-3 text-[13px] font-black text-[var(--ink)] hover:bg-[var(--yellow)]"
+            style={mono}
+          >
+            {arrowDayLabel(day, lang)}
+          </button>
+          <input
+            ref={inputRef}
+            key={day}
+            type="date"
+            name="day"
+            defaultValue={day}
+            min="1990-01-01"
+            max={today}
+            tabIndex={-1}
+            aria-hidden
+            onChange={(e) => go(e.currentTarget.value)}
+            className="pointer-events-none absolute inset-0 opacity-0"
+          />
         </span>
-        <input
-          key={day}
-          type="date"
-          name="day"
-          defaultValue={day}
-          min="1990-01-01"
-          max={today}
-          aria-label={label}
-          onChange={(e) => {
-            const next = e.currentTarget.value
-            if (!next) return
-            if (articlePath) {
-              router.push(`${articlePath}/${next}`)
-              return
-            }
-            e.currentTarget.form?.requestSubmit()
-          }}
-          className="absolute inset-0 cursor-pointer opacity-0"
-        />
-      </label>
+        {nextHref ? (
+          <Link href={nextHref} aria-label={nextLabel} className={arrowClass} style={mono}>→</Link>
+        ) : (
+          <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>→</span>
+        )}
+      </div>
     </form>
   )
 }

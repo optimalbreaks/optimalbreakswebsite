@@ -99,7 +99,6 @@ export default async function DayReleaseArticlePage({
     : joinList(named, lang)
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
-  const arrowClass = 'inline-flex h-10 w-10 items-center justify-center border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] text-lg font-black no-underline hover:bg-[var(--red)] hover:text-white'
 
   return (
     <main className="min-h-screen bg-[var(--paper)]">
@@ -108,33 +107,19 @@ export default async function DayReleaseArticlePage({
           {copy.back}
         </Link>
         <article>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {day === today ? (
-              <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
-                {copy.today}
-              </span>
-            ) : null}
-            <span className="text-[12px] font-bold uppercase" style={mono}>{longReleaseDay(day, lang)}</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            {prev >= MIN_RELEASE_DAY ? (
-              <Link href={`/${lang}/topreleases/dia/${prev}`} aria-label={copy.prev} className={arrowClass} style={mono}>←</Link>
-            ) : (
-              <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>←</span>
-            )}
-            <DayReleaseDate
-              lang={lang}
-              day={day}
-              today={today}
-              label={copy.pick}
-              articlePath={`/${lang}/topreleases/dia`}
-            />
-            {day < today ? (
-              <Link href={`/${lang}/topreleases/dia/${next}`} aria-label={copy.next} className={arrowClass} style={mono}>→</Link>
-            ) : (
-              <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>→</span>
-            )}
-          </div>
+          <DayReleaseDate
+            lang={lang}
+            day={day}
+            today={today}
+            label={copy.pick}
+            articlePath={`/${lang}/topreleases/dia`}
+            headline={longReleaseDay(day, lang)}
+            todayBadge={day === today ? copy.today : null}
+            prevHref={prev >= MIN_RELEASE_DAY ? `/${lang}/topreleases/dia/${prev}` : null}
+            nextHref={day < today ? `/${lang}/topreleases/dia/${next}` : null}
+            prevLabel={copy.prev}
+            nextLabel={copy.next}
+          />
           <h1 className="text-3xl sm:text-5xl font-black leading-[0.95] mb-3" style={display}>{copy.title}</h1>
           <p className="text-[16px] leading-relaxed mb-2" style={{ fontFamily: "'Special Elite', monospace" }}>
             {dayReleaseBlurb(lang, picks.length, rest.length)}
