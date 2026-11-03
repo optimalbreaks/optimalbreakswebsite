@@ -16,10 +16,23 @@ import {
   openFacebookShareDialog,
 } from '@/lib/share-track'
 import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
-import type { PageReelInput } from '@/lib/page-reel'
+import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
+import { dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
 import type { ShareAudioSegment } from '@/lib/share-audio'
 type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
+
+/** Igual que el audio de un mes: un tema, el fragmento lo elige R/F. */
+function dayShareAudio(day: DayReelInput) {
+  const pick = day.picks.find((p) => p.audio)
+  if (!pick?.audio) return null
+  return {
+    src: pick.audio,
+    key: `day:${day.date}:${pick.audio}`,
+    label: `${pick.title} — ${pick.artists}`,
+    seconds: dayReelDuration(Math.min(day.picks.length, 5), day.rest.length > 0),
+  }
+}
 /** JSON de `/api/og/story?play=mix:…&format=json`. */
 type SetVideoData = ReelData & { eventName?: string | null; place?: string | null }
 
@@ -409,14 +422,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           }
           makeVideo={makeVideo}
           makeCaption={makeCaption}
-          audio={pageReel?.day ? null : pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
-          audioHint={
-            pageReel?.day
-              ? pageReel.day.selection
-                ? { es: 'con la selección sonando', en: 'with the selection playing' }
-                : { es: 'con los temas del día sonando', en: "with today's tracks playing" }
-              : null
-          }
+          audio={pageReel?.day ? dayShareAudio(pageReel.day) : pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
         />
       )}
 

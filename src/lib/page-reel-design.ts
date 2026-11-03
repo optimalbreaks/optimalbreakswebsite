@@ -2205,7 +2205,7 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 
 // ===================== DÍA (artículo /topreleases/dia) =====================
 // Primero el texto («lanzamientos de hoy»). Luego una card por tema de la
-// selección, y suena ese tema. Al final, las carátulas del resto del día.
+// selección. El audio es el fragmento elegido, el mismo camino que un mes.
 export const DAY_INTRO = 5
 export const DAY_REST = 5.4
 export const DAY_OUTRO = 4.6
@@ -2226,8 +2226,6 @@ export type DayCardAnim = {
   artists: string
   label: string
   img: Img | null
-  /** Volumen por fotograma (30 fps) solo de esta card. */
-  env: Float32Array | null
 }
 export type DayAnim = {
   es: boolean
@@ -2236,6 +2234,8 @@ export type DayAnim = {
   outCount: number
   cards: DayCardAnim[]
   rest: (Img | null)[]
+  /** El fragmento elegido en R/F. Misma idea que el reproductor de un mes. */
+  sound: { title: string; artists: string; img: Img | null; env: Float32Array | null } | null
 }
 
 type DayScene = { k: 'intro' | 'card' | 'rest' | 'outro'; i: number; a: number; b: number }
@@ -2269,11 +2269,14 @@ function dayLayout(V: boolean): FnLayout {
       }
 }
 
-function dayPlayer(ctx: C, x: number, y: number, w: number, h: number, card: DayCardAnim, local: number, dur: number, V: boolean) {
+function dayPlayer(
+  ctx: C, x: number, y: number, w: number, h: number,
+  sound: NonNullable<DayAnim['sound']>, t: number, total: number, V: boolean,
+) {
   box(ctx, x, y, w, h, INK, RED, 6, 3)
   const pad = 12
   const s = h - pad * 2
-  cover(ctx, card.img, x + pad, y + pad, s, 2)
+  cover(ctx, sound.img, x + pad, y + pad, s, 2)
   const bars = 5
   const bw = V ? 9 : 8
   const gap = V ? 6 : 5
@@ -2281,11 +2284,11 @@ function dayPlayer(ctx: C, x: number, y: number, w: number, h: number, card: Day
   const ex = x + w - pad - eqW
   const eh = s * 0.62
   const ey = y + pad + 8 + eh
-  const f = Math.floor(local * 30)
+  const f = Math.floor(t * 30)
   ctx.fillStyle = YELLOW
   for (let i = 0; i < bars; i++) {
-    const v = card.env ? card.env[Math.max(0, Math.min(card.env.length - 1, f - i * 2))] : 0.35
-    const wob = 0.55 + 0.45 * Math.abs(Math.sin(i * 1.7 + local * 9))
+    const v = sound.env ? sound.env[Math.max(0, Math.min(sound.env.length - 1, f - i * 2))] : 0.35
+    const wob = 0.55 + 0.45 * Math.abs(Math.sin(i * 1.7 + t * 9))
     const bh = Math.max(4, eh * Math.min(1, v * wob * 1.15))
     ctx.fillRect(ex + i * (bw + gap), ey - bh, bw, bh)
   }
@@ -2297,16 +2300,16 @@ function dayPlayer(ctx: C, x: number, y: number, w: number, h: number, card: Day
   ctx.font = MONO(V ? 16 : 14)
   spaced(ctx, 'SUENA', tx, y + pad + (V ? 22 : 18), 3)
   ctx.fillStyle = '#fff'
-  ctx.fillText(fit(ctx, card.title.toUpperCase(), HEAD, tw, V ? 26 : 22, 13), tx, y + (V ? 62 : 52))
+  ctx.fillText(fit(ctx, sound.title.toUpperCase(), HEAD, tw, V ? 26 : 22, 13), tx, y + (V ? 62 : 52))
   ctx.fillStyle = 'rgba(255,255,255,0.72)'
   ctx.font = MONO(V ? 18 : 16)
-  ctx.fillText(fit(ctx, card.artists, (z) => MONO(z), tw, V ? 18 : 16, 11), tx, y + (V ? 92 : 78))
+  ctx.fillText(fit(ctx, sound.artists, (z) => MONO(z), tw, V ? 18 : 16, 11), tx, y + (V ? 92 : 78))
   const by = y + h - pad - 6
   const bwid = x + w - pad - tx
   ctx.fillStyle = 'rgba(255,255,255,0.22)'
   ctx.fillRect(tx, by, bwid, 6)
   ctx.fillStyle = RED
-  ctx.fillRect(tx, by, bwid * clamp(local / Math.max(0.01, dur)), 6)
+  ctx.fillRect(tx, by, bwid * clamp(t / Math.max(0.01, total)), 6)
 }
 
 export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
@@ -2501,11 +2504,10 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   ctx.strokeStyle = INK
   ctx.strokeRect(F.x + 1.5, F.y + 1.5, F.w - 3, F.h - 3)
 
-  const card = sc.k === 'card' ? d.cards[sc.i] : null
-  if (card) {
+  if (d.sound) {
     const py = F.y + F.h + (V ? 22 : 16)
     const pH = V ? 132 : 110
-    dayPlayer(ctx, F.x, py, V ? 940 : 820, pH, card, lt, dur, V)
+    dayPlayer(ctx, F.x, py, V ? 940 : 820, pH, d.sound, t, total, V)
   } else {
     obHeader(ctx, F.x, F.y + (V ? 86 : 56), V ? 40 : 30)
     ctx.font = MONO(V ? 20 : 16)
