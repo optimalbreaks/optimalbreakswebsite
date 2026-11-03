@@ -2206,15 +2206,16 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 }
 
 // ===================== DÍA (artículo /topreleases/dia) =====================
-// Primero el recuento del día, ya con el tema más destacado
-// sonando. Luego una card por tema. El último sigue hasta el final del vídeo.
+// Primero una portada negra (4 s), ya con el tema más destacado sonando.
+// Luego el recuento del día, una card por tema, y el último hasta el final.
+export const DAY_TITLE = 4
 export const DAY_INTRO = 5
 export const DAY_REST = 5.4
 export const DAY_OUTRO = 4.6
 
 export function dayCardSeconds(n: number): number {
   if (n <= 1) return 12
-  // 5 cards + la estantería del resto = 90 s, el tope de un reel. No se alarga más.
+  // 5 cards + la estantería = 90 s, más los 4 s de la portada negra.
   return 15
 }
 
@@ -2231,17 +2232,18 @@ export function dayAudioSlots(
 ): { i: number; at: number; seconds: number }[] {
   if (!audible.length || count <= 0) return []
   const total = dayReelDuration(count, hasRest)
+  const open = DAY_TITLE + DAY_INTRO
   return audible.map((i, k) => {
-    const at = k === 0 ? 0 : DAY_INTRO + i * cardSec
+    const at = k === 0 ? 0 : open + i * cardSec
     const next = audible[k + 1]
-    const end = next == null ? total : DAY_INTRO + next * cardSec
+    const end = next == null ? total : open + next * cardSec
     return { i, at, seconds: Math.max(0.2, end - at) }
   })
 }
 
 export function dayReelDuration(cards: number, hasRest: boolean): number {
   const n = Math.max(0, cards)
-  return DAY_INTRO + n * dayCardSeconds(n) + (hasRest ? DAY_REST : 0) + DAY_OUTRO
+  return DAY_TITLE + DAY_INTRO + n * dayCardSeconds(n) + (hasRest ? DAY_REST : 0) + DAY_OUTRO
 }
 
 export type DayCardAnim = {
@@ -2266,15 +2268,19 @@ export type DayAnim = {
   } | null
 }
 
-type DayScene = { k: 'intro' | 'card' | 'rest' | 'outro'; i: number; a: number; b: number }
+type DayScene = { k: 'title' | 'intro' | 'card' | 'rest' | 'outro'; i: number; a: number; b: number }
 
 function dayScenes(n: number, rest: boolean, cardSec: number): DayScene[] {
-  const out: DayScene[] = [{ k: 'intro', i: -1, a: 0, b: DAY_INTRO }]
+  const open = DAY_TITLE + DAY_INTRO
+  const out: DayScene[] = [
+    { k: 'title', i: -1, a: 0, b: DAY_TITLE },
+    { k: 'intro', i: -1, a: DAY_TITLE, b: open },
+  ]
   for (let i = 0; i < n; i++) {
-    const a = DAY_INTRO + i * cardSec
+    const a = open + i * cardSec
     out.push({ k: 'card', i, a, b: a + cardSec })
   }
-  let a = DAY_INTRO + n * cardSec
+  let a = open + n * cardSec
   if (rest) {
     out.push({ k: 'rest', i: -1, a, b: a + DAY_REST })
     a += DAY_REST
@@ -2440,9 +2446,11 @@ function dayEndPoster(
   spaced(ctx, kicker, cx, cy, 4, 'center')
   cy += 36
   ctx.fillStyle = INK
+  ctx.textAlign = 'center'
   for (const line of question) {
     cy += qs * 1.12
     ctx.font = HEAD(qs)
+    ctx.textAlign = 'center'
     ctx.fillText(line, cx, cy)
   }
   cy += 40
@@ -2460,6 +2468,7 @@ function dayEndPoster(
   ctx.fillText(fit(ctx, bio, HEAD, inner - 36, tall ? 40 : 32, 18), cx, cy + barH / 2)
   cy += barH + 48
   ctx.textBaseline = 'alphabetic'
+  ctx.textAlign = 'center'
   ctx.fillStyle = INK
   const send = es ? 'MÁNDASELO A QUIEN PINCHA BREAKBEAT' : 'SEND IT TO WHOEVER PLAYS BREAKBEAT'
   ctx.fillText(fit(ctx, send, (z) => MONO(z), inner, tall ? 22 : 18, 13), cx, cy)
@@ -2471,6 +2480,14 @@ function dayEndPoster(
   ctx.fillStyle = INK
   ctx.textAlign = 'center'
   spaced(ctx, es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE', cx, cy + logo + 8, 3, 'center')
+}
+
+const ORD_ES = ['', 'PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO']
+const ORD_EN = ['', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH']
+
+function dayOrdinal(i: number, es: boolean): string {
+  const word = (es ? ORD_ES : ORD_EN)[i]
+  return word || String(i)
 }
 
 /** Frase que se lee en la card, como un subtítulo. Visible desde el primer fotograma. */
@@ -2543,6 +2560,60 @@ function dayPlayer(
   ctx.fillRect(tx, by, bwid * clamp(t / Math.max(0.01, total)), 6)
 }
 
+function daySlashDate(iso: string, es: boolean): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!m) return iso
+  return es ? `${m[3]}/${m[2]}/${m[1]}` : `${m[2]}/${m[3]}/${m[1]}`
+}
+
+/** Letras blancas torcidas sobre negro. El mismo carácter no se mueve entre fotogramas. */
+function dayPunkLine(ctx: C, text: string, cx: number, cy: number, size: number, seed: number) {
+  ctx.font = HEAD(size)
+  ctx.fillStyle = '#fff'
+  ctx.textBaseline = 'middle'
+  const chars = [...text]
+  const widths = chars.map((c) => ctx.measureText(c).width)
+  const track = size * 0.06
+  const total = widths.reduce((a, b) => a + b, 0) + track * Math.max(0, chars.length - 1)
+  let x = cx - total / 2
+  chars.forEach((c, i) => {
+    const j = hash(seed * 17 + i, size)
+    const w = widths[i]
+    ctx.save()
+    ctx.translate(x + w / 2, cy + (j - 0.5) * size * 0.28)
+    ctx.rotate((hash(i, seed + 9) - 0.5) * 0.28)
+    ctx.textAlign = 'center'
+    ctx.fillText(c, 0, 0)
+    ctx.restore()
+    x += w + track
+  })
+}
+
+function dayPunkTitle(ctx: C, W: number, H: number, es: boolean, iso: string) {
+  const V = H > W
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, W, H)
+  const lines = es
+    ? ['EL BREAKBEAT', 'DEL DÍA', daySlashDate(iso, true)]
+    : ['THE BREAKBEAT', 'OF THE DAY', daySlashDate(iso, false)]
+  const maxW = W - (V ? 160 : 240)
+  const sizes = lines.map((line, i) => {
+    let s = i === 2 ? (V ? 78 : 64) : (V ? 108 : 86)
+    ctx.font = HEAD(s)
+    const chars = [...line]
+    const raw = chars.reduce((a, c) => a + ctx.measureText(c).width, 0) + s * 0.06 * Math.max(0, chars.length - 1)
+    if (raw > maxW) s = Math.max(36, Math.floor(s * maxW / raw))
+    return s
+  })
+  const gap = V ? 36 : 22
+  const block = sizes.reduce((a, s) => a + s, 0) + gap * (lines.length - 1)
+  let y = (H - block) / 2 + sizes[0] * 0.55
+  lines.forEach((line, i) => {
+    dayPunkLine(ctx, line, W / 2, y, sizes[i], i + 1)
+    y += sizes[i] + gap
+  })
+}
+
 export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   const V = H > W
   const es = d.es
@@ -2550,17 +2621,22 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   const n = d.cards.length
   const cardSec = dayCardSeconds(n)
   const scenes = dayScenes(n, d.rest.length > 0, cardSec)
-  const total = scenes[scenes.length - 1]?.b ?? DAY_INTRO + DAY_OUTRO
+  const total = scenes[scenes.length - 1]?.b ?? DAY_TITLE + DAY_INTRO + DAY_OUTRO
   const found = scenes.findIndex((s) => t >= s.a && t < s.b)
   const si = found === -1 ? scenes.length - 1 : found
   const sc = scenes[si]
   const lt = t - sc.a
   const dur = sc.b - sc.a
 
+  if (sc.k === 'title') {
+    dayPunkTitle(ctx, W, H, es, d.iso)
+    return
+  }
+
   paper(ctx, W, H, '#ece2cf')
   const tense = dayReelTense(d.iso, es)
   const promise = d.selection && n > 1
-    ? (es ? `COMPARTIMOS LOS ${n} MEJORES` : `SHARING THE ${n} BEST`)
+    ? (es ? `COMPARTIMOS LOS ${n} SELECCIONADOS` : `SHARING THE ${n} SELECTED`)
     : ''
   const dayLead = tense.today
     ? (es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES")
@@ -2625,8 +2701,12 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
         V ? L.hW : W - 160,
         capH - 8,
         es
-          ? (d.selection && n > 1 ? `ESTE ES EL ${sc.i + 1} DE LOS ${n} MEJORES` : `ESTE ES EL ${sc.i + 1} DE ${n}`)
-          : (d.selection && n > 1 ? `THIS IS ${sc.i + 1} OF THE ${n} BEST` : `THIS IS ${sc.i + 1} OF ${n}`),
+          ? (d.selection && n > 1
+            ? `ESTE ES EL ${dayOrdinal(sc.i + 1, true)} DE LOS ${n} SELECCIONADOS`
+            : `ESTE ES EL ${dayOrdinal(sc.i + 1, true)} DE LOS ${n}`)
+          : (d.selection && n > 1
+            ? `THIS IS THE ${dayOrdinal(sc.i + 1, false)} OF THE ${n} SELECTED`
+            : `THIS IS THE ${dayOrdinal(sc.i + 1, false)} OF THE ${n}`),
         es
           ? (tense.today ? `DE LOS ${Math.max(d.outCount, n)} QUE SALEN HOY` : `DE LOS ${Math.max(d.outCount, n)} DEL ${tense.when}`)
           : (tense.today ? `OF THE ${Math.max(d.outCount, n)} OUT TODAY` : `OF THE ${Math.max(d.outCount, n)} FROM ${tense.when}`),
