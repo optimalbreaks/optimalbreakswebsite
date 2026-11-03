@@ -11,6 +11,8 @@
 // amarillo del blog (cartel en vez de carátula). Sin audio (la música se pone en la red).
 // ============================================
 
+import { dayReelTense } from '@/lib/share-caption'
+
 export type Img = HTMLImageElement | ImageBitmap
 export type TopRow = { pos: number; title: string; artists: string; label: string; saves: number; img: Img | null }
 export type WeekData = { week: string; count: number; tracks: { title: string; artists: string; label: string; img: Img | null }[] }
@@ -2204,7 +2206,7 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 }
 
 // ===================== DÍA (artículo /topreleases/dia) =====================
-// Primero el texto («lanzamientos de hoy»), ya con el tema más destacado
+// Primero el recuento del día, ya con el tema más destacado
 // sonando. Luego una card por tema. El último sigue hasta el final del vídeo.
 export const DAY_INTRO = 5
 export const DAY_REST = 5.4
@@ -2250,6 +2252,8 @@ export type DayCardAnim = {
 export type DayAnim = {
   es: boolean
   date: string
+  /** `YYYY-MM-DD`. El presente («salen hoy») solo si el reel se genera ese día. */
+  iso: string
   selection: boolean
   outCount: number
   cards: DayCardAnim[]
@@ -2316,6 +2320,7 @@ function dayCoverStrip(
 function dayOpeningList(
   ctx: C, x: number, y: number, w: number, h: number,
   es: boolean, outCount: number, cards: DayCardAnim[], wide: boolean,
+  tense: { today: boolean; when: string },
 ) {
   box(ctx, x, y, w, h, YELLOW, INK, 12, 6)
   const pad = wide ? 28 : 32
@@ -2327,16 +2332,25 @@ function dayOpeningList(
   ctx.font = MONO(wide ? 18 : 22)
   spaced(ctx, 'BREAKBEAT', x + pad, cy, 3)
   cy += wide ? 8 : 10
-  const head = es ? `${outCount} LANZAMIENTOS SALEN HOY` : `${outCount} RELEASES OUT TODAY`
-  let hs = wide ? 32 : 40
+  const head = tense.today
+    ? (es ? [`${outCount} LANZAMIENTOS SALEN HOY`] : [`${outCount} RELEASES OUT TODAY`])
+    : (es
+      ? [`${outCount} LANZAMIENTOS`, `SALIERON EL ${tense.when}`]
+      : [`${outCount} RELEASES`, `CAME OUT ON ${tense.when}`])
+  let hs = wide ? 28 : 34
   ctx.fillStyle = INK
-  ctx.font = HEAD(hs)
-  while (ctx.measureText(head).width > maxW && hs > 20) {
-    hs -= 2
+  for (const line of head) {
     ctx.font = HEAD(hs)
+    while (ctx.measureText(line).width > maxW && hs > 16) {
+      hs -= 2
+      ctx.font = HEAD(hs)
+    }
   }
-  cy += hs
-  ctx.fillText(head, x + pad, cy)
+  for (const line of head) {
+    cy += hs
+    ctx.font = HEAD(hs)
+    ctx.fillText(line, x + pad, cy)
+  }
   const rows = cards.slice(0, 5)
   const extra = Math.max(0, outCount - rows.length)
   const foot = extra > 0 ? (wide ? 28 : 36) : 8
@@ -2371,7 +2385,10 @@ function dayOpeningList(
 }
 
 /** Cartel final. Logo y «mándaselo» solo aquí: el gancho no lleva marca. */
-function dayEndPoster(ctx: C, x: number, y: number, w: number, h: number, es: boolean) {
+function dayEndPoster(
+  ctx: C, x: number, y: number, w: number, h: number, es: boolean,
+  tense: { today: boolean; when: string },
+) {
   box(ctx, x, y, w, h, YELLOW, INK, 14, 6)
   const pad = Math.max(32, Math.min(56, w * 0.05))
   const maxW = w - pad * 2
@@ -2380,10 +2397,13 @@ function dayEndPoster(ctx: C, x: number, y: number, w: number, h: number, es: bo
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = RED
   ctx.font = MONO(Math.min(26, h * 0.04))
-  spaced(ctx, es ? 'BREAKBEAT · HOY' : 'BREAKBEAT · TODAY', x + pad, cy, 4)
+  const kicker = tense.today
+    ? (es ? 'BREAKBEAT · HOY' : 'BREAKBEAT · TODAY')
+    : `BREAKBEAT · ${tense.when}`
+  spaced(ctx, kicker, x + pad, cy, 4)
   const question = es
-    ? ['¿QUIERES ESCUCHAR', 'TODOS LOS LANZAMIENTOS', 'DE HOY?']
-    : ['WANT TO HEAR', 'EVERY RELEASE', 'OUT TODAY?']
+    ? ['¿QUIERES ESCUCHAR', 'TODOS LOS LANZAMIENTOS', tense.today ? 'DE HOY?' : `DEL ${tense.when}?`]
+    : ['WANT TO HEAR', 'EVERY RELEASE', tense.today ? 'OUT TODAY?' : `FROM ${tense.when}?`]
   let qs = Math.min(h > 900 ? 78 : 58, h * 0.09)
   for (const line of question) {
     ctx.font = HEAD(qs)
@@ -2501,8 +2521,12 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   const dur = sc.b - sc.a
 
   paper(ctx, W, H, '#ece2cf')
+  const tense = dayReelTense(d.iso, es)
+  const dayLead = tense.today
+    ? (es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES")
+    : (es ? `SALIERON EL ${tense.when}` : `OUT ON ${tense.when}`)
   const ticker = [
-    es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES",
+    dayLead,
     d.date,
     d.selection ? (es ? 'SELECCIÓN OPTIMAL BREAKS' : 'OPTIMAL BREAKS SELECTION') : (es ? 'NOVEDADES' : 'NEW RELEASES'),
     '',
@@ -2531,12 +2555,12 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       const cx = (W - cs) / 2
       cover(ctx, hero?.img ?? null, cx, top, cs, 8)
       const y2 = top + cs + 20
-      dayOpeningList(ctx, 70, y2, 940, Math.max(220, bottom - y2), es, count, d.cards, false)
+      dayOpeningList(ctx, 70, y2, 940, Math.max(220, bottom - y2), es, count, d.cards, false, tense)
     } else {
       const cs = Math.min(520, bottom - top)
       const cy = top + Math.max(0, (bottom - top - cs) / 2)
       cover(ctx, hero?.img ?? null, 80, cy, cs, 8)
-      dayOpeningList(ctx, 80 + cs + 28, top, W - 188 - cs, bottom - top, es, count, d.cards, true)
+      dayOpeningList(ctx, 80 + cs + 28, top, W - 188 - cs, bottom - top, es, count, d.cards, true, tense)
     }
   } else if (sc.k === 'card') {
     const card = d.cards[sc.i]
@@ -2544,7 +2568,7 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       fnHeader(
         ctx, L, lt,
         n <= 1
-          ? (d.selection ? (es ? 'SELECCIÓN' : 'THE PICK') : (es ? 'HOY' : 'TODAY'))
+          ? (d.selection ? (es ? 'SELECCIÓN' : 'THE PICK') : (tense.today ? (es ? 'HOY' : 'TODAY') : tense.when))
           : `${String(sc.i + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`,
         card.title,
         card.artists,
@@ -2594,7 +2618,7 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
     const top = V ? 118 : 108
     const x = 120
     const w = V ? 840 : 1680
-    dayEndPoster(ctx, x, top, w, L.foot.y - 20 - top, es)
+    dayEndPoster(ctx, x, top, w, L.foot.y - 20 - top, es, tense)
   }
   ctx.restore()
 
@@ -2632,6 +2656,6 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
     ctx.fillStyle = MUTED
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
-    spaced(ctx, es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES", F.x, F.y + (V ? 126 : 90), 3)
+    spaced(ctx, dayLead, F.x, F.y + (V ? 126 : 90), 3)
   }
 }

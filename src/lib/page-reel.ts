@@ -87,6 +87,8 @@ export type DayReelInput = {
   es: boolean
   /** «3 NOV 2026», ya formateado. */
   date: string
+  /** `YYYY-MM-DD` del artículo. El vídeo habla en presente solo si es hoy en Madrid. */
+  iso: string
   /** true = `picks` es la selección editorial. false = son los temas del día. */
   selection: boolean
   outCount: number
@@ -243,6 +245,7 @@ async function renderDayReel(
   const data = {
     es: day.es,
     date: day.date,
+    iso: day.iso,
     selection: day.selection,
     outCount: day.outCount,
     cards,

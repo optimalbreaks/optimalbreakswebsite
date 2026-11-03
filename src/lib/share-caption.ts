@@ -34,6 +34,29 @@ export function instagramMention(socials: unknown): string | null {
   return `@${handle}`
 }
 
+const DAY_MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+const DAY_MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+/**
+ * Presente solo si el reel se genera el mismo día (Madrid).
+ * `when` va en mayúsculas para el vídeo; `spoken` para el pie.
+ */
+export function dayReelTense(iso: string, es: boolean): { today: boolean; when: string; spoken: string } {
+  const todayIso = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!m) return { today: false, when: '', spoken: '' }
+  const day = Number(m[3])
+  const monthEs = DAY_MONTHS_ES[Number(m[2]) - 1] || ''
+  const monthEn = DAY_MONTHS_EN[Number(m[2]) - 1] || ''
+  return {
+    today: iso === todayIso,
+    when: es ? `${day} DE ${monthEs.toUpperCase()}` : `${monthEn.toUpperCase()} ${day}`,
+    spoken: es ? `${day} de ${monthEs}` : `${monthEn} ${day}`,
+  }
+}
+
 /** La primera línea del pie de Instagram, para que el artista reciba la mención. */
 export function prependInstagramMentions(caption: string, mentions: string[]): string {
   const line = [...new Set(mentions.map((m) => m.trim()).filter((m) => /^@[A-Za-z0-9._]{1,30}$/.test(m)))].join(' ')
@@ -138,6 +161,8 @@ export function buildPageVideoCaption(
     topPlayed?: string
     topSaved?: string
     bpm?: number | null
+    /** `YYYY-MM-DD` del artículo del día. El presente solo vale si es hoy en Madrid. */
+    dayIso?: string
   },
   opts: { lang: Locale | string; url: string; platform: SharePlatform },
 ): string {
@@ -215,11 +240,17 @@ export function buildPageVideoCaption(
       .join('\n')
   }
   if (kind === 'day') {
+    const spoken = d.dayIso ? dayReelTense(d.dayIso, es) : null
+    const when = spoken && !spoken.today ? spoken.spoken : ''
     return [
-      es ? `🆕 Lanzamientos de hoy${d.weekLabel ? `, ${d.weekLabel}` : ''}.` : `🆕 Today's releases${d.weekLabel ? `, ${d.weekLabel}` : ''}.`,
+      when
+        ? (es ? `🆕 Lanzamientos del ${when}.` : `🆕 Releases of ${when}.`)
+        : (es ? `🆕 Lanzamientos de hoy${d.weekLabel ? `, ${d.weekLabel}` : ''}.` : `🆕 Today's releases${d.weekLabel ? `, ${d.weekLabel}` : ''}.`),
       d.excerpt
         ? (es ? `La selección de Optimal Breaks: ${d.excerpt}.` : `The Optimal Breaks selection: ${d.excerpt}.`)
-        : (es ? `Hoy salen ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks are out today.`),
+        : when
+          ? (es ? `El ${when} salieron ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks came out on ${when}.`)
+          : (es ? `Hoy salen ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks are out today.`),
       d.first && d.excerpt ? (es ? `Abre con ${d.first}.` : `It opens with ${d.first}.`) : '',
       es ? 'Mándaselo a quien pincha breakbeat. Link en la bio.' : 'Send it to whoever plays breakbeat. Link in bio.',
       '',

@@ -55,8 +55,8 @@ const KIND_ES: Record<Kind, string> = {
     'Cierra preguntando cuál fue su tema del periodo o si falta alguno.',
   ].join('\n'),
   day: [
-    'El artículo de los lanzamientos de un día concreto (Optimal Breaks, /topreleases/dia). El primer fotograma es la carátula del más destacado y cuántos temas de breakbeat salen hoy, sin logo. Luego, una card por tema de la selección de Optimal Breaks (hasta 5; los que la casa ha guardado con «+»), y suena un trozo de cada uno. Cierra con un cartel: escucharlos todos, visita nuestra web, link en bio, y mandárselo a quien pincha breakbeat. El sexto, si lo hay, no entra en el vídeo. Si no hay selección, las cards son los temas que salen ese día.',
-    'Nombra la fecha y los temas de `picks` con su artista y sello. Di cuántos salen en total (`outToday`). Si `selection` es false, no digas que hay una selección de la casa. Cierra con «mándaselo a quien pincha breakbeat» y «link en la bio». Nada de hashtags genéricos.',
+    'El artículo de los lanzamientos de un día concreto (Optimal Breaks, /topreleases/dia). El primer fotograma es la carátula del más destacado y la lista de los que suenan, sin logo. Luego, una card por tema de la selección de Optimal Breaks (hasta 5; los que la casa ha guardado con «+»), y suena un trozo de cada uno. Cierra con un cartel: escucharlos todos, visita nuestra web, link en bio, y mandárselo a quien pincha breakbeat. El sexto, si lo hay, no entra en el vídeo. Si no hay selección, las cards son los temas de ese día.',
+    'Si `live` es true, presente: «salen hoy». Si `live` es false, el día ya pasó: pasado, «salieron el …» con `when` (por ejemplo «el 30 de octubre»). Prohibido «hoy», «salen» o «out today» cuando `live` es false. Nombra la fecha y los temas de `picks` con su artista y sello. Di cuántos hubo en total (`outCount`). Si `selection` es false, no digas que hay una selección de la casa. Cierra con «mándaselo a quien pincha breakbeat» y «link en la bio». Nada de hashtags genéricos.',
   ].join('\n'),
 }
 const KIND_EN: Record<Kind, string> = {
@@ -80,8 +80,8 @@ const KIND_EN: Record<Kind, string> = {
     'Close by asking what their track of the period was or what is missing.',
   ].join('\n'),
   day: [
-    "The article for one day's releases (Optimal Breaks, /topreleases/dia). The first frame is the top track's cover plus how many breakbeat releases are out today. No logo there. Then one card per track in the Optimal Breaks selection (up to 5; the ones the house saved with «+»), and a slice of each one plays. It closes on a poster: hear all of today's releases, visit the site, link in bio, and send it to whoever plays breakbeat. A sixth, if there is one, stays out of the video. If there is no selection, the cards are the tracks out that day.",
-    'Name the date and the `picks` with artist and label. Say how many are out in total (`outToday`). If `selection` is false, do not claim there is a house selection. Close with “send it to whoever plays breakbeat” and “link in bio”. No generic hashtags.',
+    "The article for one day's releases (Optimal Breaks, /topreleases/dia). The first frame is the top track's cover plus the list of the tracks that play. No logo there. Then one card per track in the Optimal Breaks selection (up to 5; the ones the house saved with «+»), and a slice of each one plays. It closes on a poster: hear all of that day's releases, visit the site, link in bio, and send it to whoever plays breakbeat. A sixth, if there is one, stays out of the video. If there is no selection, the cards are the tracks from that day.",
+    'If `live` is true, present tense: “out today”. If `live` is false, that day is already past: past tense, “came out on …” using `when` (for example “October 30”). Never say “today”, “out today” or “salen hoy” when `live` is false. Name the date and the `picks` with artist and label. Say how many came out in total (`outCount`). If `selection` is false, do not claim there is a house selection. Close with “send it to whoever plays breakbeat” and “link in bio”. No generic hashtags.',
   ].join('\n'),
 }
 

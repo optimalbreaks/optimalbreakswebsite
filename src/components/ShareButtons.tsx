@@ -15,7 +15,7 @@ import {
   copyShareLink,
   openFacebookShareDialog,
 } from '@/lib/share-track'
-import { aiShareCaption, buildPageVideoCaption, prependInstagramMentions, type SharePlatform } from '@/lib/share-caption'
+import { aiShareCaption, buildPageVideoCaption, dayReelTense, prependInstagramMentions, type SharePlatform } from '@/lib/share-caption'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
 import { dayAudioSlots, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
@@ -175,6 +175,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
     if (pageReel?.day && pageReel.day.picks.length > 0) {
       const d = pageReel.day
       const name = (t?: { title: string; artists: string }) => (t ? `${t.artists} — ${t.title}` : undefined)
+      const tense = dayReelTense(d.iso, lang !== 'en')
       return aiShareCaption({
         kind: 'day',
         platform,
@@ -186,6 +187,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
             {
               title: l === lang ? pageReel.title : undefined,
               weekLabel: d.date,
+              dayIso: d.iso,
               count: d.outCount,
               first: name(d.picks[0]),
               excerpt: d.selection
@@ -196,8 +198,10 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           ),
         context: {
           date: d.date,
+          live: tense.today,
+          when: tense.spoken,
           selection: d.selection,
-          outToday: d.outCount,
+          outCount: d.outCount,
           picks: d.picks.map((t) => ({ title: t.title, artists: t.artists, label: t.label })),
           alsoOut: d.rest.length,
         },

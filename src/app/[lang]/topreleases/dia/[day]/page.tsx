@@ -68,6 +68,7 @@ function dayReelOf(
   const dayReel: DayReelInput = {
     es: lang !== 'en',
     date: reelDayLabel(day, lang),
+    iso: day,
     selection: picks.length > 0,
     outCount: picks.length + rest.length,
     picks: sounding.map((t) => ({
