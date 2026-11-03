@@ -120,6 +120,34 @@ export function longReleaseDay(ymd: string, lang: 'es' | 'en'): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+/**
+ * H1 y `<title>` del artículo de un día. La fecha va dentro: cada URL tiene
+ * el suyo. «Hoy» no entra, porque la página se queda y al día siguiente ya no lo es.
+ */
+export function dayReleaseHeading(ymd: string, lang: 'es' | 'en'): { lead: string; when: string; title: string; h1: string } {
+  const when = longReleaseDay(ymd, lang)
+  const phrase = new Date(`${ymd}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+  if (lang === 'es') {
+    return {
+      lead: 'Temas de breakbeat lanzados el',
+      when,
+      title: `Lanzamientos de breakbeat del ${phrase}`,
+      h1: `Temas de breakbeat lanzados el ${when.charAt(0).toLowerCase()}${when.slice(1)}`,
+    }
+  }
+  return {
+    lead: 'Breakbeat tracks released on',
+    when,
+    title: `Breakbeat releases of ${phrase}`,
+    h1: `Breakbeat tracks released on ${when}`,
+  }
+}
+
 async function editorSavedKeys(ids: string[], urls: string[]): Promise<Set<string>> {
   const saved = new Set<string>()
   if (ids.length === 0 && urls.length === 0) return saved

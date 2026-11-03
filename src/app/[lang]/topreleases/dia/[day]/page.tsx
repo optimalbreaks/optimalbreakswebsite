@@ -18,8 +18,8 @@ import {
   DAY_COPY,
   clampReleaseDay,
   dayReleaseBlurb,
+  dayReleaseHeading,
   loadDayReleases,
-  longReleaseDay,
   MIN_RELEASE_DAY,
   shiftReleaseDay,
 } from '@/lib/fortnight-live'
@@ -181,8 +181,8 @@ export async function generateMetadata({
   }
   const today = todayMadrid()
   const day = clampReleaseDay(raw, today)
-  const when = longReleaseDay(day, safeLang)
-  const title = `${copy.title} · ${when}`
+  const heading = dayReleaseHeading(day, safeLang)
+  const title = heading.title
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { picks, rest } = await loadDayReleases(supabase, day)
   const blurb = dayReleaseBlurb(safeLang, picks.length, rest.length)
@@ -198,7 +198,7 @@ export async function generateMetadata({
     description,
     'article',
     image,
-    [copy.title, 'breakbeat', when, ...names.slice(0, 12)],
+    ['breakbeat', title, ...names.slice(0, 12)],
     false,
     { 'article:published_time': `${day}T12:00:00+01:00` },
   )
@@ -250,8 +250,8 @@ export default async function DayReleaseArticlePage({
     : joinList(named, lang)
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
-  const when = longReleaseDay(day, lang)
-  const articleTitle = `${copy.title} · ${when}`
+  const heading = dayReleaseHeading(day, lang)
+  const articleTitle = heading.h1
   const articleBlurb = dayReleaseBlurb(lang, picks.length, rest.length)
   const articleDescription = named.length ? `${articleBlurb} ${pickSentence}.` : articleBlurb
   const articleImage = publicOgThirdsUrl(dayTracks.map((t) => t.artwork_url))
@@ -293,7 +293,8 @@ export default async function DayReleaseArticlePage({
             today={today}
             label={copy.pick}
             articlePath={`/${lang}/topreleases/dia`}
-            headline={longReleaseDay(day, lang)}
+            headline={heading.when}
+            lead={heading.lead}
             kicker={copy.section}
             todayBadge={day === today ? copy.today : null}
             prevHref={prev >= MIN_RELEASE_DAY ? `/${lang}/topreleases/dia/${prev}` : null}

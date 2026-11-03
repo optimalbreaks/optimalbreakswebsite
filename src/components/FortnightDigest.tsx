@@ -763,7 +763,7 @@ function monthTitle(ym: string, lang: Locale): string {
 
 /** Calendario del artículo. No es el del navegador: naranja claro, días en rojo, borde negro. */
 export function DayReleaseDate({
-  lang, day, today, year, label, articlePath, headline, kicker, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
+  lang, day, today, year, label, articlePath, headline, lead, kicker, todayBadge, prevHref, nextHref, prevLabel, nextLabel,
 }: {
   lang: Locale
   day: string
@@ -772,8 +772,10 @@ export function DayReleaseDate({
   label: string
   /** Prefijo `/es/topreleases/dia`: elegir un día abre `${articlePath}/${día}`. */
   articlePath?: string
-  /** Fecha larga. Es el H1 y también abre el calendario. */
+  /** Fecha larga. Es el H1, junto con `lead`, y también abre el calendario. */
   headline: string
+  /** Frase delante de la fecha, dentro del mismo H1. */
+  lead: string
   /** Pastilla encima del título, como «Nuevos lanzamientos» en /charts. */
   kicker: string
   todayBadge?: string | null
@@ -834,10 +836,10 @@ export function DayReleaseDate({
             type="button"
             onClick={openCalendar}
             aria-expanded={open}
-            className="cursor-pointer border-0 bg-transparent p-0 text-left text-[2.35rem] font-black leading-[0.92] text-[var(--ink)] hover:text-[var(--red)] sm:text-6xl"
-            style={display}
+            className="cursor-pointer border-0 bg-transparent p-0 text-left text-[var(--ink)] hover:text-[var(--red)]"
           >
-            {headline}
+            <span className="block text-xl font-black leading-tight sm:text-2xl" style={display}>{lead}</span>
+            <span className="mt-1 block text-[2.15rem] font-black leading-[0.92] sm:text-5xl" style={display}>{headline}</span>
           </button>
         </h1>
       </div>
