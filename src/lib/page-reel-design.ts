@@ -2212,8 +2212,7 @@ export const DAY_OUTRO = 4.6
 
 export function dayCardSeconds(n: number): number {
   if (n <= 1) return 12
-  if (n === 2) return 9
-  return 7.2
+  return 10
 }
 
 export function dayReelDuration(cards: number, hasRest: boolean): number {
@@ -2258,17 +2257,52 @@ function dayScenes(n: number, rest: boolean, cardSec: number): DayScene[] {
   return out
 }
 
+function dayStripCols(n: number, wide: boolean): number {
+  if (n <= 1) return 1
+  if (wide) return Math.min(n, 5)
+  if (n <= 3) return n
+  if (n === 4) return 2
+  return 3
+}
+
+/** Carátulas grandes, centradas en el hueco. La última fila también va centrada. */
+function dayCoverStrip(
+  ctx: C, imgs: (Img | null)[], x: number, y: number, w: number, h: number, wide: boolean, lt: number, pinTop = false,
+) {
+  const n = imgs.length
+  if (!n || w < 40 || h < 40) return
+  const gap = 16
+  const cols = dayStripCols(n, wide)
+  const rows = Math.ceil(n / cols)
+  const cs = Math.floor(Math.min((w - gap * (cols - 1)) / cols, (h - gap * (rows - 1)) / rows))
+  if (cs < 48) return
+  const gridH = rows * cs + (rows - 1) * gap
+  const oy = pinTop ? y : y + Math.max(0, (h - gridH) / 2)
+  imgs.forEach((im, i) => {
+    const r = Math.floor(i / cols)
+    const c = i % cols
+    const inRow = Math.min(cols, n - r * cols)
+    const rowW = inRow * cs + (inRow - 1) * gap
+    const rx = x + (w - rowW) / 2
+    const ix = rx + c * (cs + gap)
+    const iy = oy + r * (cs + gap)
+    pop(ctx, ph(lt, 0.15 + i * 0.08, 0.4), ix + cs / 2, iy + cs / 2, () => {
+      cover(ctx, im, ix, iy, cs, 4)
+    }, (hash(i, 4) - 0.5) * 0.2)
+  })
+}
+
 function dayLayout(V: boolean): FnLayout {
   return V
     ? {
         V, hx: 70, kY: 168, hY: 310, hW: 940,
         S: { x: 70, y: 560, w: 940, h: 980 },
-        foot: { x: 70, y: 1688, w: 940, h: 16 },
+        foot: { x: 70, y: 1560, w: 940, h: 16 },
       }
     : {
         V, hx: 80, kY: 150, hY: 270, hW: 820,
         S: { x: 980, y: 140, w: 860, h: 760 },
-        foot: { x: 80, y: 900, w: 820, h: 14 },
+        foot: { x: 80, y: 900, w: 1760, h: 14 },
       }
 }
 
@@ -2351,12 +2385,6 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   hazard(ctx, V ? 64 : 56, 22, W)
 
   ctx.save()
-  if (sc.k !== 'outro') {
-    const ex = ease(ph(lt, dur - 0.32, 0.32))
-    ctx.translate(-W * 0.35 * ex, 0)
-    ctx.globalAlpha = 1 - ex
-  }
-
   if (sc.k === 'intro') {
     fnHeader(
       ctx, L, lt,
@@ -2389,20 +2417,35 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
         spaced(ctx, label, x + 30, y + ch * 0.82, 4)
       }, (hash(i, 3) - 0.5) * 0.35)
     })
+    const stripTop = V ? L.S.y + ch + 36 : 530
+    dayCoverStrip(
+      ctx,
+      d.cards.map((c) => c.img),
+      V ? L.S.x : 80,
+      stripTop,
+      V ? L.S.w : W - 160,
+      L.foot.y - 28 - stripTop,
+      !V,
+      lt,
+    )
   } else if (sc.k === 'card') {
     const card = d.cards[sc.i]
     if (card) {
       fnHeader(
         ctx, L, lt,
-        d.selection ? (es ? 'SELECCIÓN' : 'THE PICK') : (es ? 'HOY' : 'TODAY'),
+        n <= 1
+          ? (d.selection ? (es ? 'SELECCIÓN' : 'THE PICK') : (es ? 'HOY' : 'TODAY'))
+          : `${String(sc.i + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`,
         card.title,
         card.artists,
         RED,
       )
       const S = L.S
-      const cs = Math.min(V ? 820 : 640, S.w - 40, S.h - (V ? 24 : 20))
-      const cx = S.x + (S.w - cs) / 2
-      const cy = V ? S.y + S.h - cs - 16 : S.y + Math.max(0, (S.h - cs) / 2)
+      const top = V ? 530 : S.y
+      const bottom = L.foot.y - (V ? 36 : 20)
+      const cs = Math.min(V ? L.hW : Math.min(760, S.w - 16), bottom - top)
+      const cx = V ? (W - cs) / 2 : S.x + (S.w - cs) / 2
+      const cy = V ? top : S.y + Math.max(0, (Math.min(S.h, bottom - S.y) - cs) / 2)
       pop(ctx, ph(lt, 0.15, 0.45), cx + cs / 2, cy + cs / 2, () => {
         const s = 1 + 0.035 * beatPulse(t)
         ctx.save()
@@ -2411,18 +2454,6 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
         ctx.translate(-(cx + cs / 2), -(cy + cs / 2))
         cover(ctx, card.img, cx, cy, cs, 8)
         ctx.restore()
-        if (d.selection) {
-          ctx.save()
-          ctx.translate(cx + cs - 36, cy + 54)
-          ctx.rotate(-0.08)
-          box(ctx, -150, -28, 300, 56, YELLOW, INK, 6, 3)
-          ctx.fillStyle = INK
-          ctx.font = MONO(18)
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          spaced(ctx, es ? 'SELECCIÓN' : 'THE PICK', 0, 2, 3, 'center')
-          ctx.restore()
-        }
         if (card.label) {
           ctx.font = MONO(V ? 22 : 20)
           const lab = card.label.toUpperCase()
@@ -2442,20 +2473,13 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       ctx, L, lt,
       es ? 'TAMBIÉN' : 'ALSO',
       es ? 'EL RESTO\nDEL DÍA' : 'THE REST\nOF THE DAY',
-      es ? `${d.rest.length} MÁS EN EL ARTÍCULO` : `${d.rest.length} MORE IN THE ARTICLE`,
+      es
+        ? `${Math.max(d.rest.length, d.outCount - d.cards.length)} MÁS EN EL ARTÍCULO`
+        : `${Math.max(d.rest.length, d.outCount - d.cards.length)} MORE IN THE ARTICLE`,
       INK,
     )
-    const S = L.S
-    const cols = V ? 4 : 4
-    const gap = 16
-    const cs = Math.min((S.w - gap * (cols - 1)) / cols, V ? 210 : 170)
-    d.rest.slice(0, 8).forEach((im, i) => {
-      const x = S.x + (i % cols) * (cs + gap)
-      const y = S.y + Math.floor(i / cols) * (cs + gap)
-      pop(ctx, ph(lt, 0.2 + i * 0.08, 0.4), x + cs / 2, y + cs / 2, () => {
-        cover(ctx, im, x, y, cs, 4)
-      }, (hash(i, 8) - 0.5) * 0.5)
-    })
+    const stripTop = V ? 540 : 560
+    dayCoverStrip(ctx, d.rest.slice(0, 8), V ? L.hx : 80, stripTop, V ? L.hW : W - 160, L.foot.y - 28 - stripTop, !V, lt)
   } else {
     fnHeader(
       ctx, L, lt,
@@ -2482,6 +2506,24 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       ctx.fillText(fit(ctx, cta, HEAD, S.w - 48, V ? 36 : 30, 16), S.x + S.w / 2, S.y + (V ? 72 : 62))
       ctx.restore()
     })
+    const stripTop = S.y + (V ? 190 : 170)
+    const stripH = L.foot.y - 72 - stripTop
+    dayCoverStrip(
+      ctx,
+      d.cards.map((c) => c.img),
+      V ? L.hx : 80,
+      stripTop,
+      V ? L.hW : W - 160,
+      stripH,
+      !V,
+      lt,
+      true,
+    )
+    ctx.font = MONO(V ? 26 : 22)
+    ctx.fillStyle = INK
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    spaced(ctx, 'OPTIMALBREAKS.COM', V ? L.hx : 80, L.foot.y - 36, 4)
   }
   ctx.restore()
 
@@ -2512,7 +2554,7 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   if (d.sound && cue) {
     const py = F.y + F.h + (V ? 22 : 16)
     const pH = V ? 132 : 110
-    dayPlayer(ctx, F.x, py, V ? 940 : 820, pH, { ...cue, env: d.sound.env }, t, total, V)
+    dayPlayer(ctx, F.x, py, F.w, pH, { ...cue, env: d.sound.env }, t, total, V)
   } else {
     obHeader(ctx, F.x, F.y + (V ? 86 : 56), V ? 40 : 30)
     ctx.font = MONO(V ? 20 : 16)
