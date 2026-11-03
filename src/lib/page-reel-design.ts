@@ -2214,7 +2214,8 @@ export const DAY_OUTRO = 4.6
 
 export function dayCardSeconds(n: number): number {
   if (n <= 1) return 12
-  return 10
+  // 5 cards + la estantería del resto = 90 s, el tope de un reel. No se alarga más.
+  return 15
 }
 
 /**
@@ -2321,6 +2322,7 @@ function dayOpeningList(
   ctx: C, x: number, y: number, w: number, h: number,
   es: boolean, outCount: number, cards: DayCardAnim[], wide: boolean,
   tense: { today: boolean; when: string },
+  promise: string,
 ) {
   box(ctx, x, y, w, h, YELLOW, INK, 12, 6)
   const pad = wide ? 28 : 32
@@ -2350,6 +2352,12 @@ function dayOpeningList(
     cy += hs
     ctx.font = HEAD(hs)
     ctx.fillText(line, x + pad, cy)
+  }
+  if (promise) {
+    cy += wide ? 22 : 28
+    ctx.fillStyle = RED
+    ctx.font = MONO(wide ? 16 : 20)
+    ctx.fillText(fit(ctx, promise, (z) => MONO(z), maxW, wide ? 16 : 20, 12), x + pad, cy)
   }
   const rows = cards.slice(0, 5)
   const extra = Math.max(0, outCount - rows.length)
@@ -2465,6 +2473,18 @@ function dayEndPoster(
   spaced(ctx, es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE', cx, cy + logo + 8, 3, 'center')
 }
 
+/** Frase que se lee en la card, como un subtítulo. Visible desde el primer fotograma. */
+function daySpoken(ctx: C, x: number, y: number, w: number, h: number, line1: string, line2: string) {
+  box(ctx, x, y, w, h, '#fff', INK, 6, 4)
+  const cx = x + w / 2
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = INK
+  ctx.fillText(fit(ctx, line1, HEAD, w - 40, h > 100 ? 30 : 22, 14), cx, y + h * 0.36)
+  ctx.fillStyle = RED
+  ctx.fillText(fit(ctx, line2, (z) => MONO(z), w - 40, h > 100 ? 20 : 16, 12), cx, y + h * 0.72)
+}
+
 function dayLayout(V: boolean): FnLayout {
   return V
     ? {
@@ -2539,6 +2559,9 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
 
   paper(ctx, W, H, '#ece2cf')
   const tense = dayReelTense(d.iso, es)
+  const promise = d.selection && n > 1
+    ? (es ? `COMPARTIMOS LOS ${n} MEJORES` : `SHARING THE ${n} BEST`)
+    : ''
   const dayLead = tense.today
     ? (es ? 'LANZAMIENTOS DE HOY' : "TODAY'S RELEASES")
     : (es ? `SALIERON EL ${tense.when}` : `OUT ON ${tense.when}`)
@@ -2572,12 +2595,12 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       const cx = (W - cs) / 2
       cover(ctx, hero?.img ?? null, cx, top, cs, 8)
       const y2 = top + cs + 20
-      dayOpeningList(ctx, 70, y2, 940, Math.max(220, bottom - y2), es, count, d.cards, false, tense)
+      dayOpeningList(ctx, 70, y2, 940, Math.max(220, bottom - y2), es, count, d.cards, false, tense, promise)
     } else {
       const cs = Math.min(520, bottom - top)
       const cy = top + Math.max(0, (bottom - top - cs) / 2)
       cover(ctx, hero?.img ?? null, 80, cy, cs, 8)
-      dayOpeningList(ctx, 80 + cs + 28, top, W - 188 - cs, bottom - top, es, count, d.cards, true, tense)
+      dayOpeningList(ctx, 80 + cs + 28, top, W - 188 - cs, bottom - top, es, count, d.cards, true, tense, promise)
     }
   } else if (sc.k === 'card') {
     const card = d.cards[sc.i]
@@ -2591,9 +2614,23 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
         card.artists,
         RED,
       )
+      const capH = V ? 118 : 86
       const S = L.S
       const top = V ? 530 : S.y
-      const bottom = L.foot.y - (V ? 36 : 20)
+      const bottom = L.foot.y - (V ? 20 : 16) - capH
+      daySpoken(
+        ctx,
+        V ? L.hx : 80,
+        bottom + 8,
+        V ? L.hW : W - 160,
+        capH - 8,
+        es
+          ? (d.selection && n > 1 ? `ESTE ES EL ${sc.i + 1} DE LOS ${n} MEJORES` : `ESTE ES EL ${sc.i + 1} DE ${n}`)
+          : (d.selection && n > 1 ? `THIS IS ${sc.i + 1} OF THE ${n} BEST` : `THIS IS ${sc.i + 1} OF ${n}`),
+        es
+          ? (tense.today ? `DE LOS ${Math.max(d.outCount, n)} QUE SALEN HOY` : `DE LOS ${Math.max(d.outCount, n)} DEL ${tense.when}`)
+          : (tense.today ? `OF THE ${Math.max(d.outCount, n)} OUT TODAY` : `OF THE ${Math.max(d.outCount, n)} FROM ${tense.when}`),
+      )
       const cs = Math.min(V ? L.hW : Math.min(760, S.w - 16), bottom - top)
       const cx = V ? (W - cs) / 2 : S.x + (S.w - cs) / 2
       const cy = V ? top : S.y + Math.max(0, (Math.min(S.h, bottom - S.y) - cs) / 2)

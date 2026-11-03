@@ -170,6 +170,10 @@ export function buildPageVideoCaption(
     bpm?: number | null
     /** `YYYY-MM-DD` del artículo del día. El presente solo vale si es hoy en Madrid. */
     dayIso?: string
+    /** Temas que suenan en el reel del día. Una línea cada uno. */
+    tracks?: { artists: string; title: string }[]
+    /** true = esas líneas son la selección de Optimal Breaks. */
+    selection?: boolean
   },
   opts: { lang: Locale | string; url: string; platform: SharePlatform },
 ): string {
@@ -249,22 +253,26 @@ export function buildPageVideoCaption(
   if (kind === 'day') {
     const spoken = d.dayIso ? dayReelTense(d.dayIso, es) : null
     const when = spoken && !spoken.today ? spoken.spoken : ''
+    const tracks = (d.tracks ?? []).slice(0, 5).map((t) => `🎧 ${t.artists} — ${t.title}`)
+    const head = when
+      ? (es ? `🆕 ${d.count ?? ''} lanzamientos de breakbeat salieron el ${when}` : `🆕 ${d.count ?? ''} breakbeat releases came out on ${when}`)
+      : (es ? `🆕 ${d.count ?? ''} lanzamientos de breakbeat salen hoy` : `🆕 ${d.count ?? ''} breakbeat releases are out today`)
+    const mid = es
+      ? `➕ ${d.selection ? 'La selección de Optimal Breaks. ' : ''}${d.count ?? ''} temas. El resto, en la web.`
+      : `➕ ${d.selection ? 'The Optimal Breaks selection. ' : ''}${d.count ?? ''} tracks. The rest, on the site.`
     return [
-      when
-        ? (es ? `🆕 Lanzamientos del ${when}.` : `🆕 Releases of ${when}.`)
-        : (es ? `🆕 Lanzamientos de hoy${d.weekLabel ? `, ${d.weekLabel}` : ''}.` : `🆕 Today's releases${d.weekLabel ? `, ${d.weekLabel}` : ''}.`),
-      d.excerpt
-        ? (es ? `La selección de Optimal Breaks: ${d.excerpt}.` : `The Optimal Breaks selection: ${d.excerpt}.`)
-        : when
-          ? (es ? `El ${when} salieron ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks came out on ${when}.`)
-          : (es ? `Hoy salen ${d.count ?? ''} temas.` : `${d.count ?? ''} tracks are out today.`),
-      d.first && d.excerpt ? (es ? `Abre con ${d.first}.` : `It opens with ${d.first}.`) : '',
-      es ? 'Mándaselo a quien pincha breakbeat. Link en la bio.' : 'Send it to whoever plays breakbeat. Link in bio.',
+      head,
+      '',
+      ...tracks,
+      tracks.length ? '' : null,
+      mid,
+      es ? '👉 Mándaselo a quien pincha breakbeat.' : '👉 Send it to whoever plays breakbeat.',
       '',
       link,
       '',
       '#breakbeat #breaks #ukbreaks #breakbeatmusic #newreleases',
     ]
+      .filter((l): l is string => l !== null)
       .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
       .join('\n')
   }

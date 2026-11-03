@@ -190,9 +190,8 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
               dayIso: d.iso,
               count: d.outCount,
               first: name(d.picks[0]),
-              excerpt: d.selection
-                ? d.picks.map((t) => `${t.artists} — ${t.title}`).join(', ')
-                : undefined,
+              selection: d.selection,
+              tracks: d.picks.map((t) => ({ artists: t.artists, title: t.title })),
             },
             { lang: l, url: fullUrl, platform },
           ),
