@@ -13,7 +13,7 @@ import { DayReleaseDate, DigestTrackRows } from '@/components/FortnightDigest'
 import ShareButtons from '@/components/ShareButtons'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames, findArtistSlug, splitArtistDisplayLine } from '@/lib/artist-slug-map'
-import { instagramMention } from '@/lib/share-caption'
+import { instagramMention, instagramNameGuess } from '@/lib/share-caption'
 import {
   DAY_COPY,
   clampReleaseDay,
@@ -95,30 +95,36 @@ function dayReelOf(
   }
 }
 
-/** @ de la selección, en el orden de los créditos. Quien no tiene Instagram en la ficha no sale. */
-async function selectionMentions(
+/**
+ * @ de los temas que salen en el reel, en el orden de los créditos.
+ * Si la ficha tiene Instagram, ese perfil. Si no, @ con el nombre para buscarlo.
+ */
+async function reelMentions(
   supabase: ReturnType<typeof createCachedSupabase>,
-  picks: FortnightDigestTrack[],
+  tracks: FortnightDigestTrack[],
   slugMap: Record<string, string>,
 ): Promise<string[]> {
-  const slugs: string[] = []
-  const seenSlug = new Set<string>()
-  for (const track of picks) {
+  const names: string[] = []
+  const seenName = new Set<string>()
+  for (const track of tracks) {
     for (const name of splitArtistDisplayLine(track.artists)) {
-      const slug = findArtistSlug(name, slugMap)
-      if (!slug || seenSlug.has(slug)) continue
-      seenSlug.add(slug)
-      slugs.push(slug)
+      const key = name.toLowerCase()
+      if (seenName.has(key)) continue
+      seenName.add(key)
+      names.push(name)
     }
   }
-  if (!slugs.length) return []
-  const { data, error } = await supabase.from('artists').select('slug, socials').in('slug', slugs)
-  if (error || !data) return []
-  const bySlug = new Map(data.map((row) => [row.slug, row.socials]))
+  const slugs = [...new Set(names.map((name) => findArtistSlug(name, slugMap)).filter((slug): slug is string => !!slug))]
+  const bySlug = new Map<string, unknown>()
+  if (slugs.length) {
+    const { data } = await supabase.from('artists').select('slug, socials').in('slug', slugs)
+    for (const row of data ?? []) bySlug.set(row.slug, row.socials)
+  }
   const mentions: string[] = []
   const seen = new Set<string>()
-  for (const slug of slugs) {
-    const mention = instagramMention(bySlug.get(slug))
+  for (const name of names) {
+    const slug = findArtistSlug(name, slugMap)
+    const mention = (slug ? instagramMention(bySlug.get(slug)) : null) ?? instagramNameGuess(name)
     const key = mention?.toLowerCase()
     if (!mention || !key || seen.has(key)) continue
     seen.add(key)
@@ -236,7 +242,11 @@ export default async function DayReleaseArticlePage({
       : Promise.resolve([] as { slug: string; name: string | null }[]),
   ])
   const artistSlugMap = filterArtistSlugMapForNames(buildFullArtistSlugMap(artistRows), artistNames)
-  const mentions = picks.length ? await selectionMentions(supabase, picks, artistSlugMap).catch(() => [] as string[]) : []
+  const reelPicks = picks.length > 1 ? await rankDayReelTracks(picks) : picks
+  const featured = (picks.length ? reelPicks : rest).slice(0, 5)
+  const mentions = featured.length
+    ? await reelMentions(supabase, featured, artistSlugMap).catch(() => [] as string[])
+    : []
   const labelSlugMap = filterArtistSlugMapForNames(
     buildFullLabelSlugMap(labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null }))),
     labelNames,
@@ -254,7 +264,6 @@ export default async function DayReleaseArticlePage({
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
   const heading = dayReleaseHeading(day, lang)
   const articleTitle = heading.h1
-  const reelPicks = picks.length > 1 ? await rankDayReelTracks(picks) : picks
   const articleBlurb = dayReleaseBlurb(lang, picks.length, rest.length)
   const articleDescription = named.length ? `${articleBlurb} ${pickSentence}.` : articleBlurb
   const articleImage = publicOgThirdsUrl(dayTracks.map((t) => t.artwork_url))

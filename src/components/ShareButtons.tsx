@@ -205,7 +205,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           alsoOut: d.rest.length,
         },
       }).then((text) => (
-        platform === 'instagram' && d.selection ? appendInstagramMentions(text, d.mentions ?? []) : text
+        platform === 'instagram' ? appendInstagramMentions(text, d.mentions ?? []) : text
       ))
     }
     if (pageReel?.agenda) {

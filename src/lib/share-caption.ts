@@ -34,6 +34,18 @@ export function instagramMention(socials: unknown): string | null {
   return `@${handle}`
 }
 
+/** Si la ficha no tiene Instagram, un @ con el nombre para buscarlo a mano. */
+export function instagramNameGuess(name: string): string | null {
+  const handle = name
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^A-Za-z0-9._]/g, '')
+    .slice(0, 30)
+  if (handle.length < 2) return null
+  if (/^(p|reel|reels|stories|explore|accounts)$/i.test(handle)) return null
+  return `@${handle}`
+}
+
 const DAY_MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 const DAY_MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 

@@ -94,7 +94,7 @@ export type DayReelInput = {
   outCount: number
   picks: DayReelTrack[]
   rest: { artwork: string | null }[]
-  /** @ de Instagram de la selección, en el orden de los créditos. Solo si la ficha lo tiene. */
+  /** @ de los temas del reel. Perfil real si la ficha lo tiene; si no, @ con el nombre. */
   mentions?: string[]
 }
 
