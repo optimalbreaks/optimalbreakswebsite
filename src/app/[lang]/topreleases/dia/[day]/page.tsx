@@ -20,6 +20,7 @@ import {
   dayReleaseBlurb,
   dayReleaseHeading,
   loadDayReleases,
+  rankDayReelTracks,
   MIN_RELEASE_DAY,
   shiftReleaseDay,
 } from '@/lib/fortnight-live'
@@ -252,6 +253,7 @@ export default async function DayReleaseArticlePage({
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
   const heading = dayReleaseHeading(day, lang)
   const articleTitle = heading.h1
+  const reelPicks = picks.length > 1 ? await rankDayReelTracks(picks) : picks
   const articleBlurb = dayReleaseBlurb(lang, picks.length, rest.length)
   const articleDescription = named.length ? `${articleBlurb} ${pickSentence}.` : articleBlurb
   const articleImage = publicOgThirdsUrl(dayTracks.map((t) => t.artwork_url))
@@ -324,7 +326,7 @@ export default async function DayReleaseArticlePage({
               url={`/${lang}/topreleases/dia/${day}`}
               title={`${articleTitle} | Optimal Breaks`}
               lang={lang}
-              pageReel={dayReelOf(lang, day, articleTitle, articleBlurb, picks, rest, mentions)}
+              pageReel={dayReelOf(lang, day, articleTitle, articleBlurb, reelPicks, rest, mentions)}
             />
           </div>
 

@@ -228,6 +228,125 @@ export async function loadDayReleases(sb: SupabaseClient<Database>, day: string)
   return { picks, rest }
 }
 
+/**
+ * Orden del reel del día. El grupo sigue siendo la selección de Optimal Breaks.
+ * Entre ellos, primero quien tiene más «+» de otra gente y, a igualdad, más
+ * escuchas de otra gente. El «+» propio no desempata: todos los de la selección
+ * lo tienen. Si nadie más ha guardado ni escuchado, se queda el orden por nombre.
+ */
+export async function rankDayReelTracks(tracks: FortnightDigestTrack[]): Promise<FortnightDigestTrack[]> {
+  if (tracks.length <= 1) return tracks
+  const signature = tracks.map((t) => t.featured_id || t.external_url || t.title).join('\n')
+  try {
+    const order = await unstable_cache(
+      () => dayReelScoreOrder(tracks),
+      ['day-reel-rank', signature],
+      { revalidate: 300, tags: [PUBLIC_CATALOG_CACHE_TAG] },
+    )()
+    const byKey = new Map(tracks.map((t) => [t.featured_id || t.external_url || t.title, t]))
+    const ranked = order.map((key) => byKey.get(key)).filter((t): t is FortnightDigestTrack => !!t)
+    return ranked.length === tracks.length ? ranked : tracks
+  } catch (err) {
+    console.warn('[day-reel-rank]', err instanceof Error ? err.message : err)
+    return tracks
+  }
+}
+
+async function collectIn<T>(
+  ids: string[],
+  run: (chunk: string[], from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const unique = [...new Set(ids.filter(Boolean))]
+  const out: T[] = []
+  for (let i = 0; i < unique.length; i += 80) {
+    const chunk = unique.slice(i, i + 80)
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await run(chunk, from, from + 999)
+      if (error) throw new Error(error.message)
+      const rows = data ?? []
+      out.push(...rows)
+      if (rows.length < 1000) break
+    }
+  }
+  return out
+}
+
+async function dayReelScoreOrder(tracks: FortnightDigestTrack[]): Promise<string[]> {
+  const keyOf = (t: FortnightDigestTrack) => t.featured_id || t.external_url || t.title
+  const canonOf = (t: FortnightDigestTrack) => normalizeTrackCanonicalUrl(t.external_url)
+  const sb = createServiceSupabase()
+  const ids = tracks.map((t) => t.featured_id).filter((id): id is string => !!id)
+  const urls = tracks.map((t) => t.external_url).filter((url): url is string => !!url)
+  const playKeys = tracks.flatMap((t) => {
+    const key = canonOf(t)
+    return key ? [key, `${key}/`] : []
+  })
+  const [byId, byUrl, playRes, editorPlays, privateRes, selfSkip] = await Promise.all([
+    collectIn<SaveRow>(ids, (chunk, from, to) =>
+      sb.from('saved_chart_tracks').select('id, user_id, track_source, track_id, canonical_url').eq('track_source', 'featured').in('track_id', chunk).order('id').range(from, to),
+    ),
+    collectIn<SaveRow>(urls, (chunk, from, to) =>
+      sb.from('saved_chart_tracks').select('id, user_id, track_source, track_id, canonical_url').in('canonical_url', chunk).order('id').range(from, to),
+    ),
+    playKeys.length
+      ? sb.rpc('track_play_counts_for_keys' as never, { p_keys: playKeys } as never)
+      : Promise.resolve({ data: [], error: null }),
+    collectIn<{ canonical_key: string }>(playKeys, (chunk, from, to) =>
+      sb.from('track_play_events').select('canonical_key').eq('user_id', EDITOR_USER_ID).in('canonical_key', chunk).order('id').range(from, to),
+    ),
+    sb.from('profiles').select('id').eq('is_tracks_public', false),
+    loadSelfCreditSkipMap(sb),
+  ])
+  if (playRes.error) throw new Error(playRes.error.message)
+  if (privateRes.error) throw new Error(privateRes.error.message)
+
+  const byCanon = new Map<string, string>()
+  const byFeatured = new Map<string, string>()
+  for (const t of tracks) {
+    const id = keyOf(t)
+    if (t.featured_id) byFeatured.set(t.featured_id, id)
+    const canon = canonOf(t)
+    if (canon) byCanon.set(canon, id)
+  }
+  const plays = new Map<string, number>()
+  for (const row of ((playRes.data as { canonical_key: string; play_count: number }[] | null) ?? [])) {
+    const canon = row.canonical_key.replace(/\/$/, '')
+    const id = byCanon.get(canon)
+    if (!id) continue
+    plays.set(id, (plays.get(id) || 0) + (Number(row.play_count) || 0))
+  }
+  for (const row of editorPlays) {
+    const canon = row.canonical_key.replace(/\/$/, '')
+    const id = byCanon.get(canon)
+    if (!id) continue
+    plays.set(id, Math.max(0, (plays.get(id) || 0) - 1))
+  }
+
+  const privateSet = new Set((privateRes.data ?? []).map((p) => p.id))
+  const trackById = new Map(tracks.map((t) => [keyOf(t), t]))
+  const seen = new Set<string>()
+  const saves = new Map<string, number>()
+  for (const s of [...byId, ...byUrl]) {
+    if (seen.has(s.id) || s.user_id === EDITOR_USER_ID || privateSet.has(s.user_id)) continue
+    seen.add(s.id)
+    const id = (s.track_source === 'featured' && byFeatured.get(s.track_id)) || byCanon.get(normalizeTrackCanonicalUrl(s.canonical_url))
+    const t = id ? trackById.get(id) : undefined
+    if (!t || !id) continue
+    if (isArtistSelfCreditSave(selfSkip, s.user_id, t.artists, t.mix_name)) continue
+    saves.set(id, (saves.get(id) || 0) + 1)
+  }
+
+  return [...tracks].sort((a, b) => {
+    const ak = keyOf(a)
+    const bk = keyOf(b)
+    return (saves.get(bk) || 0) - (saves.get(ak) || 0)
+      || (plays.get(bk) || 0) - (plays.get(ak) || 0)
+      || a.artists.localeCompare(b.artists, 'es')
+      || a.title.localeCompare(b.title, 'es')
+      || (a.mix_name || '').localeCompare(b.mix_name || '', 'es')
+  }).map(keyOf)
+}
+
 function digestTrack(f: FeatRow, value: number, weekBy: Map<string, string>): FortnightDigestTrack {
   return {
     title: f.title,
