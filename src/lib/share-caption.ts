@@ -13,6 +13,36 @@ import type { Locale } from '@/lib/i18n-config'
 export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day'
 export type SharePlatform = 'instagram' | 'facebook'
 
+/** `@usuario` a partir de `artists.socials.instagram`. Sin ficha o sin perfil, null. */
+export function instagramMention(socials: unknown): string | null {
+  if (!socials || typeof socials !== 'object' || Array.isArray(socials)) return null
+  const url = Object.entries(socials as Record<string, unknown>).find(
+    ([key, value]) => key.toLowerCase() === 'instagram' && typeof value === 'string',
+  )?.[1]
+  if (typeof url !== 'string') return null
+  let path = ''
+  try {
+    const parsed = new URL(url)
+    if (!/(^|\.)instagram\.com$/i.test(parsed.hostname)) return null
+    path = parsed.pathname
+  } catch {
+    return null
+  }
+  const handle = (path.split('/').filter(Boolean)[0] || '').replace(/^@/, '')
+  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null
+  if (/^(p|reel|reels|stories|explore|accounts)$/i.test(handle)) return null
+  return `@${handle}`
+}
+
+/** La primera línea del pie de Instagram, para que el artista reciba la mención. */
+export function prependInstagramMentions(caption: string, mentions: string[]): string {
+  const line = [...new Set(mentions.map((m) => m.trim()).filter((m) => /^@[A-Za-z0-9._]{1,30}$/.test(m)))].join(' ')
+  const text = caption.trim()
+  if (!line) return text
+  if (text.toLowerCase().startsWith(line.toLowerCase())) return text
+  return `${line}\n\n${text}`
+}
+
 export async function aiShareCaption(opts: {
   kind: ShareCaptionKind
   platform: SharePlatform

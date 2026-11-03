@@ -92,6 +92,8 @@ export type DayReelInput = {
   outCount: number
   picks: DayReelTrack[]
   rest: { artwork: string | null }[]
+  /** @ de Instagram de la selección, en el orden de los créditos. Solo si la ficha lo tiene. */
+  mentions?: string[]
 }
 
 type FortnightReelTrack = { title: string; artists: string; value: number; artwork: string | null }

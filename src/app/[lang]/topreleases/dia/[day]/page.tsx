@@ -11,7 +11,8 @@ import type { Metadata } from 'next'
 import { DayReleaseDate, DigestTrackRows } from '@/components/FortnightDigest'
 import ShareButtons from '@/components/ShareButtons'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
-import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames, splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames, findArtistSlug, splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import { instagramMention } from '@/lib/share-caption'
 import {
   DAY_COPY,
   clampReleaseDay,
@@ -57,6 +58,7 @@ function dayReelOf(
   excerpt: string,
   picks: FortnightDigestTrack[],
   rest: FortnightDigestTrack[],
+  mentions: string[],
 ) {
   const sounding = (picks.length ? picks : rest).slice(0, 5)
   if (!sounding.length) return undefined
@@ -74,6 +76,7 @@ function dayReelOf(
       audio: reelAudio(t.audio_src),
     })),
     rest: shelf.map((t) => ({ artwork: t.artwork_url })),
+    mentions,
   }
   return {
     kind: 'blog' as const,
@@ -87,6 +90,38 @@ function dayReelOf(
     excerpt,
     day: dayReel,
   }
+}
+
+/** @ de la selección, en el orden de los créditos. Quien no tiene Instagram en la ficha no sale. */
+async function selectionMentions(
+  supabase: ReturnType<typeof createCachedSupabase>,
+  picks: FortnightDigestTrack[],
+  slugMap: Record<string, string>,
+): Promise<string[]> {
+  const slugs: string[] = []
+  const seenSlug = new Set<string>()
+  for (const track of picks) {
+    for (const name of splitArtistDisplayLine(track.artists)) {
+      const slug = findArtistSlug(name, slugMap)
+      if (!slug || seenSlug.has(slug)) continue
+      seenSlug.add(slug)
+      slugs.push(slug)
+    }
+  }
+  if (!slugs.length) return []
+  const { data, error } = await supabase.from('artists').select('slug, socials').in('slug', slugs)
+  if (error || !data) return []
+  const bySlug = new Map(data.map((row) => [row.slug, row.socials]))
+  const mentions: string[] = []
+  const seen = new Set<string>()
+  for (const slug of slugs) {
+    const mention = instagramMention(bySlug.get(slug))
+    const key = mention?.toLowerCase()
+    if (!mention || !key || seen.has(key)) continue
+    seen.add(key)
+    mentions.push(mention)
+  }
+  return mentions
 }
 
 export const dynamic = 'force-dynamic'
@@ -172,6 +207,7 @@ export default async function DayReleaseArticlePage({
       : Promise.resolve([] as { slug: string; name: string | null }[]),
   ])
   const artistSlugMap = filterArtistSlugMapForNames(buildFullArtistSlugMap(artistRows), artistNames)
+  const mentions = picks.length ? await selectionMentions(supabase, picks, artistSlugMap).catch(() => [] as string[]) : []
   const labelSlugMap = filterArtistSlugMapForNames(
     buildFullLabelSlugMap(labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null }))),
     labelNames,
@@ -242,7 +278,7 @@ export default async function DayReleaseArticlePage({
               url={`/${lang}/topreleases/dia/${day}`}
               title={`${articleTitle} | Optimal Breaks`}
               lang={lang}
-              pageReel={dayReelOf(lang, day, articleTitle, articleBlurb, picks, rest)}
+              pageReel={dayReelOf(lang, day, articleTitle, articleBlurb, picks, rest, mentions)}
             />
           </div>
           <p className="text-[16px] leading-relaxed mb-2" style={{ fontFamily: "'Special Elite', monospace" }}>
