@@ -353,7 +353,7 @@ function Cover({ src, alt, sizes = '64px', frameClass = 'border-[2px] border-[va
 }
 
 function RankedTracks({
-  tracks, spot, unit, lang, artistSlugMap, labelSlugMap,
+  tracks, spot, unit, lang, artistSlugMap, labelSlugMap, plain = false,
 }: {
   tracks: FortnightDigestTrack[]
   spot: Spot
@@ -361,6 +361,8 @@ function RankedTracks({
   lang: Locale
   artistSlugMap?: Record<string, string>
   labelSlugMap?: Record<string, string>
+  /** Sin puesto ni barra: la misma fila, para un día que no es un ranking. */
+  plain?: boolean
 }) {
   const max = Math.max(1, ...tracks.map((t) => t.value))
   const { play, current, playing } = useContext(PlayCtx)
@@ -387,9 +389,11 @@ function RankedTracks({
                   <Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="64px" frameClass="border-[3px] border-[var(--ink)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="inline-block px-1.5 py-0.5 mb-0.5 text-[9px] font-black tracking-widest bg-[var(--ink)] text-[var(--paper)] border-2 border-[var(--ink)]" style={mono}>
-                    #{i + 1}
-                  </span>
+                  {plain ? null : (
+                    <span className="inline-block px-1.5 py-0.5 mb-0.5 text-[9px] font-black tracking-widest bg-[var(--ink)] text-[var(--paper)] border-2 border-[var(--ink)]" style={mono}>
+                      #{i + 1}
+                    </span>
+                  )}
                   <div className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={display}>
                     {t.title}
                     {mix ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mix}</span> : null}
@@ -420,14 +424,16 @@ function RankedTracks({
                 {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="h-3 flex-1 border-2 border-[var(--ink)] bg-[var(--paper-dark)]">
-                <div className="h-full bg-[var(--red)]" style={{ width: `${Math.max(3, (t.value / max) * 100)}%` }} />
+            {plain ? null : (
+              <div className="flex items-center gap-3">
+                <div className="h-3 flex-1 border-2 border-[var(--ink)] bg-[var(--paper-dark)]">
+                  <div className="h-full bg-[var(--red)]" style={{ width: `${Math.max(3, (t.value / max) * 100)}%` }} />
+                </div>
+                <span className="shrink-0 min-w-[96px] text-right text-[11px] whitespace-nowrap" style={mono}>
+                  <b className="text-[16px]" style={display}>{t.value}</b> {unit}
+                </span>
               </div>
-              <span className="shrink-0 min-w-[96px] text-right text-[11px] whitespace-nowrap" style={mono}>
-                <b className="text-[16px]" style={display}>{t.value}</b> {unit}
-              </span>
-            </div>
+            )}
           </div>
         )
       })}
@@ -655,6 +661,62 @@ export function DigestTrackStrip({
           )
         })}
       </ol>
+    </PlayCtx.Provider>
+  )
+}
+
+/** Lista del artículo del día: la misma fila que un mes (play, BPM, guardar, Spotify, TIDAL, Beatport). Una sola cola. */
+export function DigestTrackRows({
+  groups, groupKey, lang, artistSlugMap, labelSlugMap,
+}: {
+  groups: { title: string; tracks: FortnightDigestTrack[]; spot: string; tone: 'pick' | 'rest' }[]
+  groupKey: string
+  lang: Locale
+  artistSlugMap?: Record<string, string>
+  labelSlugMap?: Record<string, string>
+}) {
+  const pathname = usePathname()
+  const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
+  const queue = useMemo(() => {
+    const seen = new Set<string>()
+    const out: PreviewTrack[] = []
+    for (const group of groups) {
+      for (const t of group.tracks) {
+        const key = rowKeyOf(t)
+        if (!t.audio_src || seen.has(key)) continue
+        seen.add(key)
+        out.push(queueItem(t, group.spot, pathname))
+      }
+    }
+    return out
+  }, [groups, pathname])
+  const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const play = useCallback(
+    (rowKey: string) => {
+      if (current === rowKey) {
+        togglePreview()
+        return
+      }
+      const idx = queue.findIndex((q) => q.rowKey === rowKey)
+      if (idx >= 0) playPreviewQueue(queue, idx, groupKey)
+    },
+    [current, queue, groupKey, playPreviewQueue, togglePreview],
+  )
+  const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
+  const visible = groups.filter((g) => g.tracks.length > 0)
+  if (visible.length === 0) return null
+  const display = { fontFamily: "'Unbounded', sans-serif" } as const
+  return (
+    <PlayCtx.Provider value={playCtx}>
+      {visible.map((group) => (
+        <section
+          key={group.spot}
+          className={group.tone === 'pick' ? 'mt-8 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/40 p-3 sm:p-4' : 'mt-8'}
+        >
+          <h2 className="text-xl sm:text-2xl font-black leading-tight mb-3" style={display}>{group.title}</h2>
+          <RankedTracks tracks={group.tracks} spot={group.spot} unit="" lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} plain />
+        </section>
+      ))}
     </PlayCtx.Provider>
   )
 }

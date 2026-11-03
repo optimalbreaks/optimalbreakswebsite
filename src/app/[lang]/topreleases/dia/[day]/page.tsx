@@ -8,7 +8,9 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { DayReleaseDate, DigestTrackStrip } from '@/components/FortnightDigest'
+import { DayReleaseDate, DigestTrackRows } from '@/components/FortnightDigest'
+import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
+import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames, splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import {
   DAY_COPY,
   clampReleaseDay,
@@ -20,6 +22,7 @@ import {
 } from '@/lib/fortnight-live'
 import type { Locale } from '@/lib/i18n-config'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
+import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import type { FortnightDigestTrack } from '@/types/database'
 
@@ -65,6 +68,27 @@ export default async function DayReleaseArticlePage({
   const copy = DAY_COPY[lang]
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { picks, rest } = await loadDayReleases(supabase, day)
+  const dayTracks = [...picks, ...rest]
+  const artistNames = new Set<string>()
+  const labelNames = new Set<string>()
+  for (const t of dayTracks) {
+    for (const name of splitArtistDisplayLine(t.artists)) artistNames.add(name)
+    if (t.label) labelNames.add(t.label)
+  }
+  const [artistRows, labelRows] = await Promise.all([
+    artistNames.size ? fetchAllArtistLinkRows(supabase) : Promise.resolve([]),
+    labelNames.size
+      ? fetchAllPages<{ slug: string; name: string | null }>((from, to) =>
+          supabase.from('labels').select('slug, name').order('slug', { ascending: true }).range(from, to),
+        ).catch(() => [] as { slug: string; name: string | null }[])
+      : Promise.resolve([] as { slug: string; name: string | null }[]),
+  ])
+  const artistSlugMap = filterArtistSlugMapForNames(buildFullArtistSlugMap(artistRows), artistNames)
+  const labelSlugMap = filterArtistSlugMapForNames(
+    buildFullLabelSlugMap(labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null }))),
+    labelNames,
+    { labelSuffixes: true },
+  )
   const prev = shiftReleaseDay(day, -1)
   const next = shiftReleaseDay(day, 1)
   const back = `/${lang}/topreleases`
@@ -121,37 +145,16 @@ export default async function DayReleaseArticlePage({
             </p>
           ) : null}
 
-          {picks.length > 0 ? (
-            <section className="mt-8 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/40 p-3 sm:p-4">
-              <h2 className="text-xl sm:text-2xl font-black leading-tight mb-3" style={display}>{copy.picksTitle}</h2>
-              <DigestTrackStrip
-                tracks={picks}
-                spot={`picks-${day}`}
-                groupKey={`topreleases:day-picks:${day}`}
-                units={['', '']}
-                show={picks.length}
-                playAll={copy.playPicks}
-                large
-                plain
-              />
-            </section>
-          ) : null}
-
-          {rest.length > 0 ? (
-            <section className="mt-8">
-              <h2 className="text-xl sm:text-2xl font-black leading-tight mb-3" style={display}>{copy.restTitle}</h2>
-              <DigestTrackStrip
-                tracks={rest}
-                spot={`rest-${day}`}
-                groupKey={`topreleases:day-rest:${day}`}
-                units={['', '']}
-                show={rest.length}
-                playAll={copy.playRest}
-                large
-                plain
-              />
-            </section>
-          ) : null}
+          <DigestTrackRows
+            groupKey={`topreleases:day:${day}`}
+            lang={lang}
+            artistSlugMap={artistSlugMap}
+            labelSlugMap={labelSlugMap}
+            groups={[
+              { title: copy.picksTitle, tracks: picks, spot: `picks-${day}`, tone: 'pick' },
+              { title: copy.restTitle, tracks: rest, spot: `rest-${day}`, tone: 'rest' },
+            ]}
+          />
         </article>
       </div>
     </main>
