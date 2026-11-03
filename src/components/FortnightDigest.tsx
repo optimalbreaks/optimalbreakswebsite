@@ -668,15 +668,15 @@ function arrowDayLabel(ymd: string, lang: Locale): string {
 
 /** Calendario del artículo del día. Al elegir una fecha, el formulario abre ese día. */
 export function DayReleaseDate({
-  lang, day, today, year, label, navigateTo,
+  lang, day, today, year, label, articlePath,
 }: {
   lang: Locale
   day: string
   today: string
   year?: string
   label: string
-  /** Si viene, el calendario abre esa ruta en vez de volver al índice. */
-  navigateTo?: (day: string) => string
+  /** Prefijo `/es/topreleases/dia`: el calendario abre `${articlePath}/${día}`. */
+  articlePath?: string
 }) {
   const router = useRouter()
   return (
@@ -685,7 +685,7 @@ export function DayReleaseDate({
       method="get"
       className="inline-flex"
       onSubmit={(e) => {
-        if (navigateTo) e.preventDefault()
+        if (articlePath) e.preventDefault()
       }}
     >
       {year ? <input type="hidden" name="year" value={year} /> : null}
@@ -704,8 +704,8 @@ export function DayReleaseDate({
           onChange={(e) => {
             const next = e.currentTarget.value
             if (!next) return
-            if (navigateTo) {
-              router.push(navigateTo(next))
+            if (articlePath) {
+              router.push(`${articlePath}/${next}`)
               return
             }
             e.currentTarget.form?.requestSubmit()

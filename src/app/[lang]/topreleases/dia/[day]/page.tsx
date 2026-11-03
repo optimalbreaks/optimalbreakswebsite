@@ -103,7 +103,7 @@ export default async function DayReleaseArticlePage({
               day={day}
               today={today}
               label={copy.pick}
-              navigateTo={(nextDay) => `/${lang}/topreleases/dia/${nextDay}`}
+              articlePath={`/${lang}/topreleases/dia`}
             />
             {day < today ? (
               <Link href={`/${lang}/topreleases/dia/${next}`} aria-label={copy.next} className={arrowClass} style={mono}>→</Link>
