@@ -753,6 +753,13 @@ export function DayReleaseList({ tracks, lang, day }: { tracks: FortnightDigestT
   )
 }
 
+/** Español: día/mes/año. Inglés: mes/día/año. El input nativo sigue el idioma del navegador. */
+function arrowDayLabel(ymd: string, lang: Locale): string {
+  const [year, month, day] = ymd.split('-')
+  if (!year || !month || !day) return ymd
+  return lang === 'es' ? `${day}/${month}/${year}` : `${month}/${day}/${year}`
+}
+
 /** Calendario del artículo del día. Al elegir una fecha, el formulario abre ese día. */
 export function DayReleaseDate({
   lang, day, today, year, label,
@@ -766,20 +773,24 @@ export function DayReleaseDate({
   return (
     <form action={`/${lang}/topreleases`} method="get" className="inline-flex">
       {year ? <input type="hidden" name="year" value={year} /> : null}
-      <input
-        key={day}
-        type="date"
-        name="day"
-        defaultValue={day}
-        min="1990-01-01"
-        max={today}
-        aria-label={label}
-        onChange={(e) => {
-          if (e.currentTarget.value) e.currentTarget.form?.requestSubmit()
-        }}
-        className="h-10 border-2 border-[var(--ink)] bg-[var(--paper)] px-2 text-[13px] font-black text-[var(--ink)]"
-        style={mono}
-      />
+      <label className="relative inline-flex h-10 cursor-pointer items-center border-2 border-[var(--ink)] bg-[var(--paper)]">
+        <span className="pointer-events-none px-3 text-[13px] font-black text-[var(--ink)]" style={mono}>
+          {arrowDayLabel(day, lang)}
+        </span>
+        <input
+          key={day}
+          type="date"
+          name="day"
+          defaultValue={day}
+          min="1990-01-01"
+          max={today}
+          aria-label={label}
+          onChange={(e) => {
+            if (e.currentTarget.value) e.currentTarget.form?.requestSubmit()
+          }}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </label>
     </form>
   )
 }
