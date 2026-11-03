@@ -1,9 +1,8 @@
 // ============================================
 // OPTIMAL BREAKS — Top novedades
 // ----------------------------------------------
-// Delante, el artículo del día (`?day=`): solo las canciones con esa fecha de
-// salida. Por defecto, hoy en Madrid. Las flechas mueven un día y la fecha
-// abre el calendario; un día futuro vuelve a hoy.
+// Dos secciones. Arriba, el lanzamiento del día: un resumen y el botón al
+// artículo (`/topreleases/dia/YYYY-MM-DD`). La lista de temas vive ahí, no aquí.
 // Debajo, los meses (antes, quincenas) y las temporadas, que nacen en el blog.
 // Arriba el último mes (suena ahí mismo), debajo una tarjeta por temporada
 // con sus meses dentro. `?year=` cambia de año cuando hay más de uno. Las
@@ -15,9 +14,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import CardThumbnail from '@/components/CardThumbnail'
-import { DayReleaseDate, DayReleaseList, DigestTrackStrip } from '@/components/FortnightDigest'
+import { DAY_COPY, DayReleaseDate, DigestTrackStrip, dayReleaseBlurb } from '@/components/FortnightDigest'
 import { getDictionary } from '@/lib/dictionaries'
-import { getFortnightLive, loadDayReleases, type FortnightLive } from '@/lib/fortnight-live'
+import { clampReleaseDay, getFortnightLive, loadDayReleases, longReleaseDay, MIN_RELEASE_DAY, shiftReleaseDay, type FortnightLive } from '@/lib/fortnight-live'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import type { Locale } from '@/lib/i18n-config'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
@@ -62,17 +61,6 @@ const COPY = {
     playMonth: '▶ ESCUCHAR EL MES · {n} TEMAS',
     playSeason: (label: string) => `▶ ESCUCHAR ${label} · {n} TEMAS`,
     years: 'AÑO',
-    dayKicker: 'LANZAMIENTOS',
-    dayToday: 'HOY',
-    dayTitleToday: 'Lanzamientos de hoy',
-    dayTitlePast: 'Lanzamientos del día',
-    dayIntro: 'Solo las canciones que salieron este día. Las flechas mueven un día; la fecha abre el calendario.',
-    dayEmpty: 'Este día no hay lanzamientos en la web.',
-    dayOne: '1 tema',
-    dayMany: (n: number) => `${n} temas`,
-    dayPrev: 'Día anterior',
-    dayNext: 'Día siguiente',
-    dayPick: 'Elegir un día',
   },
   en: {
     kicker: 'TOP RELEASES',
@@ -103,17 +91,6 @@ const COPY = {
     playMonth: '▶ PLAY THE MONTH · {n} TRACKS',
     playSeason: (label: string) => `▶ PLAY ${label} · {n} TRACKS`,
     years: 'YEAR',
-    dayKicker: 'RELEASES',
-    dayToday: 'TODAY',
-    dayTitleToday: "Today's releases",
-    dayTitlePast: "That day's releases",
-    dayIntro: 'Only the songs that came out on this day. The arrows move one day; the date opens the calendar.',
-    dayEmpty: 'No releases on the site for this day.',
-    dayOne: '1 track',
-    dayMany: (n: number) => `${n} tracks`,
-    dayPrev: 'Previous day',
-    dayNext: 'Next day',
-    dayPick: 'Pick a day',
   },
 } as const
 
@@ -161,24 +138,8 @@ function todayMadrid(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 }
 
-const MIN_RELEASE_DAY = '1990-01-01'
-
 function firstParam(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value || '').trim()
-}
-
-function clampDay(raw: string, today: string): string {
-  const d = raw.slice(0, 10)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return today
-  if (d > today) return today
-  if (d < MIN_RELEASE_DAY) return MIN_RELEASE_DAY
-  return d
-}
-
-function shiftDay(ymd: string, delta: number): string {
-  const d = new Date(`${ymd}T12:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + delta)
-  return d.toISOString().slice(0, 10)
 }
 
 function dayHref(lang: Locale, d: string, today: string, year?: string): string {
@@ -187,17 +148,6 @@ function dayHref(lang: Locale, d: string, today: string, year?: string): string 
   if (d !== today) q.set('day', d)
   const s = q.toString()
   return s ? `/${lang}/topreleases?${s}` : `/${lang}/topreleases`
-}
-
-function longDay(ymd: string, lang: Locale): string {
-  const text = new Date(`${ymd}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 function periodLabel(from: string, until: string, lang: Locale): string {
@@ -251,7 +201,7 @@ export default async function TopReleasesPage({
   const t = COPY[lang]
   const today = todayMadrid()
   const rawDay = firstParam(sp.day)
-  const day = clampDay(rawDay, today)
+  const day = clampReleaseDay(rawDay, today)
   const yearRaw = firstParam(sp.year)
   if (/^\d{4}-\d{2}-\d{2}$/.test(rawDay.slice(0, 10)) && rawDay.slice(0, 10) >= today) {
     const q = new URLSearchParams()
@@ -303,10 +253,11 @@ export default async function TopReleasesPage({
     liveTargets.map((p) => getFortnightLive(p.from, p.until, p.season || p.month ? 20 : 10, { slug: p.slug, publishedAt: p.published_at })),
   )
   const live = new Map(liveTargets.map((p, i) => [p.slug, liveRows[i]]))
-  const dayTracks = await dayTracksPromise
+  const dayGroups = await dayTracksPromise
+  const dayCopy = DAY_COPY[lang]
   const yearInUrl = years.includes(asked) ? String(asked) : undefined
-  const prevDay = shiftDay(day, -1)
-  const nextDay = shiftDay(day, 1)
+  const prevDay = shiftReleaseDay(day, -1)
+  const nextDay = shiftReleaseDay(day, 1)
   const arrowClass = 'inline-flex h-10 w-10 items-center justify-center border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] text-lg font-black no-underline hover:bg-[var(--red)] hover:text-white'
   const heroLabel = (p: Post) => (p.month ? (p.until >= today ? t.thisMonth : t.latestMonth) : t.latest)
 
@@ -409,47 +360,54 @@ export default async function TopReleasesPage({
           ) : null}
         </header>
 
-        <article className="mb-10 border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b-[3px] border-[var(--ink)] bg-[var(--yellow)]">
-            <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--ink)] text-[var(--paper)]" style={mono}>
-              {t.dayKicker}
-            </span>
-            {day === today ? (
-              <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
-                {t.dayToday}
-              </span>
-            ) : null}
-            <span className="text-[11px] font-bold uppercase" style={mono}>{longDay(day, lang)}</span>
-            {dayTracks.length > 0 ? (
-              <span className="text-[11px] font-black" style={mono}>{dayTracks.length === 1 ? t.dayOne : t.dayMany(dayTracks.length)}</span>
-            ) : null}
-          </div>
-          <div className="p-3 sm:p-5">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              {prevDay >= MIN_RELEASE_DAY ? (
-                <Link href={dayHref(lang, prevDay, today, yearInUrl)} aria-label={t.dayPrev} className={arrowClass} style={mono}>←</Link>
-              ) : (
-                <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>←</span>
-              )}
-              <DayReleaseDate lang={lang} day={day} today={today} year={yearInUrl} label={t.dayPick} />
-              {day < today ? (
-                <Link href={dayHref(lang, nextDay, today, yearInUrl)} aria-label={t.dayNext} className={arrowClass} style={mono}>→</Link>
-              ) : (
-                <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>→</span>
-              )}
+        <section className="mb-12" aria-labelledby="lanzamientos-dia">
+          <h2 id="lanzamientos-dia" className="text-xl sm:text-3xl font-black leading-tight mb-4" style={display}>
+            {dayCopy.section}
+          </h2>
+          <article className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
+            <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b-[3px] border-[var(--ink)] bg-[var(--yellow)]">
+              {day === today ? (
+                <span className="px-1.5 py-0.5 text-[10px] font-black tracking-[2px] bg-[var(--red)] text-white" style={mono}>
+                  {dayCopy.today}
+                </span>
+              ) : null}
+              <span className="text-[11px] font-bold uppercase" style={mono}>{longReleaseDay(day, lang)}</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black leading-tight mb-2" style={display}>
-              {day === today ? t.dayTitleToday : t.dayTitlePast}
-            </h2>
-            <p className="text-[14px] leading-relaxed text-[var(--ink)]/70 mb-3" style={mono}>{t.dayIntro}</p>
-            {dayTracks.length === 0 ? (
-              <p className="text-sm text-[var(--ink)]/50" style={mono}>{t.dayEmpty}</p>
-            ) : (
-              <DayReleaseList tracks={dayTracks} lang={lang} day={day} />
-            )}
-          </div>
-        </article>
+            <div className="p-3 sm:p-5">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {prevDay >= MIN_RELEASE_DAY ? (
+                  <Link href={dayHref(lang, prevDay, today, yearInUrl)} aria-label={dayCopy.prev} className={arrowClass} style={mono}>←</Link>
+                ) : (
+                  <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>←</span>
+                )}
+                <DayReleaseDate lang={lang} day={day} today={today} year={yearInUrl} label={dayCopy.pick} />
+                {day < today ? (
+                  <Link href={dayHref(lang, nextDay, today, yearInUrl)} aria-label={dayCopy.next} className={arrowClass} style={mono}>→</Link>
+                ) : (
+                  <span className={`${arrowClass} opacity-30 pointer-events-none`} aria-hidden>→</span>
+                )}
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black leading-tight mb-2" style={display}>{dayCopy.title}</h3>
+              <p className="text-[14px] leading-relaxed text-[var(--ink)]/70 mb-3" style={mono}>
+                {dayReleaseBlurb(lang, dayGroups.picks.length, dayGroups.rest.length)}
+              </p>
+              {dayGroups.picks.length + dayGroups.rest.length > 0 ? (
+                <Link
+                  href={`/${lang}/topreleases/dia/${day}`}
+                  className="inline-flex mt-4 min-h-[40px] items-center px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] no-underline hover:bg-[var(--red)] hover:text-white"
+                  style={mono}
+                >
+                  {dayCopy.read}
+                </Link>
+              ) : null}
+            </div>
+          </article>
+        </section>
 
+        <section aria-labelledby="todas-novedades">
+          <h2 id="todas-novedades" className="text-xl sm:text-3xl font-black leading-tight mb-4" style={display}>
+            {dayCopy.all}
+          </h2>
         {posts.length === 0 ? (
           <p className="text-sm text-[var(--ink)]/50" style={mono}>{t.empty}</p>
         ) : (
@@ -554,6 +512,7 @@ export default async function TopReleasesPage({
             </ol>
           </>
         )}
+        </section>
       </div>
     </main>
   )

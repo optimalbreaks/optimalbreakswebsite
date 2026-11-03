@@ -86,8 +86,68 @@ function editionOf(row: DayFeat): { week_date: string } | null {
   return Array.isArray(embedded) ? embedded[0] ?? null : embedded
 }
 
-/** Canciones de la web con esa fecha de salida (ediciones publicadas). Un día, no un ranking. */
-export async function loadDayReleases(sb: SupabaseClient<Database>, day: string): Promise<FortnightDigestTrack[]> {
+/** Cuenta editorial. Sus «+» son la selección de Optimal Breaks del artículo del día. */
+const EDITOR_USER_ID = '68c6457d-3141-4e13-a2be-73fdd76631de'
+
+export type DayReleaseGroups = { picks: FortnightDigestTrack[]; rest: FortnightDigestTrack[] }
+
+export const MIN_RELEASE_DAY = '1990-01-01'
+
+export function clampReleaseDay(raw: string, today: string): string {
+  const d = raw.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return today
+  if (d > today) return today
+  if (d < MIN_RELEASE_DAY) return MIN_RELEASE_DAY
+  return d
+}
+
+export function shiftReleaseDay(ymd: string, delta: number): string {
+  const d = new Date(`${ymd}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + delta)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Español: día, mes, año. Inglés: mes, día, año. */
+export function longReleaseDay(ymd: string, lang: 'es' | 'en'): string {
+  const text = new Date(`${ymd}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+async function editorSavedKeys(ids: string[], urls: string[]): Promise<Set<string>> {
+  const saved = new Set<string>()
+  if (ids.length === 0 && urls.length === 0) return saved
+  const sb = createServiceSupabase()
+  for (let i = 0; i < Math.max(ids.length, urls.length); i += 80) {
+    const idChunk = ids.slice(i, i + 80)
+    const urlChunk = urls.slice(i, i + 80)
+    const [byId, byUrl] = await Promise.all([
+      idChunk.length
+        ? sb.from('saved_chart_tracks').select('track_id').eq('user_id', EDITOR_USER_ID).in('track_id', idChunk)
+        : Promise.resolve({ data: [] as { track_id: string }[], error: null }),
+      urlChunk.length
+        ? sb.from('saved_chart_tracks').select('canonical_url').eq('user_id', EDITOR_USER_ID).in('canonical_url', urlChunk)
+        : Promise.resolve({ data: [] as { canonical_url: string | null }[], error: null }),
+    ])
+    if (byId.error || byUrl.error) throw new Error((byId.error || byUrl.error)?.message)
+    for (const row of byId.data || []) if (row.track_id) saved.add(row.track_id)
+    for (const row of byUrl.data || []) {
+      if (!row.canonical_url) continue
+      saved.add(row.canonical_url)
+      const key = normalizeTrackCanonicalUrl(row.canonical_url)
+      if (key) saved.add(key)
+    }
+  }
+  return saved
+}
+
+/** Canciones de la web con esa fecha de salida. `picks` = «+» de Optimal Breaks. */
+export async function loadDayReleases(sb: SupabaseClient<Database>, day: string): Promise<DayReleaseGroups> {
   let rows: DayFeat[]
   try {
     rows = await fetchAllPages<DayFeat>((a, b) =>
@@ -103,7 +163,7 @@ export async function loadDayReleases(sb: SupabaseClient<Database>, day: string)
     )
   } catch (err) {
     console.warn('[day-releases]', err instanceof Error ? err.message : err)
-    return []
+    return { picks: [], rest: [] }
   }
   const out: FortnightDigestTrack[] = []
   const seen = new Set<string>()
@@ -116,13 +176,27 @@ export async function loadDayReleases(sb: SupabaseClient<Database>, day: string)
     if (row.chart_edition_id && edition?.week_date) weekBy.set(row.chart_edition_id, edition.week_date)
     out.push(digestTrack(row, 0, weekBy))
   }
-  out.sort(
-    (a, b) =>
-      a.artists.localeCompare(b.artists, 'es') ||
-      a.title.localeCompare(b.title, 'es') ||
-      (a.mix_name || '').localeCompare(b.mix_name || '', 'es'),
-  )
-  return out
+  const byName = (a: FortnightDigestTrack, b: FortnightDigestTrack) =>
+    a.artists.localeCompare(b.artists, 'es') ||
+    a.title.localeCompare(b.title, 'es') ||
+    (a.mix_name || '').localeCompare(b.mix_name || '', 'es')
+  let saved = new Set<string>()
+  try {
+    saved = await editorSavedKeys(
+      out.map((t) => t.featured_id).filter((id): id is string => !!id),
+      out.map((t) => t.external_url).filter((url): url is string => !!url),
+    )
+  } catch (err) {
+    console.warn('[day-releases]', err instanceof Error ? err.message : err)
+  }
+  const picked = (t: FortnightDigestTrack) => {
+    if (t.featured_id && saved.has(t.featured_id)) return true
+    if (!t.external_url) return false
+    return saved.has(t.external_url) || saved.has(normalizeTrackCanonicalUrl(t.external_url))
+  }
+  const picks = out.filter(picked).sort(byName)
+  const rest = out.filter((t) => !picked(t)).sort(byName)
+  return { picks, rest }
 }
 
 function digestTrack(f: FeatRow, value: number, weekBy: Map<string, string>): FortnightDigestTrack {

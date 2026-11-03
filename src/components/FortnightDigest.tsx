@@ -12,7 +12,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, type MouseEvent, type ReactNode } from 'react'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { useAuth } from '@/components/AuthProvider'
@@ -559,7 +559,7 @@ function queueItem(t: FortnightDigestTrack, spot: Spot, pathname: string | null)
  * `spot` distingue la misma canción en dos tarjetas de la página (quincena y su temporada).
  */
 export function DigestTrackStrip({
-  tracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang,
+  tracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang, plain = false,
 }: {
   tracks: FortnightDigestTrack[]
   spot: string
@@ -572,6 +572,8 @@ export function DigestTrackStrip({
   large?: boolean
   /** Temas que aún no han salido: la fecha de salida en lugar del valor. */
   dateLang?: Locale
+  /** Sin puesto: no es un ranking. */
+  plain?: boolean
 }) {
   const pathname = usePathname()
   const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
@@ -635,9 +637,11 @@ export function DigestTrackStrip({
                 />
               </div>
               <span className={`mt-1 block font-black truncate ${large ? 'text-[10px] sm:text-[12px]' : 'text-[9px]'}`} style={mono}>
-                #{n + 1} {t.artists}
+                {plain ? t.artists : `#${n + 1} ${t.artists}`}
               </span>
-              {large ? (
+              {large && plain ? (
+                <span className="block text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(t)}</span>
+              ) : large ? (
                 <>
                   <span className="block text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(t)}</span>
                   {dateLang ? (
@@ -655,102 +659,62 @@ export function DigestTrackStrip({
   )
 }
 
-/** Lista del día en /topreleases: no es un ranking, suenan todos en la misma cola. */
-export function DayReleaseList({ tracks, lang, day }: { tracks: FortnightDigestTrack[]; lang: Locale; day: string }) {
-  const pathname = usePathname()
-  const spot = 'day'
-  const groupKey = `topreleases:day:${day}`
-  const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
-  const queue = useMemo(() => {
-    const seen = new Set<string>()
-    const out: PreviewTrack[] = []
-    for (const t of tracks) {
-      const key = rowKeyOf(t)
-      if (!t.audio_src || seen.has(key)) continue
-      seen.add(key)
-      out.push(queueItem(t, spot, pathname))
-    }
-    return out
-  }, [tracks, pathname])
-  const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
-  const play = useCallback(
-    (rowKey: string) => {
-      if (current === rowKey) {
-        togglePreview()
-        return
-      }
-      const idx = queue.findIndex((q) => q.rowKey === rowKey)
-      if (idx >= 0) playPreviewQueue(queue, idx, groupKey)
+/** Textos del artículo del día (índice = resumen; la ficha desarrolla el mismo día). */
+export const DAY_COPY = {
+  es: {
+    section: 'Lanzamientos del día',
+    all: 'Todas las novedades',
+    title: 'Novedades',
+    read: 'VER EL ARTÍCULO →',
+    back: '← Volver a Novedades',
+    empty: 'Este día no hay lanzamientos en la web.',
+    today: 'HOY',
+    prev: 'Día anterior',
+    next: 'Día siguiente',
+    pick: 'Elegir un día',
+    picksTitle: 'La selección de Optimal Breaks',
+    restTitle: 'El resto del día',
+    onlyPicks: (n: number) => (n === 1 ? 'Optimal Breaks destaca el tema de este día.' : `Optimal Breaks destaca los ${n} temas de este día.`),
+    onlyRest: (n: number) => (n === 1 ? 'Sale 1 tema. Optimal Breaks no ha destacado ninguno.' : `Salen ${n} temas. Optimal Breaks no ha destacado ninguno.`),
+    both: (picks: number, rest: number) => {
+      const a = picks === 1 ? 'Optimal Breaks destaca 1 tema.' : `Optimal Breaks destaca ${picks} temas.`
+      const b = rest === 1 ? 'Sale 1 más.' : `Salen ${rest} más.`
+      return `${a} ${b}`
     },
-    [current, queue, groupKey, playPreviewQueue, togglePreview],
-  )
-  const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
-  const cardPlay = cardPlayWith(play)
-  const chip = 'inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5'
-  if (tracks.length === 0) return null
-  return (
-    <PlayCtx.Provider value={playCtx}>
-      {queue.length > 0 ? (
-        <button
-          type="button"
-          onClick={() => (current ? togglePreview() : playPreviewQueue(queue, 0, groupKey))}
-          className="w-full mb-3 bg-[var(--red)] text-white border-[3px] border-[var(--ink)] font-black tracking-wider hover:bg-[var(--ink)] transition-colors shadow-[4px_4px_0_var(--ink)] px-4 py-3 text-[14px] sm:text-[16px]"
-          style={display}
-        >
-          {current && previewPlaying ? '❚❚' : (lang === 'es' ? `▶ ESCUCHAR EL DÍA · ${queue.length} TEMAS` : `▶ PLAY THE DAY · ${queue.length} TRACKS`)}
-        </button>
-      ) : null}
-      <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
-        {tracks.map((t) => {
-          const on = current === rowKeyOf(t) && previewPlaying
-          const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? t.mix_name : ''
-          const beatport = !!(t.external_url && /beatport\.com/i.test(t.external_url))
-          return (
-            <div
-              key={rowKeyOf(t)}
-              id={spotId(spot, t)}
-              onClick={cardPlay(t, spot)}
-              className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-2 py-3 px-3 sm:px-4 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
-            >
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-12 sm:w-14 shrink-0">
-                  <Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="56px" frameClass="border-[3px] border-[var(--ink)]" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm sm:text-base font-black leading-snug sm:truncate" style={display}>
-                    {t.title}
-                    {mix ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mix}</span> : null}
-                  </div>
-                  <div className="text-xs sm:text-sm mt-0.5 break-words" style={mono}>
-                    <ArtistNames artists={splitArtistDisplayLine(t.artists).map((name) => ({ name }))} mixName={t.mix_name} lang={lang} />
-                    {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} lang={lang} /></> : null}
-                  </div>
-                </div>
-              </div>
-              <div className="track-action-bar sm:!justify-start sm:!self-start sm:pl-[68px]">
-                {t.audio_src ? (
-                  <PlayButton
-                    track={t}
-                    spot={spot}
-                    className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
-                  />
-                ) : null}
-                {t.bpm != null && t.bpm > 0 ? <span className={`${chip} bg-[var(--uv)]`} style={mono}>{Math.round(t.bpm)}</span> : null}
-                {(t.music_key || '').trim() ? <span className={`${chip} bg-[var(--cyan)] whitespace-nowrap`} style={mono}>{(t.music_key || '').trim()}</span> : null}
-                <SaveButton track={t} lang={lang} />
-                {t.featured_id ? (
-                  <TrackShareButton source="featured" trackId={t.featured_id} weekDate={t.week_date || ''} lang={lang} shareTitle={`${t.title} — ${t.artists}`} />
-                ) : null}
-                <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists)} lang={lang} />
-                <TidalLinkButton url={t.tidal_url} lang={lang} />
-                {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </PlayCtx.Provider>
-  )
+    playPicks: '▶ ESCUCHAR LA SELECCIÓN · {n} TEMAS',
+    playRest: '▶ ESCUCHAR EL RESTO · {n} TEMAS',
+  },
+  en: {
+    section: 'Releases of the day',
+    all: 'All the releases',
+    title: 'Top releases day',
+    read: 'READ THE ARTICLE →',
+    back: '← Back to Releases',
+    empty: 'No releases on the site for this day.',
+    today: 'TODAY',
+    prev: 'Previous day',
+    next: 'Next day',
+    pick: 'Pick a day',
+    picksTitle: 'The Optimal Breaks selection',
+    restTitle: 'The rest of the day',
+    onlyPicks: (n: number) => (n === 1 ? 'Optimal Breaks highlights the track of this day.' : `Optimal Breaks highlights the ${n} tracks of this day.`),
+    onlyRest: (n: number) => (n === 1 ? '1 track is out. Optimal Breaks has not highlighted any.' : `${n} tracks are out. Optimal Breaks has not highlighted any.`),
+    both: (picks: number, rest: number) => {
+      const a = picks === 1 ? 'Optimal Breaks highlights 1 track.' : `Optimal Breaks highlights ${picks} tracks.`
+      const b = rest === 1 ? '1 more is out.' : `${rest} more are out.`
+      return `${a} ${b}`
+    },
+    playPicks: '▶ PLAY THE SELECTION · {n} TRACKS',
+    playRest: '▶ PLAY THE REST · {n} TRACKS',
+  },
+} as const
+
+export function dayReleaseBlurb(lang: Locale, picks: number, rest: number): string {
+  const c = DAY_COPY[lang]
+  if (picks + rest === 0) return c.empty
+  if (picks > 0 && rest === 0) return c.onlyPicks(picks)
+  if (picks === 0) return c.onlyRest(rest)
+  return c.both(picks, rest)
 }
 
 /** Español: día/mes/año. Inglés: mes/día/año. El input nativo sigue el idioma del navegador. */
@@ -762,16 +726,26 @@ function arrowDayLabel(ymd: string, lang: Locale): string {
 
 /** Calendario del artículo del día. Al elegir una fecha, el formulario abre ese día. */
 export function DayReleaseDate({
-  lang, day, today, year, label,
+  lang, day, today, year, label, navigateTo,
 }: {
   lang: Locale
   day: string
   today: string
   year?: string
   label: string
+  /** Si viene, el calendario abre esa ruta en vez de volver al índice. */
+  navigateTo?: (day: string) => string
 }) {
+  const router = useRouter()
   return (
-    <form action={`/${lang}/topreleases`} method="get" className="inline-flex">
+    <form
+      action={`/${lang}/topreleases`}
+      method="get"
+      className="inline-flex"
+      onSubmit={(e) => {
+        if (navigateTo) e.preventDefault()
+      }}
+    >
       {year ? <input type="hidden" name="year" value={year} /> : null}
       <label className="relative inline-flex h-10 cursor-pointer items-center border-2 border-[var(--ink)] bg-[var(--paper)]">
         <span className="pointer-events-none px-3 text-[13px] font-black text-[var(--ink)]" style={mono}>
@@ -786,7 +760,13 @@ export function DayReleaseDate({
           max={today}
           aria-label={label}
           onChange={(e) => {
-            if (e.currentTarget.value) e.currentTarget.form?.requestSubmit()
+            const next = e.currentTarget.value
+            if (!next) return
+            if (navigateTo) {
+              router.push(navigateTo(next))
+              return
+            }
+            e.currentTarget.form?.requestSubmit()
           }}
           className="absolute inset-0 cursor-pointer opacity-0"
         />
