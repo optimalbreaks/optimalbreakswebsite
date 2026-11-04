@@ -646,7 +646,7 @@ The public song chart, from 6 Oct 2026, drops a fichado / claim / family «+». 
 - **Eje.** `release` (default): the track’s release year (`release_date` year, else `release_year`). `save`: UTC year of `saved_chart_tracks.created_at`.
 - **Modo.** `public` (default) or `raw`.
 
-**Revelación** exists only for a concrete year: at least **2** artist-board credits in that year and **0** in the previous year, same axis and same skips.
+**Revelación** exists only for a concrete year. It is a new artist, not “quiet last year”. The earliest credit we know — `chart_featured_tracks`, `chart_tracks`, `chart_vinyl_tracks`, the ficha’s `key_releases` and Beatport Top 10s, remixer included — falls in the edition year **or the year before** (2026 → 2025 or 2026; 2027 → 2026 or 2027). A track from 2024 or earlier keeps them out. No dated credit means no debut, so they stay out. Among those, at least **2** artist-board credits in the open cut, same axis and same skips. The row shows `primer tema <year>`. A veteran with no activity in the previous year is not a breakthrough: listens only exist from 6 Oct 2026, so “zero in 2025” used to pass almost everyone.
 
 **Por año de lanzamiento** is a histogram of the **mode**, not of the edition. With axis `release` it does **not** change when you pick another edition year (the hint on the panel says so). With axis `save` and a year selected, the bars are only the «+» made that year, split by the track’s release year. Each row’s play button is that year’s most-voted track (same track sort: unique users, then saves).
 
@@ -662,7 +662,7 @@ Top **5** nominees each. Order:
 2. **Remix del año** — same cut, only if `mix_name` names a remixer. Generic *Original Mix* / *Breakbeat Remix* do not invent one.
 3. **Mejor productor** — artist-board credits, remixer included.
 4. **Mejor sello** — one «+» credits the track’s label, unless it is an aggregator or a label-mark skip.
-5. **Revelación** — only when a year is selected.
+5. **Revelación** — only when a year is selected. Earliest catalogue credit in that year or the year before, then the same artist-board sort inside the cut.
 6. **Artista español** / **Sello español** / **Tema español** — Spain via ficha country, as above.
 7. **Artista inglés** / **Tema inglés** — same rules, ficha country `GB` (stored `UK` counts; a compound such as `AU/UK` counts). No UK label prize.
 8. **Artista estadounidense** / **Tema estadounidense** — ficha country `US` only. No US label prize.
@@ -707,7 +707,7 @@ Admin-only twin of Awards. **A listen is a row in `track_play_events`** (logged 
 
 **Where:** `/[lang]/administrator/escuchas` (sidebar «Escuchas», card on the admin home). **API:** `GET /api/admin/escuchas?year=2026|all&axis=release|save&mode=public|raw`. Same engine as Awards (`loadListensBoard` → `loadAwardsBoard` with `metric: 'plays'`). `requireAdmin` only.
 
-Same five blocks and the same phase-1 categories. The number on each row is listens (then distinct logged-in listeners). Anonymous plays (`user_id` null) raise the listen total and do not invent a listener. A play whose canonical key does not resolve to the catalogue is coverage (**Sin tema**), not a nominee.
+Same five blocks and the same phase-1 categories. Revelación uses the catalogue debut window from Awards (edition year or the year before), not “no listens in the previous year”. The number on each row is listens (then distinct logged-in listeners). Anonymous plays (`user_id` null) raise the listen total and do not invent a listener. A play whose canonical key does not resolve to the catalogue is coverage (**Sin tema**), not a nominee.
 
 **Filters.** Edition works as on Awards. The page **opens on axis `save`**: the UTC year of `track_play_events.created_at` (the UI says **Año de la escucha**). The toggle can switch it to **Lanzamiento**. Awards opens the other way: release year first, vote year second. **Como en público** skips a marked / claimed / family account’s own credit and a label-mark dump on artists, labels, countries and Revelación. That same listen does not raise the **track** total either (4 Nov 2026): a marked, claimed or family account listening to a track that credits them stays in the table and off the ranking. Anonymous plays and the house account still count. A label mark does not drop the song’s listens. **Crudo** keeps the self-listen on the track, for the audit. Plays are not a public list: `is_tracks_public` does not remove a listen.
 

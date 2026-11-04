@@ -5,6 +5,7 @@
 // - Temas: listas públicas, orden por usuarios únicos. El auto-voto SÍ cuenta.
 // - Escuchas (metric plays), modo public: la auto-escucha no sube el tema. Crudo sí.
 // - Artistas / sellos / países: skip de fichaje, claim, familiar y marca de sello.
+// - Revelación: primer crédito del catálogo en el año de la edición o el anterior.
 // Modo `raw` quita esos skips y mete también las listas privadas (auditoría).
 
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
@@ -634,6 +635,147 @@ function artistKeyFor(name: string, slugMap: Record<string, string>, bySlug: Map
   return `name:${normalizeArtistKey(name)}`
 }
 
+/** Primer tema en el año de la edición o en el anterior. 2026 → 2025 o 2026; 2027 → 2026 o 2027. */
+function debutsInWindow(debut: number | null | undefined, year: number): boolean {
+  return debut != null && (debut === year || debut === year - 1)
+}
+
+function noteDebut(
+  debut: Map<string, number>,
+  name: string,
+  year: number | null,
+  slugMap: Record<string, string>,
+  bySlug: Map<string, CatalogHit>,
+) {
+  if (year == null || !name.trim()) return
+  const key = artistKeyFor(name, slugMap, bySlug)
+  const prev = debut.get(key)
+  if (prev == null || year < prev) debut.set(key, year)
+}
+
+function noteCreditDebut(
+  debut: Map<string, number>,
+  artists: unknown,
+  mixName: string | null,
+  year: number | null,
+  slugMap: Record<string, string>,
+  bySlug: Map<string, CatalogHit>,
+) {
+  if (year == null) return
+  for (const credit of creditNames(artistsLine(artists), mixName)) {
+    noteDebut(debut, credit.name, year, slugMap, bySlug)
+  }
+}
+
+/**
+ * Año del primer crédito que conocemos (tienda, 40 Breaks, vinilo, Top 10 de
+ * ficha y temas clave). Sin año no hay debut: un veterano sin fecha no entra
+ * como revelación.
+ */
+async function loadDebutYears(
+  sb: ServiceClient,
+  slugMap: Record<string, string>,
+  bySlug: Map<string, CatalogHit>,
+): Promise<Map<string, number>> {
+  type DatedTrack = {
+    artists: unknown
+    mix_name: string | null
+    release_year: number | null
+    release_date: string | null
+  }
+  type VinylTrack = { artists: unknown; mix_name: string | null; year: number | null }
+  type DebutArtist = {
+    name: string | null
+    name_display: string | null
+    key_releases: { year?: number | null }[] | null
+    beatport_top_tracks: BeatportTopTrack[] | null
+  }
+  type DebutLabel = { beatport_top_tracks: BeatportTopTrack[] | null }
+
+  const [featuredRes, chartRes, vinylRes, artistRes, labelRes] = await Promise.all([
+    fetchAllRows<DatedTrack>((from, to) =>
+      sb
+        .from('chart_featured_tracks')
+        .select('artists, mix_name, release_year, release_date')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<DatedTrack>((from, to) =>
+      sb
+        .from('chart_tracks')
+        .select('artists, mix_name, release_year, release_date')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<VinylTrack>((from, to) =>
+      sb
+        .from('chart_vinyl_tracks')
+        .select('artists, mix_name, year')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<DebutArtist>((from, to) =>
+      sb
+        .from('artists')
+        .select('name, name_display, key_releases, beatport_top_tracks')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<DebutLabel>((from, to) =>
+      sb
+        .from('labels')
+        .select('beatport_top_tracks')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+  ])
+  const err = featuredRes.error || chartRes.error || vinylRes.error || artistRes.error || labelRes.error
+  if (err) throw new Error(err.message)
+
+  const debut = new Map<string, number>()
+  for (const row of featuredRes.data || []) {
+    noteCreditDebut(debut, row.artists, row.mix_name, releaseYearOf(row.release_year, row.release_date), slugMap, bySlug)
+  }
+  for (const row of chartRes.data || []) {
+    noteCreditDebut(debut, row.artists, row.mix_name, releaseYearOf(row.release_year, row.release_date), slugMap, bySlug)
+  }
+  for (const row of vinylRes.data || []) {
+    noteCreditDebut(debut, row.artists, row.mix_name, releaseYearOf(row.year, null), slugMap, bySlug)
+  }
+  for (const row of artistRes.data || []) {
+    const name = row.name_display || row.name || ''
+    const releases = Array.isArray(row.key_releases) ? row.key_releases : []
+    for (const release of releases) {
+      noteDebut(debut, name, releaseYearOf(release?.year, null), slugMap, bySlug)
+    }
+    const tops = Array.isArray(row.beatport_top_tracks) ? row.beatport_top_tracks : []
+    for (const track of tops) {
+      noteCreditDebut(
+        debut,
+        track.artists,
+        track.mix_name,
+        releaseYearOf(track.release_year, track.release_date),
+        slugMap,
+        bySlug,
+      )
+    }
+  }
+  for (const row of labelRes.data || []) {
+    const tops = Array.isArray(row.beatport_top_tracks) ? row.beatport_top_tracks : []
+    for (const track of tops) {
+      noteCreditDebut(
+        debut,
+        track.artists,
+        track.mix_name,
+        releaseYearOf(track.release_year, track.release_date),
+        slugMap,
+        bySlug,
+      )
+    }
+  }
+  return debut
+}
+
 function labelKeyFor(name: string, slugMap: Record<string, string>, bySlug: Map<string, CatalogHit>): string {
   const slug = resolveSlug(name, slugMap, true)
   if (slug && bySlug.has(slug)) return `slug:${slug}`
@@ -734,10 +876,12 @@ export async function loadAwardsBoard(
     labelBySlug,
   }
   const plays = playRes.data || []
-  const facts =
+  const [facts, debutByKey] = await Promise.all([
     metric === 'plays'
-      ? await hydratePlayFacts(sb, plays, artistRows, labelRows, hydrateCtx)
-      : await hydrateFacts(sb, saved, hydrateCtx)
+      ? hydratePlayFacts(sb, plays, artistRows, labelRows, hydrateCtx)
+      : hydrateFacts(sb, saved, hydrateCtx),
+    year == null ? Promise.resolve(new Map<string, number>()) : loadDebutYears(sb, artistSlugMap, artistBySlug),
+  ])
   const ballotCount = metric === 'plays' ? plays.length : saved.length
 
   const years = new Set<number>()
@@ -749,8 +893,6 @@ export async function loadAwardsBoard(
   }
 
   const editionFacts = facts.filter((f) => inEdition(f, year, axis))
-  const prevFacts =
-    year == null ? [] : facts.filter((f) => inEdition(f, year - 1, axis))
 
   const editionTracks = tracksOf(editionFacts, metric)
   const editionArtists = peopleOf(editionFacts, (f) =>
@@ -759,11 +901,6 @@ export async function loadAwardsBoard(
   const editionLabels = peopleOf(editionFacts, (f) =>
     f.labelCredit ? [{ key: f.labelCredit.key, name: f.labelCredit.raw }] : [],
   )
-  const prevArtists = peopleOf(prevFacts, (f) =>
-    f.credits.map((c) => ({ key: artistKeyFor(c.name, artistSlugMap, artistBySlug), name: c.name })),
-  )
-  const prevByKey = new Map(prevArtists.map((a) => [a.key, a.save_count]))
-
   const spanishArtists = editionArtists.filter((a) => {
     const slug = a.key.startsWith('slug:') ? a.key.slice(5) : ''
     return isSpain(artistBySlug.get(slug)?.country)
@@ -787,7 +924,9 @@ export async function loadAwardsBoard(
 
   const breakthrough = year == null
     ? []
-    : editionArtists.filter((a) => a.save_count >= BREAKTHROUGH_MIN && (prevByKey.get(a.key) || 0) === 0)
+    : editionArtists.filter(
+        (a) => a.save_count >= BREAKTHROUGH_MIN && debutsInWindow(debutByKey.get(a.key), year),
+      )
 
   const yearLabel = year == null ? 'todos los años' : String(year)
   const axisLabel =
@@ -901,8 +1040,12 @@ export async function loadAwardsBoard(
       id: 'breakthrough',
       section: 'international',
       title: 'Revelación',
-      hint: `Al menos ${BREAKTHROUGH_MIN} ${metric === 'plays' ? 'escuchas acreditadas' : 'créditos'} en ${year} y cero en ${year - 1}. Mismo eje (${axisLabel}) y las mismas exclusiones.`,
-      entries: personEntries(breakthrough, artistBySlug, 'artist'),
+      hint: `Primer tema en ${year - 1} o ${year}: nada anterior en el catálogo. Al menos ${BREAKTHROUGH_MIN} ${metric === 'plays' ? 'escuchas acreditadas' : 'créditos'} en este corte (${axisLabel}), con las mismas exclusiones.`,
+      entries: personEntries(breakthrough, artistBySlug, 'artist').map((entry, i) => {
+        const debut = debutByKey.get(breakthrough[i]?.key || '')
+        const since = debut ? `primer tema ${debut}` : null
+        return { ...entry, detail: [entry.detail, since].filter(Boolean).join(' · ') || null }
+      }),
     })
   }
 

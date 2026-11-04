@@ -22,7 +22,7 @@ Una fila de `track_play_events` es una escucha. El registro empieza el **6 oct 2
 Igual que Awards, sobre escuchas:
 
 - **Temas:** en `public`, la escucha del fichado, el familiar o el reclamado no sube el tema si el crédito es suyo. El anónimo y la cuenta de la casa sí. La marca de sello no quita la escucha del tema. `raw` la deja, para auditar.
-- **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores no compiten como sello.
+- **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores no compiten como sello. Revelación no es «cero escuchas el año pasado» (el registro empieza el 6 oct 2026). Es quien tiene el primer tema del catálogo en el año de la edición o en el anterior.
 - `raw` quita esos skips. Auditoría, no nominación.
 
 Al abrir, el eje es **`save`**: año UTC de `created_at` de la escucha (en la UI, **Año de la escucha**). El selector de arriba a la derecha puede pasarlo a **Lanzamiento**. Awards abre al revés: lanzamiento, y se puede pasar a año del voto.
