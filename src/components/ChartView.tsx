@@ -449,7 +449,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
             lang={lang}
             shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
           />
-          {isAdvance ? null : (
+          {isAdvance || (pick.platform === 'hosted' && !(pick.spotify_url || '').trim()) ? null : (
             <>
               <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} dict={dict} lang={lang} />
               <TidalLinkButton url={pick.tidal_url} lang={lang} />

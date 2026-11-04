@@ -404,6 +404,8 @@ interface Aggregate {
   playback_kind: PlaybackKind
   sample_url: string | null
   full_audio_url: string | null
+  /** `hosted`: exclusiva sin tienda. La búsqueda de Spotify abriría el tema oficial. */
+  platform?: string | null
   save_count: number
   unique_users: number
   first_saved_at: string | null
@@ -715,6 +717,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     source: ChartTrackSource
     id: string
     week_date: string | null
+    platform?: string | null
   }
   const byRefKey = new Map<string, Meta>()
 
@@ -744,6 +747,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     })
   }
   for (const f of ((featRes.data || []) as FeatRow[])) {
+    const hosted = f.platform === 'hosted'
     const kind: PlaybackKind = f.platform === 'bandcamp' ? 'bandcamp' : 'beatport'
     const canonical_key = normalizeUrl(f.link_url) || `t:featured:${f.id}`
     byRefKey.set(`featured:${f.id}`, {
@@ -756,7 +760,8 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
       bpm: f.bpm,
       music_key: f.music_key,
       artwork_url: f.artwork_url,
-      external_url: f.link_url,
+      external_url: hosted ? null : f.link_url,
+      platform: f.platform,
       youtube_url: null,
       spotify_url: f.spotify_url ?? null,
       tidal_url: f.tidal_url ?? null,
@@ -918,6 +923,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
         tidal_url: meta.tidal_url,
         sample_url: meta.sample_url,
         full_audio_url: meta.full_audio_url,
+        platform: meta.platform ?? null,
         playback_kind: meta.playback_kind,
         save_count: 1,
         unique_users: 0,
@@ -958,6 +964,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
       if (!hasRd(existing.release_date) && hasRd(meta.release_date)) existing.release_date = meta.release_date
       if (!existing.sample_url && meta.sample_url) existing.sample_url = meta.sample_url
       if (!existing.full_audio_url && meta.full_audio_url) existing.full_audio_url = meta.full_audio_url
+      if (meta.platform === 'hosted') existing.platform = 'hosted'
       if (
         (existing.primary.source === 'beatport_top' && meta.source !== 'beatport_top') ||
         (existing.playback_kind === 'youtube' && meta.playback_kind !== 'youtube')
@@ -1033,6 +1040,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     tidal_url: a.tidal_url,
     sample_url: a.sample_url,
     full_audio_url: a.full_audio_url,
+    platform: a.platform ?? null,
     playback_kind: a.playback_kind,
     save_count: a.save_count,
     unique_users: a.unique_users,

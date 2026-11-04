@@ -1371,6 +1371,8 @@ export interface FortnightDigestTrack {
   music_key?: string | null
   spotify_url?: string | null
   tidal_url?: string | null
+  /** `hosted`: exclusiva sin tienda. No abre la búsqueda de Spotify. */
+  platform?: string | null
 }
 
 export interface FortnightDigestName {

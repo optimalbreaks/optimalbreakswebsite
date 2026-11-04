@@ -84,6 +84,7 @@ interface CommunityTopTrack {
   tidal_url: string | null
   sample_url: string | null
   full_audio_url?: string | null
+  platform?: string | null
   playback_kind: PlaybackKind
   save_count: number
   unique_users: number
@@ -1323,7 +1324,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         }
                         return null
                       })()}
-                      {t.primary.source !== 'vinyl' && !isAdvanceRelease(t.release_date) ? (
+                      {t.primary.source !== 'vinyl' && !isAdvanceRelease(t.release_date) && !(t.platform === 'hosted' && !(t.spotify_url || '').trim()) ? (
                         <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists || '')} lang={lang} />
                       ) : null}
                       {isAdvanceRelease(t.release_date) ? null : (

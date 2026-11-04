@@ -419,7 +419,7 @@ function RankedTracks({
                 {t.featured_id ? (
                   <TrackShareButton source="featured" trackId={t.featured_id} weekDate={t.week_date || ''} lang={lang} shareTitle={`${t.title} — ${t.artists}`} />
                 ) : null}
-                {advance ? null : <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists)} lang={lang} />}
+                {advance || (t.platform === 'hosted' && !(t.spotify_url || '').trim()) ? null : <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists)} lang={lang} />}
                 {advance ? null : <TidalLinkButton url={t.tidal_url} lang={lang} />}
                 {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
               </div>

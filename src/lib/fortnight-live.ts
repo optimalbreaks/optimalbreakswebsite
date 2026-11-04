@@ -364,6 +364,7 @@ function digestTrack(f: FeatRow, value: number, weekBy: Map<string, string>): Fo
     music_key: f.music_key || null,
     spotify_url: f.spotify_url ?? null,
     tidal_url: f.tidal_url ?? null,
+    platform: f.platform ?? null,
   }
 }
 

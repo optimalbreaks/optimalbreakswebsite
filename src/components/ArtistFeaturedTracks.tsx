@@ -74,7 +74,7 @@ function buildSnapshot(
     artwork_url: pick.artwork_url || null,
     sample_url: pick.sample_url || null,
     full_audio_url: pick.full_audio_url || null,
-    beatport_url: pick.link_url || null,
+    beatport_url: pick.platform === 'hosted' ? null : (pick.link_url || null),
     origin,
   }
 }
@@ -624,7 +624,7 @@ export default function ArtistFeaturedTracks({
                           shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
                         />
                       )}
-                      {kind !== 'vinyl' && !isAdvance ? (
+                      {kind !== 'vinyl' && !isAdvance && !(pick.platform === 'hosted' && !(pick.spotify_url || '').trim()) ? (
                         <>
                           <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
                           <TidalLinkButton url={pick.tidal_url} lang={lang} />
@@ -655,7 +655,7 @@ export default function ArtistFeaturedTracks({
                             </a>
                           ) : null}
                         </>
-                      ) : pick.link_url ? (
+                      ) : pick.platform === 'hosted' ? null : pick.link_url ? (
                         pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
                           <BeatportLinkButton url={pick.link_url} lang={lang} />
                         ) : (

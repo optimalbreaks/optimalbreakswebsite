@@ -20,6 +20,7 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 | **Lost In Desire** | `2026-08-03` | `private/music/kritycal-system-lost-in-desire.mp3` | Kritycal System. Máster 4:52. Ya estaba (`/track/lost-in-desire/28568728`). |
 | **Updating** | `2026-08-17` | `private/music/brainbass-updating.mp3` | BrainBass. Máster 4:29. Drum & Bass, Beatport lo lista a 88 BPM. `/track/updating/28597008`. |
 | **Control** | `2026-08-31` | `private/music/kritycal-system-brainbass-control.mp3` | Kritycal System y BrainBass. Máster 4:09. Ya estaba (`/track/control/30177482`). |
+| **Gone Gone Gone (WoTeR Breaks Mix)** | `2026-11-02` | `private/music/woter-gone-gone-gone.mp3` | Woter (`/artists/woter`). Máster 5:02, FL Studio, 192 kbps. No está en Beatport: `platform: hosted`, release `2026-11-04`. Sin botón de tienda ni búsqueda de Spotify (abriría el tema oficial). |
 
 ## Arquitectura (no negociable)
 
@@ -32,9 +33,10 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 ## Receta — próxima exclusiva
 
 1. Dejar el WAV y la carátula en `private/music/` (gitignorados; no se suben).
-2. `ffmpeg -i <wav> -codec:a libmp3lame -b:a 192k private/music/<slug>.mp3` y artwork → WebP subido al bucket `media` de Supabase (`music/<slug>.webp`). El WebP local, si se genera ahí, tampoco se versiona.
-3. Pick en `data/charts/picks/<lunes>.json` con `full_audio_url: "/api/audio/<slug>.mp3"` (+ `link_url` de Beatport si existe; la semana la manda el release, regla `charts-new-releases-supabase`).
-4. `node --use-system-ca scripts/chart-featured-upsert.mjs data/charts/picks/<lunes>.json` (el upsert respeta `full_audio_url`; `--enrich-release-dates` rellena bpm/key/sample de Beatport sin pisarlo).
+2. `ffmpeg -i <wav> -map 0:a:0 -vn -codec:a libmp3lame -b:a 192k private/music/<slug>.mp3` y artwork → WebP subido al bucket `media` de Supabase (`music/<slug>.webp`). El `-vn` es obligatorio: un WAV de FL Studio trae la carátula como vídeo y sin él el MP3 pesa el doble. El WebP local, si se genera ahí, tampoco se versiona.
+3. Pick en `data/charts/picks/<lunes>.json` con `full_audio_url: "/api/audio/<slug>.mp3"` (+ `link_url` de Beatport si existe; la semana la manda el release, regla `charts-new-releases-supabase`). El JSON de la semana tiene que llevar **todos** los temas de esa semana: el upsert borra las filas cuyo `link_url` no esté en el fichero.
+3bis. **Sin tienda (4 nov 2026, Woter — *Gone Gone Gone*).** Si Beatport no tiene el corte, no se inventa el enlace del tema oficial. Se inserta **una** fila en la edición del lunes ISO (`platform: hosted`, `link_url` estable que no es tienda, crédito del artista de la ficha). No se lanza el matcher de Spotify ni de TIDAL: la búsqueda abre el tema oficial. La UI esconde el botón de tienda y la búsqueda de Spotify cuando `platform` es `hosted` y no hay `spotify_url`.
+4. `node --use-system-ca scripts/chart-featured-upsert.mjs data/charts/picks/<lunes>.json` (el upsert respeta `full_audio_url`; `--enrich-release-dates` rellena bpm/key/sample de Beatport sin pisarlo). Node 22.14: `OB_NO_SYSTEM_CA=1` y `NODE_TLS_REJECT_UNAUTHORIZED=0`. El caso 3bis no usa este upsert.
 5. Commit del MP3 + JSON. Nada más: la UI y Mis Tracks ya reaccionan solos a `full_audio_url`.
 6. **Si el artista manda después el máster** (el primer archivo era una demo): `ffmpeg` otra vez **encima del mismo** `<slug>.mp3`. No cambiar `full_audio_url` ni crear otra fila. Commit + push del MP3: hasta que Vercel despliega, la web sigue sirviendo el archivo anterior. Comprobar la duración del WAV antes de codificar (ffprobe) y compararla con Beatport/Spotify.
 
