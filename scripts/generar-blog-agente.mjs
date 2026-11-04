@@ -479,6 +479,74 @@ function tituloQuincena(from, until, lang, kind = 'quincena') {
   return `The most ${heard ? 'played' : 'voted'} tracks, ${start} to ${end}`
 }
 
+function normCredit(s) {
+  return String(s || '')
+    .replace(/&/g, ' and ')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function creditKeysOf(f) {
+  const raw = Array.isArray(f.artists)
+    ? f.artists.map((x) => (x && typeof x === 'object' ? x.name : x)).filter(Boolean).join(', ')
+    : String(f.artists || '')
+  const keys = []
+  for (const part of raw.split(',')) {
+    for (const n of part.split(/\s+(?:&|and|x|vs\.?)\s+/i)) {
+      const k = normCredit(n)
+      if (k) keys.push(k)
+    }
+  }
+  const mix = String(f.mix_name || '').trim()
+  if (/remix/i.test(mix)) {
+    const stripped = mix
+      .replace(/\s*(?:\d{4}\s+)?(?:extended\s+|club\s+|radio\s+|vip\s+|breakbeat\s+|breaks\s+|break\s+|dub\s+)?remix(?:es)?(?:\s*\([^)]*\))?\s*$/i, '')
+      .trim()
+    for (const part of stripped.split(',')) {
+      for (const n of part.split(/\s+(?:&|and|x|vs\.?)\s+/i)) {
+        const k = normCredit(n)
+        if (k && k !== 'original' && k !== 'vip') keys.push(k)
+      }
+    }
+  }
+  return keys
+}
+
+function addSkipName(map, userId, name) {
+  const k = normCredit(name)
+  if (!userId || !k) return
+  if (!map.has(userId)) map.set(userId, new Set())
+  map.get(userId).add(k)
+}
+
+/** Fichaje, familiar y claim. El sello marcado no entra: su escucha sigue contando en el tema. */
+async function loadSelfListenSkip(sb) {
+  const map = new Map()
+  const [marks, family, claimed] = await Promise.all([
+    fetchAllRows(sb, 'editorial_artist_marks', 'id, user_id, artist_name'),
+    fetchAllRows(sb, 'editorial_family_marks', 'id, user_id, artist_name'),
+    fetchAllRows(sb, 'artists', 'id, claimed_by, name, name_display, slug', (q) => q.not('claimed_by', 'is', null)),
+  ])
+  for (const r of marks) addSkipName(map, r.user_id, r.artist_name)
+  for (const r of family) addSkipName(map, r.user_id, r.artist_name)
+  for (const a of claimed) {
+    addSkipName(map, a.claimed_by, a.name)
+    addSkipName(map, a.claimed_by, a.name_display)
+    addSkipName(map, a.claimed_by, String(a.slug || '').replace(/-/g, ' '))
+  }
+  return map
+}
+
+function isSelfListen(skip, userId, f) {
+  if (!userId) return false
+  const keys = skip.get(userId)
+  if (!keys) return false
+  return creditKeysOf(f).some((k) => keys.has(k))
+}
+
 async function fetchAllRows(sb, table, select, apply = (q) => q) {
   const out = []
   for (let from = 0; ; from += 500) {
@@ -689,14 +757,18 @@ async function computeQuincena(untilArg, trimestre = null, semana = null, mes = 
     .map((a) => `#${a.rank} ${artistLink(a.name)}: ${[...new Set(winByArtist.get(normName(a.name)).map((f) => `«${f.title}»${f.mix_name && !/^original mix$/i.test(f.mix_name) ? ` (${f.mix_name})` : ''}`))].slice(0, 6).join(', ')}`)
 
   // Escuchas de la quincena (previews y temas completos en la web).
-  const plays = await fetchAllRows(sb, 'track_play_events', 'id, canonical_key, created_at', (q) => q.gte('created_at', sinceIso))
+  // La del fichado, el familiar o el reclamado en un tema que le acredita no cuenta.
+  const [plays, selfListenSkip] = await Promise.all([
+    fetchAllRows(sb, 'track_play_events', 'id, canonical_key, user_id, created_at', (q) => q.gte('created_at', sinceIso)),
+    loadSelfListenSkip(sb),
+  ])
   // Las escuchas se registran desde el 6 oct 2026: un trimestre anterior cuenta todas, no las de sus días.
   const playsWin = trimestre || mes || semana ? plays : plays.filter((p) => inWin(madridDay(p.created_at)))
   const featByKey = new Map(feat.filter((f) => f.link_url).map((f) => [normUrl(f.link_url), f]))
   const playCount = new Map()
   for (const p of playsWin) {
     const f = featByKey.get(p.canonical_key.replace(/\/$/, ''))
-    if (f) inc(playCount, f.id)
+    if (f && !isSelfListen(selfListenSkip, p.user_id, f)) inc(playCount, f.id)
   }
   const featById = new Map(feat.map((f) => [f.id, f]))
   const playedWin = ranked(new Map([...playCount].filter(([id]) => inWin(featById.get(id).release_date))), TOP)

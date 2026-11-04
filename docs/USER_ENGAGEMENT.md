@@ -709,14 +709,14 @@ Admin-only twin of Awards. **A listen is a row in `track_play_events`** (logged 
 
 Same five blocks and the same phase-1 categories. The number on each row is listens (then distinct logged-in listeners). Anonymous plays (`user_id` null) raise the listen total and do not invent a listener. A play whose canonical key does not resolve to the catalogue is coverage (**Sin tema**), not a nominee.
 
-**Filters.** Edition works as on Awards. The page **opens on axis `save`**: the UTC year of `track_play_events.created_at` (the UI says **Año de la escucha**). The toggle can switch it to **Lanzamiento**. Awards opens the other way: release year first, vote year second. **Como en público** skips a marked / claimed / family account’s own credit and a label-mark dump on artists, labels, countries and Revelación. The track still counts that listen. **Crudo** drops those skips. Plays are not a public list: `is_tracks_public` does not remove a listen.
+**Filters.** Edition works as on Awards. The page **opens on axis `save`**: the UTC year of `track_play_events.created_at` (the UI says **Año de la escucha**). The toggle can switch it to **Lanzamiento**. Awards opens the other way: release year first, vote year second. **Como en público** skips a marked / claimed / family account’s own credit and a label-mark dump on artists, labels, countries and Revelación. That same listen does not raise the **track** total either (4 Nov 2026): a marked, claimed or family account listening to a track that credits them stays in the table and off the ranking. Anonymous plays and the house account still count. A label mark does not drop the song’s listens. **Crudo** keeps the self-listen on the track, for the audit. Plays are not a public list: `is_tracks_public` does not remove a listen.
 
 **Playback** is the same tap-to-play queue as Awards and does not write a new `track_play_events` row (the preview item has no `save`).
 
 ### Do not
 
 - Rank Escuchas by «+», or Awards by plays.
-- Drop self-listens from the **track** totals.
+- Put a marked / claimed / family self-listen back on the **public** track total. Raw mode keeps it. Do not delete the row.
 - Hide anonymous plays, or treat every anonymous play as one shared user.
 - Add a public `/escuchas` route.
 

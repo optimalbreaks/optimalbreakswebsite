@@ -60,6 +60,7 @@ import {
   isArtistSelfCreditSave,
   loadLabelCreditSkipMap,
   loadSelfCreditSkipMap,
+  playCountsExcludingSelfCredit,
   shouldSkipArtistSelfCredit,
   shouldSkipLabelSave,
   splitArtistCreditsForRanking,
@@ -993,14 +994,13 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
   const aggregates = Array.from(aggByKey.values())
   aggregates.forEach((a) => { a.unique_users = a._users.size })
 
-  const playByKey = new Map<string, number>()
   const allKeys = artistsOnly ? [] : aggregates.map((a) => a.canonical_key)
-  if (allKeys.length) {
-    const { data: playRows } = await sb.rpc('track_play_counts_for_keys', { p_keys: allKeys })
-    for (const row of (playRows || []) as { canonical_key: string; play_count: number }[]) {
-      playByKey.set(row.canonical_key, Number(row.play_count) || 0)
-    }
-  }
+  const playByKey = allKeys.length
+    ? await playCountsExcludingSelfCredit(sb, allKeys, (k) => {
+        const a = aggByKey.get(k)
+        return a ? { artists: a.artists, mixName: a.mix_name } : null
+      }, selfCreditSkip)
+    : new Map<string, number>()
 
   // Ordenamos por usuarios únicos primero (un mismo usuario no infla el ranking
   // re-guardando la canción en otra fuente), después por save_count, después

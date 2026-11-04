@@ -1,4 +1,5 @@
-// Exclusión de auto-voto: Top de artistas, Top 100 de canciones y Almas Gemelas.
+// Exclusión de auto-voto y de auto-escucha: Top de artistas, Top 100 de
+// canciones, listas por escuchas y Almas Gemelas.
 // Fase 2: fichaje editorial (`editorial_artist_marks`) o claim aprobado
 // (`artists.claimed_by`). El save sigue en Mis Tracks. En el Top 100 de
 // canciones ese «+» no cuenta si el tema le acredita (o acredita al familiar).
@@ -155,6 +156,50 @@ export async function loadLabelCreditSkipMap(sb: ServiceClient): Promise<LabelCr
     addLabelSkipKeys(map, row.user_id, row.label_name)
   }
   return map
+}
+
+export type PlayCredit = { artists: string; mixName?: string | null }
+
+/**
+ * Escuchas de esas claves, sin la del fichado, el familiar o el reclamado
+ * cuando el tema le acredita. El anónimo cuenta. El sello marcado no se salta:
+ * eso solo quita créditos del tablero de artistas.
+ */
+export async function playCountsExcludingSelfCredit(
+  sb: ServiceClient,
+  keys: string[],
+  creditForKey: (canonicalKey: string) => PlayCredit | null | undefined,
+  selfSkip?: SelfCreditSkipMap,
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>()
+  const unique = [...new Set(keys.map((k) => k.replace(/\/$/, '')).filter(Boolean))]
+  if (!unique.length) return counts
+  const skip = selfSkip ?? (await loadSelfCreditSkipMap(sb))
+  const queryKeys = unique.flatMap((k) => [k, `${k}/`])
+  for (let i = 0; i < queryKeys.length; i += 400) {
+    const slice = queryKeys.slice(i, i + 400)
+    const { data, error } = await sb.rpc('track_play_user_counts_for_keys', { p_keys: slice })
+    if (error) throw new Error(error.message)
+    for (const row of (data || []) as {
+      canonical_key: string
+      user_id: string | null
+      play_count: number
+    }[]) {
+      const k = row.canonical_key.replace(/\/$/, '')
+      const n = Number(row.play_count) || 0
+      if (!n) continue
+      const credit = creditForKey(k)
+      if (
+        row.user_id &&
+        credit &&
+        isArtistSelfCreditSave(skip, row.user_id, credit.artists, credit.mixName)
+      ) {
+        continue
+      }
+      counts.set(k, (counts.get(k) || 0) + n)
+    }
+  }
+  return counts
 }
 
 /** True si este save es de un sello fichado para esa cuenta (todo el crédito del tema se salta en el tablero). */

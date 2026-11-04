@@ -21,7 +21,7 @@ Una fila de `track_play_events` es una escucha. El registro empieza el **6 oct 2
 
 Igual que Awards, sobre escuchas:
 
-- **Temas:** la escucha del propio artista cuenta.
+- **Temas:** en `public`, la escucha del fichado, el familiar o el reclamado no sube el tema si el crédito es suyo. El anónimo y la cuenta de la casa sí. La marca de sello no quita la escucha del tema. `raw` la deja, para auditar.
 - **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores no compiten como sello.
 - `raw` quita esos skips. Auditoría, no nominación.
 
@@ -34,5 +34,6 @@ El mismo que Awards. El preview de esta página no lleva `save` y no escribe otr
 ## Prohibido
 
 - Ordenar esta página por votos, o Awards por escuchas.
-- Quitar la auto-escucha del total del tema.
+- Volver a sumar la auto-escucha al total del tema en `public`. En `raw` se queda.
+- Borrar la fila de `track_play_events`: él puede oírlo; la lista no se mueve.
 - Una ruta pública de escuchas.

@@ -3,6 +3,7 @@
 //
 // Dos universos, como en community-monthly:
 // - Temas: listas públicas, orden por usuarios únicos. El auto-voto SÍ cuenta.
+// - Escuchas (metric plays), modo public: la auto-escucha no sube el tema. Crudo sí.
 // - Artistas / sellos / países: skip de fichaje, claim, familiar y marca de sello.
 // Modo `raw` quita esos skips y mete también las listas privadas (auditoría).
 
@@ -14,6 +15,7 @@ import {
   slugLookupKeys,
 } from '@/lib/artist-slug-map'
 import {
+  isArtistSelfCreditSave,
   loadLabelCreditSkipMap,
   loadSelfCreditSkipMap,
   shouldSkipArtistSelfCredit,
@@ -220,6 +222,8 @@ type SaveFact = {
   labelCredit: { key: string; raw: string } | null
   aggregator: boolean
   play: PlayBits
+  /** false solo en escuchas + público: la auto-escucha no sube el total del tema. */
+  countOnTrack?: boolean
 }
 
 type TrackAgg = {
@@ -514,6 +518,7 @@ function sortPeople(rows: PersonAgg[]): PersonAgg[] {
 function tracksOf(facts: SaveFact[], metric: AwardsMetric): TrackAgg[] {
   const map = new Map<string, TrackAgg>()
   for (const f of facts) {
+    if (f.countOnTrack === false) continue
     let row = map.get(f.canonicalKey)
     if (!row) {
       row = {
@@ -1556,7 +1561,15 @@ async function hydratePlayFacts(
   for (const play of plays) {
     const meta = lookupPlayMeta(byKey, play.canonical_key || '')
     if (!meta?.canonical_key) continue
-    facts.push(factFromMeta(play.user_id || '', play.created_at, meta, ctx))
+    const fact = factFromMeta(play.user_id || '', play.created_at, meta, ctx)
+    if (
+      ctx.mode === 'public' &&
+      play.user_id &&
+      isArtistSelfCreditSave(ctx.selfSkip, play.user_id, meta.artists, meta.mix_name)
+    ) {
+      fact.countOnTrack = false
+    }
+    facts.push(fact)
   }
   return facts
 }

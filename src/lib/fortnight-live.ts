@@ -1,15 +1,15 @@
 /**
  * Artículo quincenal en directo: escuchas y votos de los temas que salieron
  * en la quincena, acumulados desde su lanzamiento hasta ahora. Mismas reglas
- * que el Top 100 de temas (perfiles privados fuera, auto-voto de fichados,
- * claims y familiares fuera). Caché 5 min: la página no golpea la BD en cada visita.
+ * que el Top 100 de temas (perfiles privados fuera, auto-voto y auto-escucha
+ * de fichados, claims y familiares fuera). Caché 5 min: la página no golpea la BD en cada visita.
  */
 import { unstable_cache } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
-import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self-credit'
+import { isArtistSelfCreditSave, loadSelfCreditSkipMap, playCountsExcludingSelfCredit } from '@/lib/artist-self-credit'
 import { fetchAllPages, fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import { articleFreeze, frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
@@ -281,23 +281,24 @@ async function dayReelScoreOrder(tracks: FortnightDigestTrack[]): Promise<string
     const key = canonOf(t)
     return key ? [key, `${key}/`] : []
   })
-  const [byId, byUrl, playRes, editorPlays, privateRes, selfSkip] = await Promise.all([
+  const barePlayKeys = tracks.map((t) => canonOf(t)).filter((k): k is string => !!k)
+  const [byId, byUrl, playCounts, editorPlays, privateRes, selfSkip] = await Promise.all([
     collectIn<SaveRow>(ids, (chunk, from, to) =>
       sb.from('saved_chart_tracks').select('id, user_id, track_source, track_id, canonical_url').eq('track_source', 'featured').in('track_id', chunk).order('id').range(from, to),
     ),
     collectIn<SaveRow>(urls, (chunk, from, to) =>
       sb.from('saved_chart_tracks').select('id, user_id, track_source, track_id, canonical_url').in('canonical_url', chunk).order('id').range(from, to),
     ),
-    playKeys.length
-      ? sb.rpc('track_play_counts_for_keys' as never, { p_keys: playKeys } as never)
-      : Promise.resolve({ data: [], error: null }),
+    playCountsExcludingSelfCredit(sb, barePlayKeys, (k) => {
+      const t = tracks.find((row) => canonOf(row) === k)
+      return t ? { artists: t.artists, mixName: t.mix_name } : null
+    }),
     collectIn<{ canonical_key: string }>(playKeys, (chunk, from, to) =>
       sb.from('track_play_events').select('canonical_key').eq('user_id', EDITOR_USER_ID).in('canonical_key', chunk).order('id').range(from, to),
     ),
     sb.from('profiles').select('id').eq('is_tracks_public', false),
     loadSelfCreditSkipMap(sb),
   ])
-  if (playRes.error) throw new Error(playRes.error.message)
   if (privateRes.error) throw new Error(privateRes.error.message)
 
   const byCanon = new Map<string, string>()
@@ -309,11 +310,10 @@ async function dayReelScoreOrder(tracks: FortnightDigestTrack[]): Promise<string
     if (canon) byCanon.set(canon, id)
   }
   const plays = new Map<string, number>()
-  for (const row of ((playRes.data as { canonical_key: string; play_count: number }[] | null) ?? [])) {
-    const canon = row.canonical_key.replace(/\/$/, '')
+  for (const [canon, n] of playCounts) {
     const id = byCanon.get(canon)
     if (!id) continue
-    plays.set(id, (plays.get(id) || 0) + (Number(row.play_count) || 0))
+    plays.set(id, n)
   }
   for (const row of editorPlays) {
     const canon = row.canonical_key.replace(/\/$/, '')
@@ -400,10 +400,11 @@ export async function loadFortnightLive(from: string, until: string, topN: numbe
   const keys = [...byKey.keys()]
   const links = [...new Set(feat.map((f) => f.link_url).filter((x): x is string => !!x))]
 
-  const [playRes, byId, byUrl, privateRes, selfSkip] = await Promise.all([
-    keys.length
-      ? sb.rpc('track_play_counts_for_keys' as never, { p_keys: [...keys, ...keys.map((k) => `${k}/`)] } as never)
-      : Promise.resolve({ data: [], error: null }),
+  const [plays, byId, byUrl, privateRes, selfSkip] = await Promise.all([
+    playCountsExcludingSelfCredit(sb, keys, (k) => {
+      const f = byKey.get(k)
+      return f ? { artists: artistsLine(f.artists), mixName: f.mix_name } : null
+    }),
     selectByIds<SaveRow>([...keyById.keys()], (chunk) =>
       sb.from('saved_chart_tracks').select('id, user_id, track_source, track_id, canonical_url').eq('track_source', 'featured').in('track_id', chunk),
     ),
@@ -414,12 +415,6 @@ export async function loadFortnightLive(from: string, until: string, topN: numbe
     loadSelfCreditSkipMap(sb),
   ])
   if (byId.error || byUrl.error) throw new Error((byId.error || byUrl.error)!.message)
-
-  const plays = new Map<string, number>()
-  for (const row of ((playRes.data as { canonical_key: string; play_count: number }[] | null) ?? [])) {
-    const k = row.canonical_key.replace(/\/$/, '')
-    plays.set(k, (plays.get(k) || 0) + (Number(row.play_count) || 0))
-  }
 
   const privateSet = new Set(((privateRes.data as { id: string }[] | null) ?? []).map((p) => p.id))
   const seen = new Set<string>()
