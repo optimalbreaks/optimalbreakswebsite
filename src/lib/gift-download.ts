@@ -13,3 +13,12 @@ export const GIFT_SHOT_MAX_BYTES = 8 * 1024 * 1024
 export function giftInstagramUrl(handle: string): string {
   return `https://www.instagram.com/${handle}/`
 }
+
+export function giftArticlePath(lang: string): string {
+  return `/${lang}/blog/${GIFT_BLOG_SLUG}`
+}
+
+/** Solo este corte. El enlace abre el artículo; no sirve el MP3. */
+export function isGiftDownloadTrack(fullAudioUrl: string | null | undefined): boolean {
+  return (fullAudioUrl || '').includes(GIFT_FILE)
+}

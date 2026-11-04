@@ -21,6 +21,7 @@ import {
 } from '@/lib/youtube-play-coordinator'
 import { logTrackPlay } from '@/lib/track-play-log'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
+import { giftArticlePath, isGiftDownloadTrack } from '@/lib/gift-download'
 
 interface Props {
   picks: ArtistFeaturedPick[]
@@ -578,6 +579,16 @@ export default function ArtistFeaturedTracks({
                           {isActive && !isPausedHere ? '❚❚' : pick.full_audio_url ? '▶ FULL' : '▶'}
                         </button>
                       )}
+                      {isGiftDownloadTrack(pick.full_audio_url) ? (
+                        <Link
+                          href={giftArticlePath(lang)}
+                          className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={lang === 'es' ? 'La descarga está en el artículo' : 'The download is in the article'}
+                        >
+                          {lang === 'es' ? 'DESCARGAR' : 'DOWNLOAD'}
+                        </Link>
+                      ) : null}
                       {ytId && !canPlay && (
                         <button
                           type="button"
