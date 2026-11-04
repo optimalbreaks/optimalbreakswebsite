@@ -13,6 +13,56 @@ type Status = 'none' | 'pending' | 'approved' | 'rejected'
 
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 
+function loadShot(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve(img)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('image'))
+    }
+    img.src = url
+  })
+}
+
+/** Dos PNG de iPhone se pasan de los 4,5 MB que admite el servidor y Safari corta el envío. */
+async function shrinkShot(file: File): Promise<File> {
+  let source: CanvasImageSource
+  let width = 0
+  let height = 0
+  let close: (() => void) | null = null
+  try {
+    const bmp = await createImageBitmap(file)
+    source = bmp
+    width = bmp.width
+    height = bmp.height
+    close = () => bmp.close()
+  } catch {
+    const img = await loadShot(file)
+    source = img
+    width = img.naturalWidth
+    height = img.naturalHeight
+  }
+  try {
+    const scale = Math.min(1, 1600 / Math.max(width, height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(width * scale))
+    canvas.height = Math.max(1, Math.round(height * scale))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height)
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8))
+    if (!blob) return file
+    return new File([blob], 'captura.jpg', { type: 'image/jpeg' })
+  } finally {
+    close?.()
+  }
+}
+
 export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
   const es = lang === 'es'
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
@@ -42,19 +92,28 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-    const data = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const site = (form.elements.namedItem('site') as HTMLInputElement | null)?.files?.[0]
+    const artist = (form.elements.namedItem('artist') as HTMLInputElement | null)?.files?.[0]
+    if (!site || !artist) {
+      setError(es ? 'Faltan las dos capturas' : 'Both screenshots are missing')
+      return
+    }
     setBusy(true)
     try {
+      const data = new FormData()
+      data.append('site', await shrinkShot(site))
+      data.append('artist', await shrinkShot(artist))
       const res = await fetch(`/api/gifts/${GIFT_SLUG}`, { method: 'POST', body: data })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(json.error || (es ? 'No se ha enviado' : 'Not sent'))
+        setError(typeof json.error === 'string' && json.error ? json.error : (es ? 'No se ha enviado' : 'Not sent'))
         return
       }
       setStatus('pending')
       setNote(null)
     } catch {
-      setError(es ? 'No se ha enviado' : 'Not sent')
+      setError(es ? 'No se ha podido preparar las capturas. Prueba otra vez.' : 'Could not prepare the screenshots. Try again.')
     } finally {
       setBusy(false)
     }
