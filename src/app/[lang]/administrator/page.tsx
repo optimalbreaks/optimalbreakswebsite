@@ -118,6 +118,12 @@ export default function AdminDashboard() {
           >
             Escuchas
           </Link>
+          <Link
+            href={`${base}/trampas`}
+            className="admin-btn no-underline"
+          >
+            Trampas
+          </Link>
           <Link href={`${base}/artists/new`} className="admin-btn no-underline">
             + Artista
           </Link>

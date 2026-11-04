@@ -722,6 +722,22 @@ Same five blocks and the same phase-1 categories. The number on each row is list
 
 ---
 
+## Admin Trampas
+
+Admin-only ranking of accounts that are **already** marked: editorial artist, approved claim, family, or label. **Where:** `/[lang]/administrator/trampas` (sidebar «Trampas», button on the admin home). Loader: `loadCheatBoard` in `src/lib/cheat-board.ts`. The admin layout already requires `role = admin`. No public route.
+
+A «+» or a listen counts when the track credits that marked name (artist, claim, or family — same test as `isArtistSelfCreditSave`) or when the track’s label is the marked label (`shouldSkipLabelSave`). A row that is both stays once, under **a su nombre**. The rank is the sum of those rows. The rest of the account’s library is shown beside it and does not move the rank. Rows that do not resolve to a title stay out of the rank and are counted as *sin ficha*. Nothing is deleted and nobody is newly marked.
+
+Name self-votes and name self-listens are the ones the public lists already drop. Label rows still count on the public song chart; this page only shows the volume.
+
+### Do not
+
+- Mark, unmark, or delete saves or plays from this page.
+- Infer a mark from display name or email. The list is the existing mark tables plus `artists.claimed_by`.
+- Add a public `/trampas` route.
+
+---
+
 ## Favorites vs ratings vs saves
 
 - **Favorite** = bookmark / "I like this" — no stars (artists, labels, events, mixes).
