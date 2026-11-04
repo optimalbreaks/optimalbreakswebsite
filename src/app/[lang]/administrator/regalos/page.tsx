@@ -76,7 +76,7 @@ export default function RegalosAdminPage() {
         REGALOS
       </h1>
       <p className="mb-6 max-w-[40rem] text-[14px]" style={MONO}>
-        Gone Gone Gone, de Woter. Aprueba solo si en una captura se lee que sigue a @optimalbreaks y en la otra a @woter_dj. Luego puedes borrar las fotos: la descarga se queda.
+        Gone Gone Gone, de Woter. Al enviarlas, la IA lee las dos capturas. Si se ve «Siguiendo» en @optimal.breaks y en @woter_dj, aprueba sola. @optimalbreaks sin punto es otra cuenta y no vale. Aquí quedan las que no ha podido cerrar: aprueba solo si los dos follows se leen. Luego puedes borrar las fotos.
       </p>
       {error && <p className="mb-4 text-[14px] text-[var(--red)]" style={MONO}>{error}</p>}
       {rows === null && <p style={MONO}>Cargando…</p>}
@@ -97,7 +97,7 @@ export default function RegalosAdminPage() {
             <div className="mb-4 grid gap-3 sm:grid-cols-2">
               {row.has_site ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={`/api/admin/gifts/shot?id=${row.id}&which=site`} alt="Captura de @optimalbreaks" className="max-h-[420px] w-full border-4 border-[var(--ink)] object-contain bg-[var(--yellow)]" />
+                <img src={`/api/admin/gifts/shot?id=${row.id}&which=site`} alt="Captura de @optimal.breaks" className="max-h-[420px] w-full border-4 border-[var(--ink)] object-contain bg-[var(--yellow)]" />
               ) : (
                 <p style={MONO}>Sin captura de la web</p>
               )}

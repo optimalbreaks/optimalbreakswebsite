@@ -6,9 +6,11 @@ import {
   GIFT_SHOT_MAX_BYTES,
   GIFT_SLUG,
 } from '@/lib/gift-download'
+import { checkGiftFollows } from '@/lib/gift-follow-check'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 function sniffImage(buf: Buffer): { mime: string; ext: string } | null {
   if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
@@ -115,15 +117,40 @@ export async function POST(req: Request, ctx: { params: Promise<{ slug: string }
     updated_at: new Date().toISOString(),
   }
   const write = prev
-    ? await svc.from('gift_download_requests').update(row).eq('id', prev.id)
-    : await svc.from('gift_download_requests').insert(row)
-  if (write.error) {
+    ? await svc.from('gift_download_requests').update(row).eq('id', prev.id).select('id').single()
+    : await svc.from('gift_download_requests').insert(row).select('id').single()
+  if (write.error || !write.data) {
     await svc.storage.from(GIFT_PROOF_BUCKET).remove([sitePath, artistPath])
-    return NextResponse.json({ error: write.error.message }, { status: 500 })
+    return NextResponse.json({ error: write.error?.message || 'No se ha guardado' }, { status: 500 })
   }
 
   const oldPaths = [prev?.shot_site_path, prev?.shot_artist_path].filter((p): p is string => Boolean(p))
   if (oldPaths.length) await svc.storage.from(GIFT_PROOF_BUCKET).remove(oldPaths)
 
-  return NextResponse.json({ ok: true, status: 'pending' })
+  let status: 'pending' | 'approved' = 'pending'
+  let note: string | null = null
+  try {
+    const verdict = await checkGiftFollows({
+      site: site.buf,
+      siteMime: site.mime,
+      artist: artist.buf,
+      artistMime: artist.mime,
+    })
+    if (verdict) {
+      const clear = verdict.siteFollows && verdict.artistFollows && verdict.confident
+      status = clear ? 'approved' : 'pending'
+      note = verdict.note ? `Lectura: ${verdict.note}` : null
+      await svc.from('gift_download_requests').update({
+        status,
+        note,
+        decided_at: clear ? new Date().toISOString() : null,
+        decided_by: null,
+        updated_at: new Date().toISOString(),
+      }).eq('id', write.data.id)
+    }
+  } catch {
+    status = 'pending'
+  }
+
+  return NextResponse.json({ ok: true, status, note: status === 'approved' ? null : note })
 }

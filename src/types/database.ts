@@ -1103,6 +1103,8 @@ export interface BeatportTopTrack {
   tidal_url?: string | null
   /** Exclusiva cedida (`chart_featured_tracks.full_audio_url`), la pone la ficha al pintar; no vive en el JSONB. */
   full_audio_url?: string | null
+  /** `hosted` esconde la búsqueda de Spotify y el botón de tienda. */
+  platform?: string | null
 }
 
 export interface Artist extends Record<string, unknown> {

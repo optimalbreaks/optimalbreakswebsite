@@ -110,8 +110,9 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
         setError(typeof json.error === 'string' && json.error ? json.error : (es ? 'No se ha enviado' : 'Not sent'))
         return
       }
-      setStatus('pending')
-      setNote(null)
+      const next = json.status === 'approved' || json.status === 'rejected' || json.status === 'pending' ? json.status : 'pending'
+      setStatus(next)
+      setNote(next === 'rejected' && typeof json.note === 'string' ? json.note : null)
     } catch {
       setError(es ? 'No se ha podido preparar las capturas. Prueba otra vez.' : 'Could not prepare the screenshots. Try again.')
     } finally {
@@ -128,8 +129,8 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
       </h2>
       <p className="mb-4 text-[15px] leading-snug" style={MONO}>
         {es
-          ? 'Entra con tu cuenta y sube dos capturas del móvil: una en la que se vea que sigues a @optimalbreaks y otra en la que se vea que sigues a @woter_dj. Las miramos. Si las dos se leen, aquí aparece Descargar. Una foto cualquiera no lo abre.'
-          : 'Sign in and upload two phone screenshots: one showing you follow @optimalbreaks, and one showing you follow @woter_dj. We look at them. When both are clear, Download shows up here. A random photo does not unlock it.'}
+          ? `Entra con tu cuenta y sube dos capturas del móvil: una en la que se vea que sigues a @${GIFT_IG_SITE} y otra en la que se vea que sigues a @${GIFT_IG_ARTIST}. Las miramos. Si las dos se leen, aquí aparece Descargar. Una foto cualquiera no lo abre.`
+          : `Sign in and upload two phone screenshots: one showing you follow @${GIFT_IG_SITE}, and one showing you follow @${GIFT_IG_ARTIST}. We look at them. When both are clear, Download shows up here. A random photo does not unlock it.`}
       </p>
       <p className="mb-4 flex flex-wrap gap-3 text-[13px]" style={MONO}>
         <a href={giftInstagramUrl(GIFT_IG_SITE)} target="_blank" rel="noopener noreferrer" className="underline">
@@ -167,8 +168,8 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
       {loggedIn && status === 'pending' && (
         <p className="border-4 border-[var(--ink)] bg-[var(--paper)] p-4 text-[15px]" style={MONO}>
           {es
-            ? 'Recibido. Cuando hayamos mirado las dos capturas, esta misma página enseña el botón. Puedes volver más tarde con la misma cuenta.'
-            : 'Received. Once we have looked at both screenshots, this same page shows the button. Come back later with the same account.'}
+            ? 'Recibido. Si en las dos se lee que ya sigues, el botón sale solo al recargar. Si la lectura no es clara, lo mira una persona y vuelves con la misma cuenta.'
+            : 'Received. If both screenshots clearly show you already follow, reload and the button is here. If the reading is not clear, a person looks at them. Come back with the same account.'}
         </p>
       )}
 
@@ -181,7 +182,7 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
             </p>
           )}
           <label className="block text-[13px]" style={MONO}>
-            {es ? 'Captura: sigues a @optimalbreaks' : 'Screenshot: you follow @optimalbreaks'}
+            {es ? `Captura: sigues a @${GIFT_IG_SITE}` : `Screenshot: you follow @${GIFT_IG_SITE}`}
             <input name="site" type="file" accept="image/jpeg,image/png,image/webp" required className="mt-1 block w-full text-[14px]" />
           </label>
           <label className="block text-[13px]" style={MONO}>
@@ -194,7 +195,7 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
             className="border-4 border-[var(--ink)] bg-[var(--ink)] px-5 py-3 text-white disabled:opacity-60"
             style={{ ...MONO, fontWeight: 700 }}
           >
-            {busy ? (es ? 'ENVIANDO…' : 'SENDING…') : es ? 'ENVIAR CAPTURAS' : 'SEND SCREENSHOTS'}
+            {busy ? (es ? 'LEYENDO…' : 'READING…') : es ? 'ENVIAR CAPTURAS' : 'SEND SCREENSHOTS'}
           </button>
         </form>
       )}

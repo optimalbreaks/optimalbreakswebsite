@@ -223,7 +223,10 @@ export default function BeatportTopTracks({
   const myQueueActive = previewGroupKey === groupKey && previewQueue.length > 0
 
   // Solo los tracks con preview audible van a la cola global.
-  const playableTracks = useMemo(() => tracks.filter(t => t.sample_url), [tracks])
+  const playableTracks = useMemo(
+    () => tracks.filter((t) => t.full_audio_url || t.sample_url),
+    [tracks],
+  )
 
   // Cada track del Top 10 lleva su propio `save` para que el botón "+/✓"
   // del MiniPreviewBar opere sobre la misma URL canónica que el botón de
@@ -246,7 +249,7 @@ export default function BeatportTopTracks({
       const chartRef = chartRefFor(t)
       return {
         rowKey: `bp-${t.position}`,
-        src: t.full_audio_url || proxyUrl(t.sample_url!),
+        src: t.full_audio_url || proxyUrl(t.sample_url || ''),
         title: t.title,
         artist: t.artists.map(a => a.name).join(', '),
         artworkUrl: t.artwork_url || null,
@@ -370,7 +373,7 @@ export default function BeatportTopTracks({
         const chartRef = chartRefFor(t)
         return {
           rowKey: `bp-${t.position}`,
-          src: t.full_audio_url || proxyUrl(t.sample_url!),
+          src: t.full_audio_url || proxyUrl(t.sample_url || ''),
           title: t.title,
           artist: t.artists.map((a) => a.name).join(', '),
           artworkUrl: t.artwork_url || null,
@@ -391,7 +394,7 @@ export default function BeatportTopTracks({
       appliedBeatportPlayRef.current = parsed.id
       setExpanded(true)
       // Enlace compartido y buscador en la misma ficha: modal, sin autoplay.
-      if (idx >= 0 && target.sample_url) {
+      if (idx >= 0 && (target.full_audio_url || target.sample_url)) {
         setPendingTapPlay({
           queue,
           idx,
@@ -504,7 +507,7 @@ export default function BeatportTopTracks({
               const isActive = isPlayingTrack(t)
               const isPausedHere = isActive && !previewPlaying
               const rowId = `bp-row-${t.position}`
-              const canPlay = !!t.sample_url
+              const canPlay = !!(t.full_audio_url || t.sample_url)
               const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.release_year)
               return (
                 <div
@@ -618,9 +621,11 @@ export default function BeatportTopTracks({
                           />
                         )
                       })()}
-                      <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={t.artists} lang={lang} />
+                      {t.platform === 'hosted' && !(t.spotify_url || '').trim() ? null : (
+                        <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={t.artists} lang={lang} />
+                      )}
                       <TidalLinkButton url={t.tidal_url} lang={lang} />
-                      {t.beatport_url && (
+                      {t.beatport_url && /beatport\.com/i.test(t.beatport_url) && (
                         <BeatportLinkButton url={t.beatport_url} lang={lang} />
                       )}
                     </div>

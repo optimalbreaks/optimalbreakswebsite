@@ -523,7 +523,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
 
       {agendaStored && <AgendaDigestView digest={agendaStored} nights={agendaNights} lang={safeLang} />}
 
-      {albumTracks.length > 0 && (
+      {albumTracks.length > 0 && safeSlug !== GIFT_BLOG_SLUG && (
         <div className={digest ? 'mt-12' : 'mb-10'}>
           {digest && (
             <p className="text-[14px] leading-snug mb-3" style={{ fontFamily: "'Courier Prime', monospace" }}>
@@ -583,11 +583,40 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
         </div>
       )}
 
-      {!digest && !agendaStored && (
-        <>
-          <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />
-          {safeSlug === GIFT_BLOG_SLUG && <GiftDownloadBox lang={safeLang === 'es' ? 'es' : 'en'} />}
-        </>
+      {!digest && !agendaStored && safeSlug === GIFT_BLOG_SLUG && (() => {
+        const parts = content.split(/<h2>El trato<\/h2>|<h2>The deal<\/h2>/)
+        const head = parts.length === 2 ? parts[0] : content
+        const tail = parts.length === 2 ? parts[1] : ''
+        const trato = safeLang === 'es' ? 'El trato' : 'The deal'
+        return (
+          <>
+            <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: head }} />
+            {albumTracks.length > 0 && (
+              <div className="mt-8">
+                <BeatportTopTracks
+                  tracks={albumTracks}
+                  beatportUrl={null}
+                  lang={safeLang}
+                  entityName={title}
+                  artistSlugMap={artistSlugMap}
+                  labelSlugMap={labelSlugMap}
+                  saveRefsByUrl={saveRefsByUrl}
+                  heading={safeLang === 'es' ? 'LO QUE MÁS SE GUARDA' : 'WHAT PEOPLE SAVE MOST'}
+                  defaultExpanded
+                  badgeVariant="index"
+                  stacked
+                  shareToCharts
+                />
+              </div>
+            )}
+            {tail ? <article className="prose-ob prose-ob-blog mt-10" dangerouslySetInnerHTML={{ __html: `<h2>${trato}</h2>${tail}` }} /> : null}
+            <GiftDownloadBox lang={safeLang === 'es' ? 'es' : 'en'} />
+          </>
+        )
+      })()}
+
+      {!digest && !agendaStored && safeSlug !== GIFT_BLOG_SLUG && (
+        <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />
       )}
 
       {/* Bottom share */}
