@@ -950,6 +950,7 @@ Casos (Kritycal System, Kaos Beat y BrainBass; el lote del 17 oct 2026 engancha 
 - **UI (`ChartView.tsx`):** fila con fondo amarillo suave, banner rojo a sangre arriba («EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS») y botón rojo **▶ PLAY FULL**. El player prefiere `full_audio_url` sobre `sample_url`; Mis Tracks también lo propaga y lo reproduce entero.
 - **Sesiones y mixes en vídeo no van por aquí.** Una hora de vídeo no cabe en Git ni en la lambda, y esta ruta solo acepta `.mp3`. Si nos pasan una sesión, se sube a un YouTube no listado y `/mixes` la embebe. Un mix solo en audio (una hora a 192 kbps ≈ 80 MB) tampoco entra en `private/music`: unos pocos agotarían el tamaño de la función.
 - **Receta para la próxima exclusiva:** `.cursor/rules/audio-completo-exclusivas.mdc` (paso a paso: ffmpeg → `private/music/` → pick JSON con `full_audio_url: "/api/audio/<slug>.mp3"` → `chart-featured-upsert`).
+- **Descarga (solo *Gone Gone Gone*, 4 nov 2026).** El resto de exclusivas se oye y no se baja. Esta sí, porque Woter lo autorizó, y el botón está en el artículo [`/blog/woter-regala-gone-gone-gone`](https://www.optimalbreaks.com/es/blog/woter-regala-gone-gone-gone), no en la fila. Cuenta, dos capturas de Instagram (@optimalbreaks y @woter_dj) y aprobación en `/administrator/regalos`. El MP3 sale con la cookie de esa sesión. Las capturas no son públicas.
 
 ---
 

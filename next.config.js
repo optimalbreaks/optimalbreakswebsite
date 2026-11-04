@@ -9,6 +9,7 @@ const nextConfig = {
   // arranca. El pase diario de las 12:05 corre en GitHub Actions, no en Vercel.
   outputFileTracingIncludes: {
     '/api/audio/*': ['./private/music/*.mp3'],
+    '/api/gifts/*/file': ['./private/music/woter-gone-gone-gone.mp3'],
     '/api/admin/imports': ['./node_modules/@sparticuz/chromium/**/*'],
     // El chat editorial busca la ficha de Beatport antes de archivar un YouTube.
     '/api/admin/agent/chat': ['./node_modules/@sparticuz/chromium/**/*'],

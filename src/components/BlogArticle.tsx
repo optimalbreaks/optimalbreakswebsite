@@ -23,6 +23,8 @@ import BlogViewTracker from '@/components/BlogViewTracker'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import FortnightDigest from '@/components/FortnightDigest'
+import GiftDownloadBox from '@/components/GiftDownloadBox'
+import { GIFT_BLOG_SLUG } from '@/lib/gift-download'
 import AgendaDigestView from '@/components/AgendaDigest'
 import { getFortnightLive, getPeriodStats } from '@/lib/fortnight-live'
 import { agendaCoverImage, loadAgendaNights } from '@/lib/agenda-nights'
@@ -581,7 +583,12 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
         </div>
       )}
 
-      {!digest && !agendaStored && <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />}
+      {!digest && !agendaStored && (
+        <>
+          <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />
+          {safeSlug === GIFT_BLOG_SLUG && <GiftDownloadBox lang={safeLang === 'es' ? 'es' : 'en'} />}
+        </>
+      )}
 
       {/* Bottom share */}
       <div className="mt-12 pt-8 border-t-4 border-dashed border-[var(--ink)] flex flex-wrap items-center justify-between gap-4">

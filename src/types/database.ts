@@ -266,6 +266,12 @@ export interface Database {
         Update: Partial<Omit<BlogPost, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
+      gift_download_requests: {
+        Row: GiftDownloadRequestRow
+        Insert: Omit<GiftDownloadRequestRow, 'id' | 'created_at'>
+        Update: Partial<Omit<GiftDownloadRequestRow, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
       scenes: {
         Row: Scene
         Insert: Omit<Scene, 'id' | 'created_at'>
@@ -1308,6 +1314,20 @@ export function eventLineupNames(event: {
     for (const n of st?.lineup ?? []) push(n)
   }
   return names
+}
+
+export interface GiftDownloadRequestRow extends Record<string, unknown> {
+  id: string
+  created_at: string
+  updated_at: string
+  gift_slug: string
+  user_id: string
+  status: 'pending' | 'approved' | 'rejected'
+  shot_site_path: string
+  shot_artist_path: string
+  note: string | null
+  decided_at: string | null
+  decided_by: string | null
 }
 
 export interface BlogPost extends Record<string, unknown> {

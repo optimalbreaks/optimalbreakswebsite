@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { key: 'scenes', label: 'Escenas', icon: '☰', path: '/scenes' },
   { key: 'mixes', label: 'Mixes', icon: '▶', path: '/mixes' },
   { key: 'parkineo', label: 'Parkineo', icon: 'P', path: '/parkineo' },
+  { key: 'gifts', label: 'Regalos', icon: '⬇', path: '/regalos' },
   { key: 'tracks', label: 'Saved Tracks', icon: '♪', path: '/tracks' },
   { key: 'imports', label: 'Imports', icon: '✚', path: '/imports' },
   { key: 'history', label: 'Historia', icon: '↻', path: '/history' },
