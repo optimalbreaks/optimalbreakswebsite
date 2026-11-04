@@ -6,12 +6,30 @@ import {
   GIFT_IG_ARTIST,
   GIFT_IG_SITE,
   GIFT_SLUG,
+  giftArticlePath,
   giftInstagramUrl,
+  isGiftDownloadTrack,
 } from '@/lib/gift-download'
 
-type Status = 'none' | 'pending' | 'approved' | 'rejected'
-
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
+
+/** Mismo hueco en todas las barras: justo después del play, antes del BPM. */
+export function GiftDownloadLink({ lang, fullAudioUrl }: { lang: string; fullAudioUrl?: string | null }) {
+  if (!isGiftDownloadTrack(fullAudioUrl)) return null
+  const es = lang === 'es'
+  return (
+    <Link
+      href={giftArticlePath(lang)}
+      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+      style={MONO}
+      title={es ? 'La descarga está en el artículo' : 'The download is in the article'}
+    >
+      {es ? 'DESCARGAR' : 'DOWNLOAD'}
+    </Link>
+  )
+}
+
+type Status = 'none' | 'pending' | 'approved' | 'rejected'
 
 function loadShot(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {

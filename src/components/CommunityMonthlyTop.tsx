@@ -31,6 +31,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
 import type { ReelFormat } from '@/lib/reel-renderer'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import { GiftDownloadLink } from '@/components/GiftDownloadBox'
 import {
   buildFullArtistSlugMap,
   buildFullLabelSlugMap,
@@ -1229,6 +1230,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           {isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
+                      <GiftDownloadLink lang={lang} fullAudioUrl={t.full_audio_url} />
                       {ytId && (
                         <button
                           type="button"

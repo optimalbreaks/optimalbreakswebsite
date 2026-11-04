@@ -20,6 +20,7 @@ import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
 import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import { GiftDownloadLink } from '@/components/GiftDownloadBox'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { findArtistSlug, splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import type { FortnightPlayedArtist } from '@/lib/fortnight-live'
@@ -413,6 +414,7 @@ function RankedTracks({
                     className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
                   />
                 ) : null}
+                <GiftDownloadLink lang={lang} fullAudioUrl={t.audio_src} />
                 {t.bpm != null && t.bpm > 0 ? <span className={`${chip} bg-[var(--uv)]`} style={mono}>{Math.round(t.bpm)}</span> : null}
                 {(t.music_key || '').trim() ? <span className={`${chip} bg-[var(--cyan)] whitespace-nowrap`} style={mono}>{(t.music_key || '').trim()}</span> : null}
                 <SaveButton track={t} lang={lang} />

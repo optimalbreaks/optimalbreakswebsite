@@ -28,6 +28,7 @@ import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
+import { GiftDownloadLink } from '@/components/GiftDownloadBox'
 import {
   requestYouTubePlay,
   releaseYouTubePlay,
@@ -431,6 +432,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
               {isPlaying && !isPaused ? '❚❚' : hasFullAudio ? '▶ PLAY FULL' : '▶'}
             </button>
           )}
+          <GiftDownloadLink lang={lang} fullAudioUrl={pick.full_audio_url} />
           {pick.bpm != null && pick.bpm > 0 ? (
             <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {pick.bpm}

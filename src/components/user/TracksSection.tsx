@@ -18,6 +18,7 @@ import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import LoadingBreaks from '@/components/LoadingBreaks'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import { GiftDownloadLink } from '@/components/GiftDownloadBox'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
@@ -1634,6 +1635,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                         {isCurrent && !isPausedHere ? '❚❚' : '▶'}
                       </button>
                     ) : null}
+                    <GiftDownloadLink lang={lang} fullAudioUrl={t.full_audio_url} />
                     {ytId ? (
                       <button
                         type="button"

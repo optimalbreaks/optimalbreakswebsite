@@ -21,6 +21,7 @@ import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 import type { TrackSaveCatalogRef } from '@/lib/track-canonical-key'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
+import { GiftDownloadLink } from '@/components/GiftDownloadBox'
 
 interface Props {
   tracks: BeatportTopTrack[]
@@ -554,6 +555,7 @@ export default function BeatportTopTracks({
                           {isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
+                      <GiftDownloadLink lang={lang} fullAudioUrl={t.full_audio_url} />
                       {t.bpm != null && t.bpm > 0 && (
                         <span
                           className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5"
