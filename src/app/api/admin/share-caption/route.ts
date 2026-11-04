@@ -233,6 +233,9 @@ export async function POST(request: NextRequest) {
             ? `- Después, 3 párrafos cortos (1–3 frases cada uno, separados por una línea en blanco): los datos del contexto (${factsEs}), por qué escucharlo, y una línea para DJs con BPM y tonalidad si los hay. Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, nu skool, DJ set, rave, nuevo tema…). No inventes datos que no estén en el contexto (ni remezclas, ni historia, ni premios); lo que digas del sonido, en términos generales del género.`
             : '- Después 2–3 párrafos cortos (separados por una línea en blanco) con datos concretos del contexto (fechas, BPM, ciudad, festival, número de temas, puestos, nombres…). Usa de forma natural palabras que la gente busca en Instagram (breakbeat, breaks, DJ set, rave, nuevos lanzamientos…). No inventes nada que no esté en el contexto (ni ambiente, ni público, ni anécdotas).',
         day ? '- La línea 👉 es la llamada a compartir. No añadas otra pregunta.' : '- Una línea que invite a interactuar de forma concreta para esta publicación (una pregunta para comentar, guardar para el finde, etiquetar a alguien…).',
+        platform === 'instagram'
+          ? '- No escribas la frase del sobre de enviar ni pidas reenviar el reel: la web la añade sola, en español antes de «🇬🇧 EN» y en inglés antes del enlace. Deja ese hueco: unos 300 caracteres menos que el tope.'
+          : '',
         day
           ? '- Bilingüe: el bloque español con esa maqueta (gancho, línea en blanco, una 🎧 por tema, línea en blanco, ➕ y 👉). Después, una línea en blanco, «🇬🇧 EN» y el mismo esquema en inglés, con las mismas líneas 🎧. No lo comprimas en un párrafo para ahorrar caracteres.'
           : `- Bilingüe: todo lo anterior, en español, ocupa ${long ? '1.100–1.300' : '450–550'} caracteres. Después, una línea en blanco, una línea «🇬🇧 EN» y un bloque en inglés de ${long ? '500–600' : '450–550'} caracteres con su propio gancho, los datos clave y la pregunta, escrito para quien lee en inglés (no una traducción literal). Los mismos datos: nada que no esté en el español.`,
@@ -247,7 +250,7 @@ export async function POST(request: NextRequest) {
             ? '- En total, con hashtags, nunca más de 2.050 caracteres (Instagram corta en 2.200) y como mucho 7 emojis.'
             : '- En total, con hashtags, nunca más de 1.250 caracteres y como mucho 6 emojis.',
         'Responde SOLO JSON: {"caption": string}',
-      ].join('\n')
+      ].filter(Boolean).join('\n')
     : [
         'You are the social media manager of Optimal Breaks, the go-to breakbeat website (breaks, nu skool, florida breaks, UK bass…).',
         `You write the caption of a video for ${platform === 'instagram' ? 'an Instagram reel' : 'a Facebook post'}.`,
@@ -261,6 +264,9 @@ export async function POST(request: NextRequest) {
             ? `- Then 3 short paragraphs (1–3 sentences each, separated by a blank line): the facts from the context (${factsEn}), why to listen, and a line for DJs with BPM and key if present. Work in naturally the words people search on Instagram (breakbeat, breaks, nu skool, DJ set, rave, new track…). Never invent facts not in the context (no remixes, history or awards); describe the sound only in general genre terms.`
             : '- Then 2–3 short paragraphs (separated by a blank line) with concrete facts from the context (dates, BPM, city, festival, number of tracks, positions, names…). Work in naturally the words people search on Instagram (breakbeat, breaks, DJ set, rave, new releases…). Never invent anything not in the context (no vibe, crowd or anecdotes).',
         day ? '- The 👉 line is the share ask. Do not add another question.' : '- One line inviting interaction, specific to this post (a question to comment, save it for the weekend, tag someone…).',
+        platform === 'instagram'
+          ? '- Do not write the send-button line or ask people to forward the reel: the site adds it, in Spanish before «🇬🇧 EN» and in English before the link. Leave that room: about 300 characters under the cap.'
+          : '',
         day
           ? '- Bilingual: the English block in that layout (hook, blank line, one 🎧 per track, blank line, ➕ and 👉). Then a blank line, «🇪🇸 ES» and the same layout in Spanish, with the same 🎧 lines. Do not crush it into a paragraph to save characters.'
           : `- Bilingual: everything above, in English, takes ${long ? '1,100–1,300' : '450–550'} characters. Then a blank line, a line «🇪🇸 ES» and a block in Spanish from Spain of ${long ? '500–600' : '450–550'} characters with its own hook, the key facts and the question, written for Spanish readers (not a literal translation). Same facts: nothing that is not in the English.`,
@@ -275,7 +281,7 @@ export async function POST(request: NextRequest) {
             ? '- In total, with hashtags, never over 2,050 characters (Instagram cuts at 2,200) and at most 7 emojis.'
             : '- In total, with hashtags, never over 1,250 characters and at most 6 emojis.',
         'Reply ONLY JSON: {"caption": string}',
-      ].join('\n')
+      ].filter(Boolean).join('\n')
 
   const user = `${es ? 'Tipo de publicación' : 'Post type'}: ${(es ? KIND_ES : KIND_EN)[kind]}\n${es ? 'Fecha de hoy' : 'Today'}: ${today}\n${es ? 'Contexto (datos reales)' : 'Context (real data)'}:\n${ctxJson}`
 

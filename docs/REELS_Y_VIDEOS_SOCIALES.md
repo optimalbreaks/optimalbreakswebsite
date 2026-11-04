@@ -8,7 +8,7 @@ Herramienta de promo para **admins** y para **artistas con ficha reclamada** (`a
 | **R** | Reel para **Instagram** | MP4 vertical **1080×1920**, 30 s, 30 fps, **con el fragmento de audio** si hay preview; mudo si no | Móvil: el botón pasa a **↗**; un segundo toque abre el menú de compartir (Instagram, Guardar vídeo…). Escritorio: descarga el MP4. |
 | **F** | Vídeo para **Facebook** | MP4 horizontal **1920×1080**, 30 s, 30 fps, **el mismo fragmento**; mudo si no hay preview | Siempre **descarga** el MP4 (también en móvil; sin menú de compartir). |
 
-Los dos **copian el texto del post** al portapapeles (tema, artistas, sello, fecha, BPM). El de Facebook incluye el enlace del tema; el del reel dice «enlace en la bio».
+Los dos **copian el texto del post** al portapapeles (tema, artistas, sello, fecha, BPM). El de Facebook incluye el enlace del tema; el del reel dice «enlace en la bio». En Instagram, justo antes de ese enlace, va siempre la llamada a compartir: darle al sobre de enviar y mandárselo a la gente. Eso lo añade la web (`withInstagramShareCta`), no el modelo.
 
 > Contexto: octubre 2026. Probado en iPhone con Instagram (reel publicado con la música del tema y el artista invitado como colaborador).
 

@@ -114,12 +114,38 @@ export async function aiShareCaption(opts: {
       }),
       signal: AbortSignal.timeout(55_000),
     })
-    if (!res.ok) return fallback
+    if (!res.ok) return withInstagramShareCta(fallback, opts.platform)
     const j = (await res.json()) as { caption?: string }
-    return j.caption?.trim() || fallback
+    return withInstagramShareCta(j.caption?.trim() || fallback, opts.platform)
   } catch {
-    return fallback
+    return withInstagramShareCta(fallback, opts.platform)
   }
+}
+
+const SHARE_CTA_ES =
+  'Y si te gusta este reel, compártelo. Dale al sobre de enviar y mándaselo a tu gente, a tus amigos. Eso es lo que más ayuda a difundir el breakbeat.'
+const SHARE_CTA_EN =
+  'And if you like this reel, share it. Hit the send button and pass it to your people, to your friends. That is what spreads breakbeat the most.'
+
+/** En el pie de Instagram, justo antes del enlace: el sobre de enviar. */
+export function withInstagramShareCta(caption: string, platform: SharePlatform): string {
+  if (platform !== 'instagram') return caption
+  if (/sobre de enviar/i.test(caption)) return caption
+  const lines = caption.split('\n')
+  const last = (pred: (line: string) => boolean) => {
+    for (let i = lines.length - 1; i >= 0; i--) if (pred(lines[i])) return i
+    return -1
+  }
+  const enAt = lines.findIndex((l) => l.trim() === '🇬🇧 EN')
+  const insert = (at: number, block: string) => {
+    lines.splice(Math.max(0, at), 0, '', block, '')
+  }
+  if (enAt >= 0) insert(enAt, SHARE_CTA_ES)
+  const linkAt = last((l) => /enlace en la bio|link in bio/i.test(l))
+  const hashAt = last((l) => /^#\S/.test(l.trim()))
+  const tail = linkAt >= 0 ? linkAt : hashAt >= 0 ? hashAt : lines.length
+  insert(tail, enAt >= 0 ? SHARE_CTA_EN : `${SHARE_CTA_ES}\n${SHARE_CTA_EN}`)
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
 }
 
 /**
