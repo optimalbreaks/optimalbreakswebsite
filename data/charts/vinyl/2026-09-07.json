@@ -788,6 +788,28 @@
       "artwork_url": "https://i.ytimg.com/vi/6TbYS0T8yeA/hqdefault.jpg",
       "note_en": "Breaks mix of Benny Benassi Satisfaction, 2003. The other Satisfaction rows in the store stay.",
       "note_es": "Breaks Mix de Satisfaction, de Benny Benassi, 2003. Las otras filas de Satisfaction en la tienda se quedan."
+    },
+    {
+      "sort_order": 41,
+      "title": "Atmospherics",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ed 209"
+        },
+        {
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Rat Records",
+      "catalog_number": "RAT 006",
+      "year": 2000,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=qK59I7zNiNU",
+      "artwork_url": "https://i.ytimg.com/vi/qK59I7zNiNU/hqdefault.jpg",
+      "note_en": "B-side of All In My Mind / Atmospherics, Rat Records RAT 006, 2000. Written by DJ Quest and Ed 209.",
+      "note_es": "Cara B de All In My Mind / Atmospherics, Rat Records RAT 006, 2000. Escrita por DJ Quest y Ed 209."
     }
   ]
 }

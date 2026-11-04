@@ -56,6 +56,8 @@ Reglas que no se negocian:
 
 Primera campaña (26 ago 2026): **Mis Tracks / Top 100**. Audiencia = confirmados con **&lt; 100** canciones únicas. 35 enviados, 0 fallos; 7 sin confirmar fuera; editorial fuera.
 
+Segunda (31 oct 2026): **No seas lechón**. Audiencia = 123 cuentas con el correo confirmado (sin las de baja y sin los buzones editoriales). 123 enviados, 0 fallos al cerrar. Cada persona recibió temas del top que aún no tenía en Mis Tracks. OVH corta `contacto@` a **200 mensajes por hora** y la copia editorial cuenta el doble: la tanda se partió en tres (101, luego 16, luego 6) hasta vaciar la cola.
+
 ---
 
 ## 3. Diseño (reutilizar)

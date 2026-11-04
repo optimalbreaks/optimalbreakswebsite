@@ -2985,6 +2985,34 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 130
+    },
+    {
+      "title": "Málaga City",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Gordo Master"
+        },
+        {
+          "name": "Dj Tortu"
+        },
+        {
+          "name": "Jose Rodríguez (Spain)"
+        }
+      ],
+      "label": "ACE Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/malaga-city/31119481",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/11d6580f-7075-4a7f-8ee8-da7c0691ffec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/71937cef-83d5-4bd8-af3d-976a785c8d77.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 135
     }
   ]
 }

@@ -2069,7 +2069,13 @@ async function adminInternalPost(
       body: JSON.stringify(body),
       ...(timeoutMs && timeoutMs > 0 ? { signal: AbortSignal.timeout(timeoutMs) } : {}),
     })
-    const json = (await res.json().catch(() => ({}))) as Record<string, unknown>
+    const raw = await res.text()
+    let json: Record<string, unknown> = {}
+    try {
+      json = raw ? (JSON.parse(raw) as Record<string, unknown>) : {}
+    } catch {
+      json = raw ? { error: raw.replace(/\s+/g, ' ').trim().slice(0, 500) } : {}
+    }
     return { ok: res.ok, status: res.status, json }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
@@ -2320,13 +2326,11 @@ function findDuplicateEvent(
   for (const e of all) {
     const normOld = normalizeEventName(e.name)
     if (!normOld) continue
-    const sameName =
-      normOld === normNew ||
-      (normOld.length >= 8 && normNew.includes(normOld)) ||
-      (normNew.length >= 8 && normOld.includes(normNew))
+    // Solo el nombre entero. Un título que contiene a otro («We Love Breaks» dentro de
+    // «We Love Breaks presenta Lady Waks», 26 oct 2026) es otro evento: no se pisa.
+    const sameName = normOld === normNew
     // Misma noche en el mismo local, aunque el segundo cartel acorte o alargue el título
-    // (RITMIKA XXL y «RitMika x ARÁ», 23 oct 2026). No basta el nombre corto suelto:
-    // Electrolunch XXL pisó otra fecha porque el nombre corto cabía en el largo.
+    // (RITMIKA XXL y «RitMika x ARÁ», 23 oct 2026).
     const sameNight =
       sameVenueName(e.venue, venue) && sameLeadingBrand(e.name, name)
     if (!sameName && !sameNight) continue

@@ -185,6 +185,15 @@ export async function POST(request: NextRequest) {
   const auth = await requireCatalogEditor(request)
   if (!auth.ok) return auth.response
 
+  try {
+  return await createArtistFromChat(request)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: message.slice(0, 2000), saved: false }, { status: 500 })
+  }
+}
+
+async function createArtistFromChat(request: NextRequest) {
   const body = await request.json()
   const { slug, artistName, notes, search = true } = body as {
     slug?: string
