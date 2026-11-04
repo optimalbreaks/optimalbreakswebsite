@@ -565,9 +565,14 @@ function queueItem(t: FortnightDigestTrack, spot: Spot, pathname: string | null)
  * `spot` distingue la misma canción en dos tarjetas de la página (quincena y su temporada).
  */
 export function DigestTrackStrip({
-  tracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang, plain = false, marked,
+  tracks, queueTracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang, plain = false, marked,
 }: {
   tracks: FortnightDigestTrack[]
+  /**
+   * Cola del botón de play. Si no viene, suena lo que se ve.
+   * En el día: se pintan los destacados y la cola es el día entero.
+   */
+  queueTracks?: FortnightDigestTrack[]
   spot: string
   groupKey: string
   /** [singular, plural] del valor de cada tema (escuchas o votos). */
@@ -588,14 +593,14 @@ export function DigestTrackStrip({
   const queue = useMemo(() => {
     const seen = new Set<string>()
     const out: PreviewTrack[] = []
-    for (const t of tracks) {
+    for (const t of queueTracks ?? tracks) {
       const key = rowKeyOf(t)
       if (!t.audio_src || seen.has(key)) continue
       seen.add(key)
       out.push(queueItem(t, spot, pathname))
     }
     return out
-  }, [tracks, spot, pathname])
+  }, [tracks, queueTracks, spot, pathname])
   const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
   const play = useCallback(
     (rowKey: string) => {
@@ -611,7 +616,7 @@ export function DigestTrackStrip({
   const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
   const cardPlay = cardPlayWith(play)
   const shown = tracks.slice(0, show)
-  if (shown.length === 0) return null
+  if (shown.length === 0 && queue.length === 0) return null
 
   return (
     <PlayCtx.Provider value={playCtx}>

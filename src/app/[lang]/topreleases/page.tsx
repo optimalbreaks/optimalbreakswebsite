@@ -1,10 +1,10 @@
 // ============================================
 // OPTIMAL BREAKS — Top novedades
 // ----------------------------------------------
-// Dos secciones. Arriba, el lanzamiento de hoy: un resumen, las carátulas
-// (la misma tira que el artículo de debajo) y el botón al artículo
-// (`/topreleases/dia/YYYY-MM-DD`). El calendario y la lista entera viven
-// en el artículo, no aquí.
+// Dos secciones. Arriba, el lanzamiento de hoy: un resumen y las carátulas
+// de la selección de Optimal Breaks. El botón de play suena el día entero
+// (selección y el resto, en ese orden). El calendario y la lista entera
+// viven en el artículo (`/topreleases/dia/YYYY-MM-DD`), no aquí.
 // Debajo, los meses (antes, quincenas) y las temporadas, que nacen en el blog.
 // Arriba el último mes (suena ahí mismo), debajo una tarjeta por temporada
 // con sus meses dentro. `?year=` cambia de año cuando hay más de uno. Las
@@ -238,8 +238,8 @@ export default async function TopReleasesPage({
   const live = new Map(liveTargets.map((p, i) => [p.slug, liveRows[i]]))
   const dayGroups = await dayTracksPromise
   const dayCopy = DAY_COPY[lang]
-  const dayPreview = [...dayGroups.picks, ...dayGroups.rest].slice(0, 5)
-  const dayTotal = dayGroups.picks.length + dayGroups.rest.length
+  const dayQueue = [...dayGroups.picks, ...dayGroups.rest]
+  const dayTotal = dayQueue.length
   const heroLabel = (p: Post) => (p.month ? (p.until >= today ? t.thisMonth : t.latestMonth) : t.latest)
 
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
@@ -359,17 +359,18 @@ export default async function TopReleasesPage({
               <p className="text-[14px] leading-relaxed text-[var(--ink)]/70 mb-3" style={mono}>
                 {dayReleaseBlurb(lang, dayGroups.picks.length, dayGroups.rest.length)}
               </p>
-              {dayPreview.length > 0 ? (
+              {dayTotal > 0 ? (
                 <DigestTrackStrip
-                  tracks={dayPreview}
+                  tracks={dayGroups.picks}
+                  queueTracks={dayQueue}
                   spot={`day-${day}`}
                   groupKey={`topreleases:day-door:${day}`}
                   units={lang === 'es' ? ['escucha', 'escuchas'] : ['play', 'plays']}
-                  show={dayPreview.length}
+                  show={dayGroups.picks.length}
                   playAll={t.playDay}
                   large
                   plain
-                  marked={Math.min(dayGroups.picks.length, dayPreview.length)}
+                  marked={dayGroups.picks.length}
                 />
               ) : null}
               {dayTotal > 0 ? (
