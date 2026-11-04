@@ -38,6 +38,7 @@ const KIND_ES: Record<Kind, string> = {
     '· new_release (NEW RELEASE): salió hace poco (días en `daysSinceRelease`). Es novedad: está en nuestras New Releases, invita a escucharlo, guardarlo y meterlo en sus sets.',
     '· archive_pick (ARCHIVE PICK): tema con meses o años. Rescate del archivo: por qué sigue sonando hoy, el año en que salió, invita a recordar si lo pinchaban o lo bailaban. No lo vendas como novedad.',
     '· sin releaseStatus: recomendación sin fecha; no hables de novedad ni de archivo.',
+    'Si `fullTrack` es true, el artista ha cedido el tema entero: se oye completo en optimalbreaks.com, no es un preview de tienda. Dilo en las dos primeras líneas. No hables de preview, de fragmento ni de un trozo.',
   ].join('\n'),
   set:
     'Una sesión (DJ set) grabada en directo en un festival o evento. Transmite el directo con los datos que hay: festival o evento, ciudad, fecha, quién la pinchó y si se puede descargar gratis en MP3 (`freeDownload`) o escuchar entera. Si se descarga, dilo arriba: es lo que más se guarda.',
@@ -67,6 +68,7 @@ const KIND_EN: Record<Kind, string> = {
     '· new_release (NEW RELEASE): out recently (days in `daysSinceRelease`). It is new: it is in our New Releases, invite people to listen, save it and play it in their sets.',
     '· archive_pick (ARCHIVE PICK): months or years old. An archive pick: why it still works today, the year it came out, ask whether people played or danced to it back then. Do not sell it as new.',
     '· no releaseStatus: a recommendation without a date; do not talk about new or archive.',
+    'If `fullTrack` is true, the artist gifted the whole track: it streams in full on optimalbreaks.com, not a store preview. Say so in the first two lines. Do not call it a preview, a clip or a snippet.',
   ].join('\n'),
   set: 'A DJ set recorded live at a festival or event. Convey the live set with the facts you have: festival or event, city, date, who played it and whether it is a free MP3 download (`freeDownload`) or can be streamed in full. If it downloads, say so near the top: that is what gets saved most.',
   top100: 'The Optimal Breaks community Top 100: the tracks users saved the most (the video counts down from 10 to 1). Highlight the #1 and spark debate about the ranking.',

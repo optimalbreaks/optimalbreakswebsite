@@ -583,6 +583,8 @@ export async function GET(request: NextRequest) {
         lang,
         // Audio del tema (mismo origen) para incrustarlo en IG/R/F; null = sin preview.
         audio: shareAudioSrc(row),
+        // Exclusiva alojada: el reel lleva el banner «tema entero en la web».
+        fullTrack: Boolean((row.full_audio_url || '').trim()),
       },
       { headers: { 'Cache-Control': 'private, no-store' } },
     )

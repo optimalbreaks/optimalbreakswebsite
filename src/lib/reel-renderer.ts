@@ -45,6 +45,11 @@ export type ReelData = {
    * (`set-reel-design.ts`) con cartel del evento, color del festival y entrada.
    */
   variant?: 'track' | 'set'
+  /**
+   * Exclusiva (`full_audio_url`): banner en el centro de la funda. El tema se
+   * oye entero en la web; el resto de reels son un preview.
+   */
+  fullTrack?: boolean
   /** Cartel del evento (data URL, vertical) para las sesiones. */
   poster?: string | null
   festival?: string | null
@@ -562,6 +567,50 @@ function drawSplatter(ctx: CanvasRenderingContext2D, cx: number, cy: number, spr
   }
 }
 
+/**
+ * Banner de exclusiva, en el centro de la funda. Solo si el tema se oye
+ * entero en la web: el resto de reels son un preview de tienda.
+ */
+function drawFullTrackBanner(ctx: CanvasRenderingContext2D, p: number, es: boolean, maxW: number) {
+  if (p <= 0) return
+  const line1 = es ? 'TEMA ENTERO' : 'FULL TRACK'
+  const line2 = es ? 'EN NUESTRA WEB' : 'STREAMING ON OUR SITE'
+  let size2 = 32
+  ctx.font = font(HEAD, size2)
+  while (size2 > 18 && ctx.measureText(line2).width > maxW - 80) {
+    size2 -= 2
+    ctx.font = font(HEAD, size2)
+  }
+  const size1 = Math.round(size2 * 1.55)
+  ctx.font = font(HEAD, size1)
+  const w1 = ctx.measureText(line1).width
+  ctx.font = font(HEAD, size2)
+  const w2 = ctx.measureText(line2).width
+  const boxW = Math.max(w1, w2) + 56
+  const boxH = size1 + size2 + 36
+  const s = 1 + 0.45 * (1 - easeOut(p))
+  ctx.save()
+  ctx.globalAlpha = Math.min(1, p * 1.5)
+  ctx.rotate(-0.03)
+  ctx.scale(s, s)
+  ctx.fillStyle = INK
+  ctx.fillRect(-boxW / 2 + 10, -boxH / 2 + 10, boxW, boxH)
+  ctx.fillStyle = YELLOW
+  ctx.fillRect(-boxW / 2, -boxH / 2, boxW, boxH)
+  ctx.fillStyle = RED
+  ctx.fillRect(-boxW / 2, -boxH / 2, boxW, 12)
+  ctx.fillRect(-boxW / 2, boxH / 2 - 12, boxW, 12)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = INK
+  ctx.font = font(HEAD, size1)
+  ctx.fillText(line1, 0, -size2 * 0.55)
+  ctx.fillStyle = RED
+  ctx.font = font(HEAD, size2)
+  ctx.fillText(line2, 0, size1 * 0.42)
+  ctx.restore()
+}
+
 /** Dibuja el fotograma del instante `t` (segundos). Determinista salvo el grano. */
 export function drawReelFrame(
   ctx: CanvasRenderingContext2D,
@@ -815,6 +864,12 @@ export function drawReelFrame(
       ctx.scale(s, s)
       drawTape(ctx, 0, 0, 200, 54, -0.72, 2)
       ctx.restore()
+    }
+
+    // Exclusiva: banner en el centro de la funda. Se queda todo el vídeo.
+    if (data.fullTrack) {
+      const bp = prog(t, 1.7, 2.05)
+      if (bp > 0) drawFullTrackBanner(ctx, bp, es, SLEEVE - 36)
     }
 
     // Sello de fecha de release: golpe sobre la esquina superior derecha de la funda
@@ -1093,7 +1148,7 @@ export function drawReelFrame(
       ctx.globalAlpha = p
       ctx.rotate((-5 * Math.PI) / 180)
       ctx.scale(s, s)
-      const big = es ? 'ESCÚCHALO' : 'LISTEN NOW'
+      const big = data.fullTrack ? (es ? 'ENTERO AQUÍ' : 'FULL TRACK') : es ? 'ESCÚCHALO' : 'LISTEN NOW'
       ctx.font = font(HEAD, 96)
       const bw = Math.min(900, ctx.measureText(big).width)
       ctx.fillStyle = INK

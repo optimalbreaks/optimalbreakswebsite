@@ -708,6 +708,8 @@ export type VideoCaptionData = {
   year?: number | null
   bpm?: number | null
   musicKey?: string | null
+  /** El tema entero se oye en la web (exclusiva), no es un preview. */
+  fullTrack?: boolean
 }
 
 function captionDate(iso: string, lang: Locale): { text: string; future: boolean } | null {
@@ -784,8 +786,11 @@ export function buildVideoCaption(
       : n <= 1 ? ' Just landed.' : n <= 13 ? ` Out for ${n} days.` : ` Out for ${Math.round(n / 7)} weeks.`
   }
 
-  const why =
-    tone === 'soon'
+  const why = d.fullTrack
+    ? es
+      ? 'Este no es un preview: el tema entero se oye en Optimal Breaks, de principio a fin y gratis. Abre el enlace y escúchalo completo.'
+      : 'This is not a preview: the full track streams on Optimal Breaks, start to finish, free. Open the link and hear the whole thing.'
+    : tone === 'soon'
       ? es
         ? 'Apunta la fecha: el día que salga lo tendrás en Optimal Breaks con su preview y los enlaces a las tiendas y plataformas. Guarda este reel para que no se te pase.'
         : 'Mark the date: the day it drops you will find it on Optimal Breaks with its preview and links to stores and streaming. Save this reel so you do not miss it.'
@@ -817,8 +822,15 @@ export function buildVideoCaption(
           ? '¿Qué te parece? Etiqueta a quien tiene que escucharlo 👇'
           : 'What do you think? Tag someone who needs to hear it 👇'
 
-  const listen =
-    opts.platform === 'instagram'
+  const listen = d.fullTrack
+    ? opts.platform === 'instagram'
+      ? es
+        ? '🎧 Tema entero en Optimal Breaks: enlace en la bio.'
+        : '🎧 Full track on Optimal Breaks: link in bio.'
+      : es
+        ? `🎧 Tema entero en Optimal Breaks: ${opts.url}`
+        : `🎧 Full track on Optimal Breaks: ${opts.url}`
+    : opts.platform === 'instagram'
       ? es
         ? '🎧 Escúchalo en Optimal Breaks: enlace en la bio.'
         : '🎧 Listen on Optimal Breaks: link in bio.'

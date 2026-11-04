@@ -95,6 +95,8 @@ type VideoData = {
   year?: number | null
   /** URL del mismo origen del audio del tema; null = sin preview (vídeo mudo). */
   audio?: string | null
+  /** Exclusiva: el tema entero está en la web. El reel lo dice en el centro. */
+  fullTrack?: boolean
   lang: 'en'
 }
 
@@ -236,6 +238,7 @@ export default function TrackShareButton(props: Props) {
           : null,
         daysSinceRelease: status?.days ?? null,
         videoSticker: status ? `${status.word} · ${status.sub}` : null,
+        fullTrack: !!data.fullTrack,
       },
     })
   }
