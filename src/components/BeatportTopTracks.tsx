@@ -21,7 +21,7 @@ import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 import type { TrackSaveCatalogRef } from '@/lib/track-canonical-key'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
-import { GiftDownloadLink } from '@/components/GiftDownloadBox'
+import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 
 interface Props {
   tracks: BeatportTopTrack[]
@@ -508,14 +508,16 @@ export default function BeatportTopTracks({
               const isActive = isPlayingTrack(t)
               const isPausedHere = isActive && !previewPlaying
               const rowId = `bp-row-${t.position}`
-              const canPlay = !!(t.full_audio_url || t.sample_url)
+              const hasFull = !!(t.full_audio_url || '').trim()
+              const canPlay = !!(hasFull || t.sample_url)
               const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.release_year)
               return (
                 <div
                   key={`${t.beatport_url}-${i}`}
                   id={rowId}
-                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isActive ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${hasFull ? exclusiveRowClass(isActive) : isActive ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
+                  {hasFull ? <ExclusiveFullBanner lang={lang} /> : null}
                   <div className={`flex flex-col gap-3 ${stacked ? '' : 'sm:flex-row sm:items-start sm:gap-4'}`}>
                     <div className={`flex items-start gap-3 min-w-0 ${stacked ? '' : 'flex-1'}`}>
                       <PositionBadge position={t.position} variant={badgeVariant} />
@@ -547,12 +549,11 @@ export default function BeatportTopTracks({
                         <button
                           type="button"
                           onClick={() => playFromTrack(t)}
-                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-                            ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                          className={hasFull ? fullPlayClass() : `h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive && !isPausedHere ? 'Pause' : 'Preview'}
+                          title={isActive && !isPausedHere ? (lang === 'es' ? 'Pausar' : 'Pause') : hasFull ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
                         >
-                          {isActive && !isPausedHere ? '❚❚' : '▶'}
+                          {hasFull ? fullPlayLabel(isActive, isPausedHere) : isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
                       <GiftDownloadLink lang={lang} fullAudioUrl={t.full_audio_url} />

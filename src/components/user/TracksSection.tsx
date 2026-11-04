@@ -18,7 +18,7 @@ import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import LoadingBreaks from '@/components/LoadingBreaks'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { GiftDownloadLink } from '@/components/GiftDownloadBox'
+import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
@@ -1559,6 +1559,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
             const hasAudio = !!(t.full_audio_url || t.sample_url || (t.platform === 'bandcamp' && t.external_url))
+            const hasFull = !!(t.full_audio_url || '').trim()
             const ytId = extractYouTubeId(t.youtube_url)
             const showYtEmbed = ytId && openYoutubeKey === t.key
             const rowHighlighted = isCurrent || showYtEmbed
@@ -1568,8 +1569,9 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
               <div
                 key={t.key}
                 id={`mytracks-row-${t.key}`}
-                className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${hasFull ? exclusiveRowClass(isCurrent) : rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
               >
+                {hasFull ? <ExclusiveFullBanner lang={lang} /> : null}
                 {/* La barra no encoge (flex-shrink: 0). En fila desde 640 px se queda
                     con ~460 px y el título cae a una columna de ~46 px: en inglés
                     se lee en vertical («Aggre / sivne / s»). Hasta lg, el título
@@ -1627,12 +1629,11 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                       <button
                         type="button"
                         onClick={() => playTrackInOrdered(t)}
-                        className={`h-[36px] px-2.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer
-                          ${isCurrent ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                        className={hasFull ? fullPlayClass() : `h-[36px] px-2.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer ${isCurrent ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
                         style={{ fontFamily: "'Courier Prime', monospace" }}
-                        title={isCurrent && !isPausedHere ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
+                        title={isCurrent && !isPausedHere ? (es ? 'Pausar' : 'Pause') : hasFull ? (es ? 'Escuchar el tema entero' : 'Play full track') : (es ? 'Reproducir' : 'Play')}
                       >
-                        {isCurrent && !isPausedHere ? '❚❚' : '▶'}
+                        {hasFull ? fullPlayLabel(isCurrent, isPausedHere) : isCurrent && !isPausedHere ? '❚❚' : '▶'}
                       </button>
                     ) : null}
                     <GiftDownloadLink lang={lang} fullAudioUrl={t.full_audio_url} />
@@ -1755,7 +1756,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                         />
                       )
                     })()}
-                    {t.source !== 'vinyl' && !isAdvanceRelease(t.release_date) ? (
+                    {t.source !== 'vinyl' && !isAdvanceRelease(t.release_date) && !(t.platform === 'hosted' && !(t.spotify_url || '').trim()) ? (
                       <SpotifyLinkButton
                         url={t.spotify_url}
                         title={t.title}
@@ -1766,7 +1767,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                     {isAdvanceRelease(t.release_date) ? null : (
                       <TidalLinkButton url={t.tidal_url} lang={lang as Locale} />
                     )}
-                    {t.external_url ? (
+                    {t.external_url && t.platform !== 'hosted' ? (
                       (t.external_label || '') === 'BEATPORT' ? (
                         <BeatportLinkButton url={t.external_url} lang={lang as Locale} />
                       ) : (

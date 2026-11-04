@@ -28,7 +28,7 @@ import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
-import { GiftDownloadLink } from '@/components/GiftDownloadBox'
+import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 import {
   requestYouTubePlay,
   releaseYouTubePlay,
@@ -365,23 +365,18 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   // El adelanto usa el mismo fondo, con banner amarillo, para no confundirlo
   // con la exclusiva.
   // Tailwind 3: el modificador de opacidad no funciona sobre var(--…) → hex directo.
-  const rowStateClasses = hasFullAudio || isAdvance
-    ? `bg-[#f7e733]/30 ${isPlaying ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}`
-    : isPlaying
-      ? 'bg-[var(--red)]/15 border-[var(--red)]/30'
-      : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'
+  const rowStateClasses = hasFullAudio
+    ? exclusiveRowClass(!!isPlaying)
+    : isAdvance
+      ? `bg-[#f7e733]/30 ${isPlaying ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}`
+      : isPlaying
+        ? 'bg-[var(--red)]/15 border-[var(--red)]/30'
+        : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'
 
   return (
     <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowStateClasses}`}>
       {hasFullAudio ? (
-        <div
-          className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--red)] text-white px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
-          style={{ fontFamily: "'Courier Prime', monospace" }}
-        >
-          <span className="animate-pulse shrink-0">●</span>
-          <span className="truncate">{lang === 'es' ? 'EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS' : 'EXCLUSIVE FULL TRACK — LISTEN IN FULL, FREE'}</span>
-          <span className="ml-auto hidden md:inline font-normal opacity-75 text-[10px] tracking-[0.05em] shrink-0">FULL STREAMING · NO PREVIEW</span>
-        </div>
+        <ExclusiveFullBanner lang={lang} />
       ) : isAdvance ? (
         <div
           className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--yellow)] text-[var(--ink)] px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
@@ -423,13 +418,14 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
             <button
               type="button"
               onClick={onPlay}
-              className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation whitespace-nowrap
-                ${isPlaying || hasFullAudio ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)] active:bg-[var(--ink)]' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+              className={hasFullAudio
+                ? fullPlayClass()
+                : `h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation whitespace-nowrap ${isPlaying ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)] active:bg-[var(--ink)]' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
-              title={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
-              aria-label={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
+              title={isPlaying && !isPaused ? c.preview_pause : hasFullAudio ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : c.preview_play}
+              aria-label={isPlaying && !isPaused ? c.preview_pause : hasFullAudio ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : c.preview_play}
             >
-              {isPlaying && !isPaused ? '❚❚' : hasFullAudio ? '▶ PLAY FULL' : '▶'}
+              {hasFullAudio ? fullPlayLabel(!!isPlaying, !!isPaused) : isPlaying && !isPaused ? '❚❚' : '▶'}
             </button>
           )}
           <GiftDownloadLink lang={lang} fullAudioUrl={pick.full_audio_url} />

@@ -22,3 +22,9 @@ export function giftArticlePath(lang: string): string {
 export function isGiftDownloadTrack(fullAudioUrl: string | null | undefined): boolean {
   return (fullAudioUrl || '').includes(GIFT_FILE)
 }
+
+/** Audio cedido servido por la web. El proxy de preview (`/api/audio-proxy`) no entra. */
+export function isHostedFullAudio(url: string | null | undefined): boolean {
+  const u = (url || '').trim()
+  return u.startsWith('/api/audio/') && u.includes('.mp3')
+}

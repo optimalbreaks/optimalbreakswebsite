@@ -21,7 +21,7 @@ import {
 } from '@/lib/youtube-play-coordinator'
 import { logTrackPlay } from '@/lib/track-play-log'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
-import { GiftDownloadLink } from '@/components/GiftDownloadBox'
+import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 
 interface Props {
   picks: ArtistFeaturedPick[]
@@ -496,14 +496,16 @@ export default function ArtistFeaturedTracks({
               const artworkSrc = pickArtworkSrc(pick)
               const discogsUrl = (pick.discogs_url || '').trim()
               const rowHighlighted = isActive || showYt
-              const isAdvance = !(pick.full_audio_url ?? null) && isAdvanceRelease(pick.release_date)
+              const hasFull = !!(pick.full_audio_url ?? null)
+              const isAdvance = !hasFull && isAdvanceRelease(pick.release_date)
 
               return (
                 <div
                   key={`${kind}-${pick.id}`}
                   id={rowId}
-                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isAdvance ? `bg-[#f7e733]/30 ${rowHighlighted ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}` : rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${hasFull ? exclusiveRowClass(isActive) : isAdvance ? `bg-[#f7e733]/30 ${rowHighlighted ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}` : rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
+                  {hasFull ? <ExclusiveFullBanner lang={lang} /> : null}
                   {isAdvance ? (
                     <div
                       className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--yellow)] text-[var(--ink)] px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
@@ -571,12 +573,11 @@ export default function ArtistFeaturedTracks({
                         <button
                           type="button"
                           onClick={() => playFromPick(pick)}
-                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-                            ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                          className={hasFull ? fullPlayClass() : `h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive && !isPausedHere ? (lang === 'es' ? 'Pausar' : 'Pause') : pick.full_audio_url ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
+                          title={isActive && !isPausedHere ? (lang === 'es' ? 'Pausar' : 'Pause') : hasFull ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
                         >
-                          {isActive && !isPausedHere ? '❚❚' : pick.full_audio_url ? '▶ FULL' : '▶'}
+                          {hasFull ? fullPlayLabel(isActive, isPausedHere) : isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
                       <GiftDownloadLink lang={lang} fullAudioUrl={pick.full_audio_url} />

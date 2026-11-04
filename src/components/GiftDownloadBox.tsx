@@ -13,6 +13,34 @@ import {
 
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 
+/** Fondo de la fila exclusiva, el mismo que en /charts. */
+export function exclusiveRowClass(playing: boolean): string {
+  return `bg-[#f7e733]/30 ${playing ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}`
+}
+
+export function fullPlayLabel(playing: boolean, paused: boolean): string {
+  return playing && !paused ? '❚❚' : '▶ PLAY FULL'
+}
+
+export function fullPlayClass(): string {
+  return 'h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation whitespace-nowrap bg-[var(--red)] text-white hover:bg-[var(--ink)] active:bg-[var(--ink)]'
+}
+
+/** Banner rojo de la fila exclusiva. El margen negativo asume el padding de /charts. */
+export function ExclusiveFullBanner({ lang }: { lang: string }) {
+  const es = lang === 'es'
+  return (
+    <div
+      className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--red)] text-white px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
+      style={MONO}
+    >
+      <span className="animate-pulse shrink-0">●</span>
+      <span className="truncate">{es ? 'EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS' : 'EXCLUSIVE FULL TRACK — LISTEN IN FULL, FREE'}</span>
+      <span className="ml-auto hidden md:inline font-normal opacity-75 text-[10px] tracking-[0.05em] shrink-0">FULL STREAMING · NO PREVIEW</span>
+    </div>
+  )
+}
+
 /** Mismo hueco en todas las barras: justo después del play, antes del BPM. */
 export function GiftDownloadLink({ lang, fullAudioUrl }: { lang: string; fullAudioUrl?: string | null }) {
   if (!isGiftDownloadTrack(fullAudioUrl)) return null

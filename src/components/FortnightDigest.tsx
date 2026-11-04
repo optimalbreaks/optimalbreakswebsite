@@ -20,7 +20,8 @@ import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
 import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { GiftDownloadLink } from '@/components/GiftDownloadBox'
+import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
+import { isHostedFullAudio } from '@/lib/gift-download'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { findArtistSlug, splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import type { FortnightPlayedArtist } from '@/lib/fortnight-live'
@@ -294,7 +295,7 @@ function cardPlayWith(play: (rowKey: string, domId?: string) => void) {
   }
 }
 
-function PlayButton({ track, spot, className = '' }: { track: FortnightDigestTrack; spot: Spot; className?: string }) {
+function PlayButton({ track, spot, className = '', full = false }: { track: FortnightDigestTrack; spot: Spot; className?: string; full?: boolean }) {
   const { play, current, playing } = useContext(PlayCtx)
   if (!track.audio_src) return null
   const rowKey = rowKeyOf(track)
@@ -304,10 +305,10 @@ function PlayButton({ track, spot, className = '' }: { track: FortnightDigestTra
       type="button"
       onClick={() => play(rowKey, spotId(spot, track))}
       aria-label={`${on ? 'Pause' : 'Play'} ${track.artists} — ${trackName(track)}`}
-      className={`flex items-center justify-center border-[2px] border-[var(--ink)] font-black transition-colors ${on ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white hover:bg-[var(--ink)]'} ${className}`}
+      className={full ? fullPlayClass() : `flex items-center justify-center border-[2px] border-[var(--ink)] font-black transition-colors ${on ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white hover:bg-[var(--ink)]'} ${className}`}
       style={mono}
     >
-      {on ? '❚❚' : '▶'}
+      {full ? fullPlayLabel(on, false) : on ? '❚❚' : '▶'}
     </button>
   )
 }
@@ -377,13 +378,15 @@ function RankedTracks({
         const release = formatTrackReleaseDisplay(t.release_date, null)
         const advance = isAdvanceRelease(t.release_date)
         const beatport = !!(t.external_url && /beatport\.com/i.test(t.external_url))
+        const hasFull = isHostedFullAudio(t.audio_src)
         return (
           <div
             key={`${t.title}-${i}`}
             id={spotId(spot, t)}
             onClick={cardPlay(t, spot)}
-            className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+            className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${hasFull ? exclusiveRowClass(on) : on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
           >
+            {hasFull ? <ExclusiveFullBanner lang={lang} /> : null}
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <div className="w-14 sm:w-16 shrink-0">
@@ -411,7 +414,8 @@ function RankedTracks({
                   <PlayButton
                     track={t}
                     spot={spot}
-                    className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
+                    full={hasFull}
+                    className={hasFull ? '' : `h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
                   />
                 ) : null}
                 <GiftDownloadLink lang={lang} fullAudioUrl={t.audio_src} />

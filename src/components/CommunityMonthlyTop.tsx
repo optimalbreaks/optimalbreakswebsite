@@ -31,7 +31,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
 import type { ReelFormat } from '@/lib/reel-renderer'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { GiftDownloadLink } from '@/components/GiftDownloadBox'
+import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 import {
   buildFullArtistSlugMap,
   buildFullLabelSlugMap,
@@ -1176,14 +1176,16 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 : t.external_url
 
               const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
+              const hasFull = !!(t.full_audio_url || '').trim()
 
               return (
                 <div
                   key={t.canonical_key}
                   id={rowKey}
-                  className={`flex flex-col gap-3 py-2.5 sm:py-3 px-3 sm:px-4 transition-colors
-                    ${rowHighlighted ? 'bg-[var(--red)]/15' : 'hover:bg-[var(--yellow)]/10'}`}
+                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 transition-colors
+                    ${hasFull ? exclusiveRowClass(isActive) : rowHighlighted ? 'bg-[var(--red)]/15' : 'hover:bg-[var(--yellow)]/10'}`}
                 >
+                  {hasFull ? <ExclusiveFullBanner lang={lang} /> : null}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                       <RankOrderBadge rank={t.rank} />
@@ -1221,13 +1223,12 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         <button
                           type="button"
                           onClick={() => playFromIndex(idx)}
-                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-                            ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                          className={hasFull ? fullPlayClass() : `h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive && !isPausedHere ? c.preview_pause : c.preview_play}
-                          aria-label={isActive && !isPausedHere ? c.preview_pause : c.preview_play}
+                          title={isActive && !isPausedHere ? c.preview_pause : hasFull ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : c.preview_play}
+                          aria-label={isActive && !isPausedHere ? c.preview_pause : hasFull ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : c.preview_play}
                         >
-                          {isActive && !isPausedHere ? '❚❚' : '▶'}
+                          {hasFull ? fullPlayLabel(isActive, isPausedHere) : isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
                       <GiftDownloadLink lang={lang} fullAudioUrl={t.full_audio_url} />
@@ -1332,7 +1333,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       {isAdvanceRelease(t.release_date) ? null : (
                         <TidalLinkButton url={t.tidal_url} lang={lang} />
                       )}
-                      {externalLink && (
+                      {externalLink && t.platform !== 'hosted' && (
                         ctaLabel === 'BEATPORT' ? (
                           <BeatportLinkButton url={externalLink} lang={lang} />
                         ) : (
