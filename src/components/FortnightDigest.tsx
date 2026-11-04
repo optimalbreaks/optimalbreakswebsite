@@ -565,7 +565,7 @@ function queueItem(t: FortnightDigestTrack, spot: Spot, pathname: string | null)
  * `spot` distingue la misma canción en dos tarjetas de la página (quincena y su temporada).
  */
 export function DigestTrackStrip({
-  tracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang, plain = false,
+  tracks, spot, groupKey, units, show = 8, playAll, large = false, dateLang, plain = false, marked,
 }: {
   tracks: FortnightDigestTrack[]
   spot: string
@@ -580,6 +580,8 @@ export function DigestTrackStrip({
   dateLang?: Locale
   /** Sin puesto: no es un ranking. */
   plain?: boolean
+  /** Las primeras N son la selección de la casa: fondo amarillo, como la lista del día. */
+  marked?: number
 }) {
   const pathname = usePathname()
   const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
@@ -642,6 +644,7 @@ export function DigestTrackStrip({
                   className={`absolute rounded-full shadow-[2px_2px_0_var(--ink)] ${large ? 'top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 text-[14px]' : 'top-1 right-1 h-7 w-7 text-[11px]'}`}
                 />
               </div>
+              <div className={marked != null && n < marked ? 'bg-[var(--yellow)]' : ''}>
               <span className={`mt-1 block font-black truncate ${large ? 'text-[10px] sm:text-[12px]' : 'text-[9px]'}`} style={mono}>
                 {plain ? t.artists : `#${n + 1} ${t.artists}`}
               </span>
@@ -657,6 +660,7 @@ export function DigestTrackStrip({
                   )}
                 </>
               ) : null}
+              </div>
             </li>
           )
         })}

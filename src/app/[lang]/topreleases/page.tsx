@@ -1,9 +1,10 @@
 // ============================================
 // OPTIMAL BREAKS — Top novedades
 // ----------------------------------------------
-// Dos secciones. Arriba, el lanzamiento de hoy: un resumen, una lista corta
-// y el botón al artículo (`/topreleases/dia/YYYY-MM-DD`). El calendario y
-// la lista entera viven en el artículo, no aquí.
+// Dos secciones. Arriba, el lanzamiento de hoy: un resumen, las carátulas
+// (la misma tira que el artículo de debajo) y el botón al artículo
+// (`/topreleases/dia/YYYY-MM-DD`). El calendario y la lista entera viven
+// en el artículo, no aquí.
 // Debajo, los meses (antes, quincenas) y las temporadas, que nacen en el blog.
 // Arriba el último mes (suena ahí mismo), debajo una tarjeta por temporada
 // con sus meses dentro. `?year=` cambia de año cuando hay más de uno. Las
@@ -60,6 +61,7 @@ const COPY = {
     playFortnight: '▶ ESCUCHAR LA QUINCENA · {n} TEMAS',
     playMonth: '▶ ESCUCHAR EL MES · {n} TEMAS',
     playSeason: (label: string) => `▶ ESCUCHAR ${label} · {n} TEMAS`,
+    playDay: '▶ ESCUCHAR HOY · {n} TEMAS',
     years: 'AÑO',
   },
   en: {
@@ -90,6 +92,7 @@ const COPY = {
     playFortnight: '▶ PLAY THE FORTNIGHT · {n} TRACKS',
     playMonth: '▶ PLAY THE MONTH · {n} TRACKS',
     playSeason: (label: string) => `▶ PLAY ${label} · {n} TRACKS`,
+    playDay: '▶ PLAY TODAY · {n} TRACKS',
     years: 'YEAR',
   },
 } as const
@@ -357,17 +360,17 @@ export default async function TopReleasesPage({
                 {dayReleaseBlurb(lang, dayGroups.picks.length, dayGroups.rest.length)}
               </p>
               {dayPreview.length > 0 ? (
-                <ul className="list-none m-0 p-0 mb-1">
-                  {dayPreview.map((track, i) => {
-                    const pick = i < dayGroups.picks.length
-                    const mix = track.mix_name && !/^original mix$/i.test(track.mix_name) ? ` (${track.mix_name})` : ''
-                    return (
-                      <li key={track.featured_id || `${track.artists}-${track.title}-${i}`} className={`py-1 border-b border-[var(--ink)]/15 text-[13px] truncate ${pick ? 'bg-[var(--yellow)] px-1' : ''}`} style={mono}>
-                        <span className="font-black">{track.artists}</span> — {track.title}{mix}
-                      </li>
-                    )
-                  })}
-                </ul>
+                <DigestTrackStrip
+                  tracks={dayPreview}
+                  spot={`day-${day}`}
+                  groupKey={`topreleases:day-door:${day}`}
+                  units={lang === 'es' ? ['escucha', 'escuchas'] : ['play', 'plays']}
+                  show={dayPreview.length}
+                  playAll={t.playDay}
+                  large
+                  plain
+                  marked={Math.min(dayGroups.picks.length, dayPreview.length)}
+                />
               ) : null}
               {dayTotal > 0 ? (
                 <Link
