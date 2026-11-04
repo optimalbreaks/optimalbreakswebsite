@@ -24,7 +24,7 @@ import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import FortnightDigest from '@/components/FortnightDigest'
 import GiftDownloadBox from '@/components/GiftDownloadBox'
-import { GIFT_BLOG_SLUG } from '@/lib/gift-download'
+import { GIFT_BLOG_SLUG, isGiftDownloadTrack } from '@/lib/gift-download'
 import AgendaDigestView from '@/components/AgendaDigest'
 import { getFortnightLive, getPeriodStats } from '@/lib/fortnight-live'
 import { agendaCoverImage, loadAgendaNights } from '@/lib/agenda-nights'
@@ -40,7 +40,7 @@ import { digestCoverFocuses } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
-import { FORTNIGHT_DUR } from '@/lib/page-reel-design'
+import { FORTNIGHT_DUR, GIFT_DUR } from '@/lib/page-reel-design'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 
@@ -353,6 +353,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
       artists: trackArtists(t),
       artwork: t.artwork_url,
       bpm: t.bpm,
+      gift: isGiftDownloadTrack(t.full_audio_url),
     })),
     artist: firstTrack ? trackArtists(firstTrack) : '',
     label: firstTrack?.label || '',
@@ -375,20 +376,26 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
             }
             return null
           }
-          const t = albumTracks.find((row) => srcOf(row))
+          const giftRow = albumTracks.find((row) => isGiftDownloadTrack(row.full_audio_url) && srcOf(row))
+          const t = giftRow || albumTracks.find((row) => srcOf(row))
           const src = t ? srcOf(t) : null
           if (!t || !src) return null
           const name = t.mix_name && !/^original/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title
+          const gifted = isGiftDownloadTrack(t.full_audio_url)
           return {
             src,
             key: t.beatport_url || `album:${name}`,
             label: `${name} — ${trackArtists(t)}`,
-            seconds: FORTNIGHT_DUR,
+            seconds: gifted ? GIFT_DUR : FORTNIGHT_DUR,
             title: name,
             artists: trackArtists(t),
             artwork: t.artwork_url,
           }
         })(),
+    gift:
+      safeSlug === GIFT_BLOG_SLUG && albumTracks.some((t) => isGiftDownloadTrack(t.full_audio_url))
+        ? { es: safeLang !== 'en' }
+        : undefined,
     fortnight: digest
       ? {
           // share-reel-images solo acepta https: los retratos de /images/... van absolutos.

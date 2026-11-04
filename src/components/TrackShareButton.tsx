@@ -23,7 +23,8 @@
 
 'use client'
 
-import { aiShareCaption } from '@/lib/share-caption'
+import { aiShareCaption, appendInstagramMentions, buildGiftVideoCaption } from '@/lib/share-caption'
+import { GIFT_IG_ARTIST, GIFT_IG_SITE } from '@/lib/gift-download'
 import { useRef, useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import AudioSegmentPicker from '@/components/AudioSegmentPicker'
@@ -97,6 +98,11 @@ type VideoData = {
   audio?: string | null
   /** Exclusiva: el tema entero está en la web. El reel lo dice en el centro. */
   fullTrack?: boolean
+  /**
+   * Solo el regalo de Woter. R y F usan la pieza propia (`animGift`) y el
+   * fragmento dura lo que el vídeo, no los 30 s de un tema.
+   */
+  giftTracks?: { title: string; artists: string; artwork: string | null; gift: boolean }[] | null
   lang: 'en'
 }
 
@@ -143,7 +149,12 @@ export default function TrackShareButton(props: Props) {
   /** Story ya generada a la espera del 2.º toque (ver `shareNeedsSecondTap`). */
   const [storyFile, setStoryFile] = useState<File | null>(null)
   /** Selector de fragmento abierto: qué botón lo pidió y con qué datos. */
-  const [picker, setPicker] = useState<{ kind: 'story' | 'reel' | 'fb'; data: VideoData; audioUrl: string } | null>(null)
+  const [picker, setPicker] = useState<{
+    kind: 'story' | 'reel' | 'fb'
+    data: VideoData
+    audioUrl: string
+    segmentSec?: number
+  } | null>(null)
   const videoDataRef = useRef<{ play: string; p: Promise<VideoData> } | null>(null)
   const [reelState, setReelState] = useState<'idle' | 'busy' | 'ready' | 'done' | 'error'>('idle')
   const [reelPct, setReelPct] = useState(0)
@@ -216,7 +227,32 @@ export default function TrackShareButton(props: Props) {
   }
 
   /** Texto del post: GPT‑5.6 (`/api/admin/share-caption`) con la plantilla de respaldo. */
+  function isGiftFilm(data: VideoData) {
+    return !!data.giftTracks?.some((t) => t.gift)
+  }
+
   function videoCaption(data: VideoData, platform: 'instagram' | 'facebook') {
+    if (isGiftFilm(data)) {
+      const also = (data.giftTracks || []).filter((t) => !t.gift).map((t) => t.title)
+      return aiShareCaption({
+        kind: 'gift',
+        platform,
+        lang: props.lang,
+        url: fullUrl,
+        fallback: (lang) =>
+          buildGiftVideoCaption({ title: data.title, artist: data.artists, also }, { lang, url: fullUrl, platform }),
+        context: {
+          artist: data.artists,
+          title: data.title,
+          fullTrack: true,
+          download: true,
+          follows: [`@${GIFT_IG_SITE}`, `@${GIFT_IG_ARTIST}`],
+          also,
+        },
+      }).then((text) =>
+        platform === 'instagram' ? appendInstagramMentions(text, [`@${GIFT_IG_SITE}`, `@${GIFT_IG_ARTIST}`]) : text,
+      )
+    }
     const status = releaseBadge(data.releaseDate, data.year)
     return aiShareCaption({
       kind: 'track',
@@ -380,7 +416,8 @@ export default function TrackShareButton(props: Props) {
       const data = await getVideoData(storyPlay)
       if (data.audio) {
         setReelState('idle')
-        setPicker({ kind: 'reel', data, audioUrl: data.audio })
+        const segmentSec = isGiftFilm(data) ? (await import('@/lib/page-reel-design')).GIFT_DUR : undefined
+        setPicker({ kind: 'reel', data, audioUrl: data.audio, segmentSec })
         return
       }
       await renderReelVideo(data, null)
@@ -391,14 +428,61 @@ export default function TrackShareButton(props: Props) {
     }
   }
 
+  async function renderGiftFilm(
+    data: VideoData,
+    segment: ShareAudioSegment | null,
+    format: 'vertical' | 'horizontal',
+    onProgress: (ratio: number) => void,
+  ) {
+    const { renderPageReel } = await import('@/lib/page-reel')
+    const { GIFT_DUR } = await import('@/lib/page-reel-design')
+    const tracks = data.giftTracks || []
+    const art = tracks.find((t) => t.gift)?.artwork || null
+    return renderPageReel(
+      {
+        kind: 'blog',
+        title: data.title,
+        date: data.releaseDate ?? null,
+        tags: [],
+        artwork: art,
+        tracks: tracks.map((t) => ({
+          title: t.title,
+          meta: '',
+          artists: t.artists,
+          artwork: t.artwork,
+          gift: t.gift,
+        })),
+        artist: data.artists,
+        label: '',
+        excerpt: '',
+        albumAudio: data.audio
+          ? {
+              src: data.audio,
+              key: storyPlay || data.title,
+              label: `${data.title} — ${data.artists}`,
+              seconds: GIFT_DUR,
+              title: data.title,
+              artists: data.artists,
+              artwork: art,
+            }
+          : undefined,
+        gift: { es: props.lang !== 'en' },
+      },
+      format,
+      onProgress,
+      segment,
+    )
+  }
+
   async function renderReelVideo(data: VideoData, segment: ShareAudioSegment | null) {
     setReelState('busy')
     setReelPct(0)
     try {
       // Texto con GPT‑5.6 en paralelo al render (plantilla si falla).
       const captionP = videoCaption(data, 'instagram')
-      const { renderReel } = await import('@/lib/reel-renderer')
-      const reel = await renderReel(data, {
+      const reel = isGiftFilm(data)
+        ? await renderGiftFilm(data, segment, 'vertical', (r) => setReelPct(Math.min(99, Math.round(r * 100))))
+        : await (await import('@/lib/reel-renderer')).renderReel(data, {
         format: 'vertical',
         durationSec: SHARE_SEGMENT_SEC,
         audio: segment,
@@ -445,7 +529,8 @@ export default function TrackShareButton(props: Props) {
       const data = await getVideoData(storyPlay)
       if (data.audio) {
         setFbState('idle')
-        setPicker({ kind: 'fb', data, audioUrl: data.audio })
+        const segmentSec = isGiftFilm(data) ? (await import('@/lib/page-reel-design')).GIFT_DUR : undefined
+        setPicker({ kind: 'fb', data, audioUrl: data.audio, segmentSec })
         return
       }
       await renderFacebookVideo(data, null)
@@ -461,8 +546,9 @@ export default function TrackShareButton(props: Props) {
     setFbPct(0)
     try {
       const captionP = videoCaption(data, 'facebook')
-      const { renderReel } = await import('@/lib/reel-renderer')
-      const video = await renderReel(data, {
+      const video = isGiftFilm(data)
+        ? await renderGiftFilm(data, segment, 'horizontal', (r) => setFbPct(Math.min(99, Math.round(r * 100))))
+        : await (await import('@/lib/reel-renderer')).renderReel(data, {
         format: 'horizontal',
         durationSec: SHARE_SEGMENT_SEC,
         audio: segment,
@@ -648,6 +734,7 @@ export default function TrackShareButton(props: Props) {
           audioUrl={picker.audioUrl}
           segmentKey={storyPlay}
           trackTitle={props.shareTitle}
+          segmentSec={picker.segmentSec}
           confirmLabel={
             picker.kind === 'story'
               ? (es ? 'Generar story' : 'Generate story')

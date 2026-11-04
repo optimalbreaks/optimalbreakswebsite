@@ -26,8 +26,8 @@ import { madridCalendarDate } from '@/lib/share-track'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day'
-const KINDS: readonly Kind[] = ['track', 'set', 'top100', 'week', 'blog', 'events', 'digest', 'day']
+type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day' | 'gift'
+const KINDS: readonly Kind[] = ['track', 'set', 'top100', 'week', 'blog', 'events', 'digest', 'day', 'gift']
 type Platform = 'instagram' | 'facebook'
 
 const KIND_ES: Record<Kind, string> = {
@@ -59,6 +59,14 @@ const KIND_ES: Record<Kind, string> = {
     'El artículo de los lanzamientos de un día concreto (Optimal Breaks, /topreleases/dia). El primer fotograma es la carátula del más destacado y la lista de los que suenan, sin logo. Luego, una card por tema de la selección de Optimal Breaks (hasta 5; los que la casa ha guardado con «+»), y suena un trozo de cada uno. Cierra con un cartel: escucharlos todos, visita nuestra web, link en bio, y mandárselo a quien pincha breakbeat. El sexto, si lo hay, no entra en el vídeo. Si no hay selección, las cards son los temas de ese día.',
     'Maqueta fija, no un párrafo. Si `live` es true, el gancho va en presente («salen hoy»). Si `live` es false, en pasado con `when` («salieron el 30 de octubre»): prohibido «hoy», «salen» o «out today». Una línea 🎧 por cada tema de `picks` (artista — título), nunca varios temas en la misma frase. Di el total (`outCount`). Si `selection` es false, no digas que hay una selección de la casa. Cierra con «mándaselo a quien pincha breakbeat» y «link en la bio».',
   ].join('\n'),
+  gift: [
+    'El regalo de Woter: el vídeo es solo de «Gone Gone Gone (WoTeR Breaks Mix)». No es el reel de un álbum ni el de una exclusiva que solo se oye.',
+    'Primera línea: es un regalo suyo, el tema está entero y se puede descargar.',
+    'Después, en frases cortas: se oye de principio a fin en optimalbreaks.com. Para descargarlo hace falta una cuenta, seguir a @optimal.breaks (con el punto; @optimalbreaks sin punto es otra cuenta y no vale) y a @woter_dj, y subir dos capturas donde se lea «Siguiendo» o «Following».',
+    'Esos dos @ van en el texto: son el requisito, no una mención de cortesía.',
+    'Nombra dos o tres temas de `also`: son lo demás que más se guarda de él. No inventes discografía.',
+    'Prohibido nombrar a Kritycal System, Kaos Beat o BrainBass, y prohibido comparar este regalo con otras exclusivas.',
+  ].join('\n'),
 }
 const KIND_EN: Record<Kind, string> = {
   track: [
@@ -85,6 +93,14 @@ const KIND_EN: Record<Kind, string> = {
     "The article for one day's releases (Optimal Breaks, /topreleases/dia). The first frame is the top track's cover plus the list of the tracks that play. No logo there. Then one card per track in the Optimal Breaks selection (up to 5; the ones the house saved with «+»), and a slice of each one plays. It closes on a poster: hear all of that day's releases, visit the site, link in bio, and send it to whoever plays breakbeat. A sixth, if there is one, stays out of the video. If there is no selection, the cards are the tracks from that day.",
     'Fixed layout, not a paragraph. If `live` is true, the hook is present tense (“out today”). If `live` is false, past tense with `when` (“came out on October 30”): never “today”, “out today” or “salen hoy”. One 🎧 line per `picks` track (artist — title), never several tracks in one sentence. Say the total (`outCount`). If `selection` is false, do not claim there is a house selection. Close with “send it to whoever plays breakbeat” and “link in bio”.',
   ].join('\n'),
+  gift: [
+    'Woter’s gift: the video is only about “Gone Gone Gone (WoTeR Breaks Mix)”. It is not an album reel and not a stream-only exclusive.',
+    'First line: it is a gift from him, the track is complete, and it can be downloaded.',
+    'Then, in short lines: it plays start to finish on optimalbreaks.com. The download needs an account, a follow of @optimal.breaks (with the dot; @optimalbreaks without a dot is a different account and does not count) and of @woter_dj, plus two screenshots that show “Following” or “Siguiendo”.',
+    'Those two @ handles belong in the text: they are the requirement, not a courtesy tag.',
+    'Name two or three tracks from `also`: the rest of what people save most from him. Do not invent a discography.',
+    'Do not name Kritycal System, Kaos Beat or BrainBass, and do not compare this gift with other exclusives.',
+  ].join('\n'),
 }
 
 const DEFAULT_TAGS: Record<Kind, string[]> = {
@@ -96,6 +112,7 @@ const DEFAULT_TAGS: Record<Kind, string[]> = {
   events: ['#breakbeat', '#rave', '#electronicmusic', '#festival', '#dj'],
   digest: ['#breakbeat', '#breaks', '#newreleases', '#newmusic', '#electronicmusic'],
   day: ['#breakbeat', '#breaks', '#ukbreaks', '#breakbeatmusic', '#newreleases'],
+  gift: ['#breakbeat', '#breaks', '#freedownload', '#electronicmusic', '#dj'],
 }
 
 function norm(s: string): string {
@@ -191,7 +208,7 @@ export async function POST(request: NextRequest) {
   const today = madridCalendarDate()
   // Un tema admite pie largo: Instagram indexa el texto para su buscador y un
   // pie con contexto retiene más. Tope de Instagram: 2.200 caracteres.
-  const long = kind === 'track' || kind === 'digest'
+  const long = kind === 'track' || kind === 'digest' || kind === 'gift'
   const day = kind === 'day'
   const factsEs =
     kind === 'digest'

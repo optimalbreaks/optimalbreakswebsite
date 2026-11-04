@@ -14,7 +14,7 @@
 // piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animAlbum, animBlog, animDay, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, dayAudioSlots, dayCardSeconds, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
+import { animAlbum, animBlog, animDay, animEvents, animFortnight, animGift, animTop, animWeek, blogHighlightFrom, dayAudioSlots, dayCardSeconds, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, GIFT_DUR, type EventsAnim, type GiftAnim, type Img } from './page-reel-design'
 
 export type EventsReelEvent = {
   name: string
@@ -58,7 +58,7 @@ export type PageReelInput =
       date: string | null
       tags: string[]
       artwork: string | null
-      tracks: { title: string; meta: string; artists?: string; artwork?: string | null; bpm?: number | null }[]
+      tracks: { title: string; meta: string; artists?: string; artwork?: string | null; bpm?: number | null; gift?: boolean }[]
       artist: string
       label: string
       excerpt: string
@@ -67,6 +67,11 @@ export type PageReelInput =
        * Preview del primer corte con audio, para el selector de R/F.
        */
       albumAudio?: FortnightReelInput['audio']
+      /**
+       * Regalo de Woter. El audio es el tema cedido y el vídeo es `animGift`,
+       * no el molde de álbum ni el banner de exclusiva.
+       */
+      gift?: { es: boolean }
       /** Artículo quincenal: vídeo de datos (`animFortnight`) en vez del de artículo. */
       fortnight?: FortnightReelInput
       /** Artículo de agenda: reel de carteles (`animEvents`). */
@@ -262,6 +267,44 @@ async function renderDayReel(
   return encodeCanvasVideo(W, H, total, 30, (c, t) => animDay(c, W, H, data, t), onProgress, audio)
 }
 
+/** Reel del regalo: el tema cedido suena, y el vídeo no es el de un álbum. */
+async function renderGiftReel(
+  input: Extract<PageReelInput, { kind: 'blog' }>,
+  format: ReelFormat,
+  onProgress: ((ratio: number) => void) | undefined,
+  audio: ShareAudioSegment | null | undefined,
+): Promise<ReelResult> {
+  const W = format === 'horizontal' ? 1920 : 1080
+  const H = format === 'horizontal' ? 1080 : 1920
+  await loadFonts()
+  const imgs = await loadArtworks(input.tracks.map((t) => t.artwork || null))
+  const giftAt = Math.max(0, input.tracks.findIndex((t) => t.gift))
+  const gift = input.tracks[giftAt]
+  const others = input.tracks.flatMap((t, i) =>
+    i === giftAt
+      ? []
+      : [{ title: t.title, artists: t.artists || input.artist, img: imgs[i] ?? null }],
+  )
+  const playing =
+    audio && gift
+      ? {
+          title: gift.title,
+          artists: gift.artists || input.artist,
+          img: imgs[giftAt] ?? null,
+          env: audioEnvelope(audio, GIFT_DUR, 30),
+        }
+      : null
+  const data: GiftAnim = {
+    es: input.gift?.es !== false,
+    artist: input.artist || 'Woter',
+    giftTitle: gift?.title || input.title,
+    giftImg: imgs[giftAt] ?? null,
+    others,
+    playing,
+  }
+  return encodeCanvasVideo(W, H, GIFT_DUR, 30, (c, t) => animGift(c, W, H, data, t), onProgress, audio)
+}
+
 export async function renderPageReel(
   input: PageReelInput,
   format: ReelFormat,
@@ -315,6 +358,8 @@ export async function renderPageReel(
     return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress, audio)
   } else if (input.agenda) {
     return renderEventsReel(input.agenda, format, onProgress)
+  } else if (input.kind === 'blog' && input.gift && input.tracks.length > 0) {
+    return renderGiftReel(input, format, onProgress, audio)
   } else if (input.tracks.length > 0) {
     const urls = [
       ...input.tracks.map((t) => t.artwork || null),

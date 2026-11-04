@@ -10,7 +10,7 @@
 
 import type { Locale } from '@/lib/i18n-config'
 
-export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day'
+export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day' | 'gift'
 export type SharePlatform = 'instagram' | 'facebook'
 
 /** `@usuario` a partir de `artists.socials.instagram`. Sin ficha o sin perfil, null. */
@@ -165,6 +165,40 @@ export function bilingualCaption(
 }
 
 /** Plantilla (sin IA) de los vídeos de página. Máx. 5 hashtags genéricos. */
+/** Plantilla del reel del regalo. El modelo la sustituye si responde. */
+export function buildGiftVideoCaption(
+  d: { title: string; artist: string; also: string[] },
+  opts: { lang: Locale | string; url: string; platform: SharePlatform },
+): string {
+  const es = opts.lang !== 'en'
+  const link = opts.platform === 'instagram' ? (es ? '🔗 Enlace en la bio.' : '🔗 Link in bio.') : `👉 ${opts.url}`
+  const also = d.also.slice(0, 4).map((title) => `🎧 ${title}`)
+  return [
+    es
+      ? `🎁 ${d.artist} regala «${d.title}». El tema entero, y se puede descargar.`
+      : `🎁 ${d.artist} is giving away “${d.title}”. The whole track, and you can download it.`,
+    '',
+    es
+      ? 'Se oye de principio a fin en Optimal Breaks. La descarga pide una cuenta, seguir a @optimal.breaks y a @woter_dj, y dos capturas donde se lea Siguiendo.'
+      : 'It plays start to finish on Optimal Breaks. The download needs an account, a follow of @optimal.breaks and of @woter_dj, and two screenshots that show Following.',
+    '',
+    ...also,
+    also.length
+      ? es
+        ? 'Y esto también es suyo: lo más guardado, en el mismo artículo.'
+        : 'And this is his too: the most saved, in the same article.'
+      : '',
+    '',
+    es ? '¿Ya lo has metido en un set? 👇' : 'Have you played it in a set yet? 👇',
+    '',
+    link,
+    '',
+    '#breakbeat #breaks #freedownload #electronicmusic #dj',
+  ]
+    .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
+    .join('\n')
+}
+
 export function buildPageVideoCaption(
   kind: 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day',
   d: {

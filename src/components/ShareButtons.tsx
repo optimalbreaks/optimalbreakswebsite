@@ -15,7 +15,8 @@ import {
   copyShareLink,
   openFacebookShareDialog,
 } from '@/lib/share-track'
-import { aiShareCaption, appendInstagramMentions, buildPageVideoCaption, dayReelTense, type SharePlatform } from '@/lib/share-caption'
+import { aiShareCaption, appendInstagramMentions, buildGiftVideoCaption, buildPageVideoCaption, dayReelTense, type SharePlatform } from '@/lib/share-caption'
+import { GIFT_IG_ARTIST, GIFT_IG_SITE } from '@/lib/gift-download'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
 import { dayAudioSlots, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
@@ -288,6 +289,31 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           newToCatalogue: f.debut.slice(0, 8),
         },
       })
+    }
+    if (pageReel?.gift) {
+      const gift = pageReel.tracks.find((t) => t.gift) || pageReel.tracks[0]
+      const also = pageReel.tracks.filter((t) => t !== gift).map((t) => t.title)
+      return aiShareCaption({
+        kind: 'gift',
+        platform,
+        lang,
+        url: fullUrl,
+        fallback: (l) =>
+          buildGiftVideoCaption(
+            { title: gift?.title || pageReel.title, artist: pageReel.artist || 'Woter', also },
+            { lang: l, url: fullUrl, platform },
+          ),
+        context: {
+          artist: pageReel.artist || 'Woter',
+          title: gift?.title || pageReel.title,
+          fullTrack: true,
+          download: true,
+          follows: [`@${GIFT_IG_SITE}`, `@${GIFT_IG_ARTIST}`],
+          also,
+        },
+      }).then((text) =>
+        platform === 'instagram' ? appendInstagramMentions(text, [`@${GIFT_IG_SITE}`, `@${GIFT_IG_ARTIST}`]) : text,
+      )
     }
     if (pageReel) {
       return aiShareCaption({

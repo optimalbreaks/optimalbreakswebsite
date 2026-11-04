@@ -1833,6 +1833,355 @@ export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number)
   fnPlayer(ctx, F.x, py, Math.min(V ? 640 : 470, blockX - F.x - 28), pH, d.playing, t, V)
 }
 
+// ===================== REGALO (Woter — Gone Gone Gone) =====================
+// Pieza propia, no el molde de álbum ni el banner de exclusiva. El audio es
+// el tema cedido. El vídeo dice que se oye entero, que se descarga, qué hace
+// falta para bajarlo, y enseña el resto de lo más guardado.
+export const GIFT_DUR = 46
+
+export type GiftSideAnim = { title: string; artists: string; img: Img | null }
+export type GiftAnim = {
+  es: boolean
+  artist: string
+  giftTitle: string
+  giftImg: Img | null
+  others: GiftSideAnim[]
+  playing: { title: string; artists: string; img: Img | null; env: Float32Array } | null
+}
+
+type GiftSceneKey = 'hook' | 'full' | 'deal' | 'also' | 'close'
+
+function giftScenes(): { k: GiftSceneKey; a: number; b: number }[] {
+  const weights: [GiftSceneKey, number][] = [
+    ['hook', 8],
+    ['full', 9],
+    ['deal', 12],
+    ['also', 10],
+    ['close', 7],
+  ]
+  let a = 0
+  return weights.map(([k, w]) => {
+    const sc = { k, a, b: a + w }
+    a = sc.b
+    return sc
+  })
+}
+
+function giftRibbon(ctx: C, W: number, H: number, p: number) {
+  if (p <= 0) return
+  ctx.save()
+  ctx.globalAlpha = Math.min(1, p)
+  ctx.translate(W * 0.78, H * 0.08)
+  ctx.rotate(0.42)
+  ctx.fillStyle = RED
+  ctx.fillRect(-70, -H, 150, H * 2.2)
+  ctx.fillStyle = YELLOW
+  ctx.fillRect(-18, -H, 36, H * 2.2)
+  ctx.restore()
+}
+
+export function animGift(ctx: C, W: number, H: number, d: GiftAnim, t: number) {
+  const V = H > W
+  const es = d.es
+  const copy = es
+    ? {
+        kicker: 'REGALO',
+        from: `DE ${d.artist.toUpperCase()}`,
+        full: 'TEMA ENTERO',
+        hear: 'SE OYE DE PRINCIPIO A FIN',
+        down: 'Y SE PUEDE DESCARGAR',
+        how: 'PARA BAJARLO',
+        s1: 'CUENTA EN LA WEB',
+        s2: 'SIGUE A @optimal.breaks',
+        s3: 'SIGUE A @woter_dj',
+        shots: 'DOS CAPTURAS DE «SIGUIENDO»',
+        also: 'Y ESTO TAMBIÉN ES SUYO',
+        saved: 'LO MÁS GUARDADO',
+        cta: V ? 'ENLACE EN LA BIO' : 'ENLACE EN EL POST',
+        free: 'GRATIS',
+      }
+    : {
+        kicker: 'A GIFT',
+        from: `FROM ${d.artist.toUpperCase()}`,
+        full: 'FULL TRACK',
+        hear: 'HEAR IT START TO FINISH',
+        down: 'AND YOU CAN DOWNLOAD IT',
+        how: 'TO GET THE FILE',
+        s1: 'AN ACCOUNT ON THE SITE',
+        s2: 'FOLLOW @optimal.breaks',
+        s3: 'FOLLOW @woter_dj',
+        shots: 'TWO SHOTS OF «FOLLOWING»',
+        also: 'AND THIS IS HIS TOO',
+        saved: 'MOST SAVED',
+        cta: V ? 'LINK IN BIO' : 'LINK IN THE POST',
+        free: 'FREE',
+      }
+  const scenes = giftScenes()
+  const found = scenes.findIndex((s) => t >= s.a && t < s.b)
+  const si = found === -1 ? scenes.length - 1 : found
+  const sc = scenes[si]
+  const lt = t - sc.a
+  const dock = d.playing ? (V ? 188 : 132) : 0
+  const pad = V ? 70 : 64
+
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = 1
+  if (sc.k === 'full' || sc.k === 'close') {
+    ctx.fillStyle = sc.k === 'close' ? RED : YELLOW
+    ctx.fillRect(0, 0, W, H)
+  } else if (sc.k === 'deal') {
+    paper(ctx, W, H, '#efe4cf')
+  } else {
+    ctx.fillStyle = INK
+    ctx.fillRect(0, 0, W, H)
+  }
+  if (sc.k === 'hook' || sc.k === 'close') giftRibbon(ctx, W, H, ph(lt, 0.15, 0.45))
+
+  ctx.fillStyle = sc.k === 'full' ? INK : YELLOW
+  ctx.fillRect(0, 0, W, V ? 64 : 52)
+  if (sc.k !== 'full') hazard(ctx, V ? 64 : 52, 18, W)
+  ctx.fillStyle = sc.k === 'full' ? YELLOW : INK
+  ctx.font = MONO(V ? 20 : 18)
+  ctx.textBaseline = 'middle'
+  spaced(ctx, `OPTIMAL BREAKS  ·  ${copy.kicker}  ·  ${d.artist.toUpperCase()}`, V ? W / 2 : pad, V ? 32 : 26, 4, V ? 'center' : 'left')
+
+  const bodyTop = V ? 110 : 86
+  const bodyH = H - bodyTop - dock - (V ? 36 : 24)
+
+  if (sc.k === 'hook') {
+    const sleeve = Math.min(V ? 640 : 460, bodyH * (V ? 0.42 : 0.78))
+    slide(ctx, ph(lt, 0.15, 0.4), -30, 0, () => {
+      ctx.font = MONO(V ? 28 : 22)
+      ctx.fillStyle = YELLOW
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      spaced(ctx, copy.kicker, pad, bodyTop + (V ? 36 : 28), 8)
+    })
+    slide(ctx, ph(lt, 0.35, 0.45), 0, 40, () => {
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 92 : 72)
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillText(fit(ctx, d.artist.toUpperCase(), HEAD, W - pad * 2 - 80, V ? 92 : 72, 36), pad, bodyTop + (V ? 150 : 120))
+      ctx.fillStyle = YELLOW
+      ctx.font = MONO(V ? 26 : 22)
+      spaced(ctx, copy.from, pad, bodyTop + (V ? 196 : 158), 4)
+    })
+    const titleY = bodyTop + (V ? 280 : 210)
+    ctx.font = HEAD(V ? 54 : 40)
+    const lines = wrap(ctx, d.giftTitle.toUpperCase(), V ? W - pad * 2 : W * 0.48).slice(0, 3)
+    lines.forEach((ln, i) => {
+      slide(ctx, ph(lt, 0.7 + i * 0.12, 0.4), 0, 24, () => {
+        ctx.font = HEAD(V ? 54 : 40)
+        ctx.fillStyle = '#fff'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillText(ln, pad, titleY + i * (V ? 64 : 48))
+      })
+    })
+    const sx = V ? (W - sleeve) / 2 : W - pad - sleeve
+    const sy = V ? bodyTop + bodyH - sleeve - 10 : bodyTop + 20
+    pop(ctx, ph(lt, 1.1, 0.55), sx + sleeve / 2, sy + sleeve / 2, () => {
+      ctx.fillStyle = YELLOW
+      ctx.fillRect(sx + 16, sy + 16, sleeve, sleeve)
+      cover(ctx, d.giftImg, sx, sy, sleeve, 8)
+    }, -0.04)
+    pop(ctx, ph(lt, 2.2, 0.4), pad + 90, sy + (V ? -10 : sleeve - 20), () => {
+      box(ctx, pad, sy - (V ? 70 : 0), 210, 64, RED, INK, 8, 4)
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(28)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(copy.free, pad + 105, sy - (V ? 38 : -32))
+    }, -0.08)
+  } else if (sc.k === 'full') {
+    const sleeve = Math.min(V ? 760 : 620, V ? bodyH * 0.48 : bodyH - 20)
+    const sx = V ? (W - sleeve) / 2 : pad
+    const sy = bodyTop + (V ? 10 : (bodyH - sleeve) / 2)
+    pop(ctx, ph(lt, 0.1, 0.5), sx + sleeve / 2, sy + sleeve / 2, () => {
+      ctx.fillStyle = INK
+      ctx.fillRect(sx + 18, sy + 18, sleeve, sleeve)
+      cover(ctx, d.giftImg, sx, sy, sleeve, 8)
+    })
+    const tx = V ? pad : sx + sleeve + 56
+    const tw = V ? W - pad * 2 : W - tx - pad
+    const ty = V ? sy + sleeve + 70 : bodyTop + 80
+    slide(ctx, ph(lt, 0.45, 0.4), 0, 30, () => {
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillStyle = INK
+      ctx.font = HEAD(V ? 78 : 64)
+      const head = fit(ctx, copy.full, HEAD, tw, V ? 78 : 64, 32)
+      ctx.fillText(head, tx, ty)
+      ctx.font = MONO(V ? 28 : 24)
+      spaced(ctx, copy.hear, tx, ty + (V ? 52 : 44), 3)
+    })
+    pop(ctx, ph(lt, 1.15, 0.45), tx + tw / 2, ty + (V ? 150 : 130), () => {
+      ctx.font = HEAD(V ? 36 : 30)
+      const label = copy.down
+      const bw = Math.min(tw, ctx.measureText(label).width + 48)
+      box(ctx, tx, ty + (V ? 90 : 78), bw, V ? 88 : 76, RED, INK, 8, 4)
+      ctx.fillStyle = '#fff'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'middle'
+      ctx.font = HEAD(V ? 32 : 26)
+      ctx.fillText(fit(ctx, label, HEAD, bw - 36, V ? 32 : 26, 16), tx + 20, ty + (V ? 134 : 116))
+    })
+  } else if (sc.k === 'deal') {
+    slide(ctx, ph(lt, 0.05, 0.35), -20, 0, () => {
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillStyle = RED
+      ctx.font = MONO(V ? 24 : 20)
+      spaced(ctx, d.giftTitle.toUpperCase(), pad, bodyTop + 8, 3)
+      ctx.fillStyle = INK
+      ctx.font = HEAD(V ? 64 : 48)
+      ctx.fillText(copy.how, pad, bodyTop + (V ? 84 : 64))
+    })
+    const steps: [string, string][] = [
+      ['01', copy.s1],
+      ['02', copy.s2],
+      ['03', copy.s3],
+    ]
+    const rowH = V ? 168 : 118
+    const y0 = bodyTop + (V ? 140 : 100)
+    steps.forEach(([n, label], i) => {
+      const y = y0 + i * rowH
+      slide(ctx, ph(lt, 0.35 + i * 0.28, 0.4), 40, 0, () => {
+        box(ctx, pad, y, V ? 140 : 110, V ? 130 : 96, i === 1 ? YELLOW : '#fff', INK, 8, 4)
+        ctx.fillStyle = RED
+        ctx.font = HEAD(V ? 48 : 36)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(n, pad + (V ? 70 : 55), y + (V ? 65 : 48))
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        ctx.fillStyle = INK
+        ctx.font = HEAD(V ? 36 : 28)
+        ctx.fillText(fit(ctx, label, HEAD, W - pad * 2 - (V ? 190 : 160), V ? 36 : 28, 16), pad + (V ? 168 : 136), y + (V ? 65 : 48))
+      })
+    })
+    const by = y0 + 3 * rowH + (V ? 8 : 0)
+    pop(ctx, ph(lt, 1.5, 0.4), W / 2, by + 36, () => {
+      box(ctx, pad, by, W - pad * 2, V ? 78 : 64, RED, INK, 8, 4)
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 28 : 24)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(fit(ctx, copy.shots, HEAD, W - pad * 2 - 40, V ? 28 : 24, 14), W / 2, by + (V ? 39 : 32))
+    })
+  } else if (sc.k === 'also') {
+    slide(ctx, ph(lt, 0.05, 0.35), 0, 24, () => {
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillStyle = YELLOW
+      ctx.font = MONO(V ? 22 : 18)
+      spaced(ctx, copy.saved, pad, bodyTop + 10, 4)
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 52 : 40)
+      const head = wrap(ctx, copy.also, W - pad * 2).slice(0, 2)
+      head.forEach((ln, i) => ctx.fillText(ln, pad, bodyTop + (V ? 78 : 58) + i * (V ? 58 : 46)))
+    })
+    const items = d.others.slice(0, 8)
+    const cols = V ? 2 : Math.min(4, Math.max(items.length, 1))
+    const gap = V ? 28 : 18
+    const top = bodyTop + (V ? 210 : 150)
+    const availH = bodyH - (V ? 230 : 170)
+    const rows = Math.max(1, Math.ceil(items.length / cols))
+    const cellW = (W - pad * 2 - gap * (cols - 1)) / cols
+    const cellH = Math.min(cellW, (availH - gap * (rows - 1)) / rows)
+    const cs = Math.max(80, cellH - (V ? 78 : 56))
+    items.forEach((tr, i) => {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const x = pad + col * (cellW + gap)
+      const y = top + row * (cellH + gap)
+      pop(ctx, ph(lt, 0.35 + i * 0.08, 0.35), x + cs / 2, y + cs / 2, () => {
+        cover(ctx, tr.img, x, y, cs, 4)
+        ctx.fillStyle = '#fff'
+        ctx.font = HEAD(V ? 22 : 18)
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillText(fit(ctx, tr.title.toUpperCase(), HEAD, cellW - 4, V ? 22 : 18, 12), x, y + cs + (V ? 28 : 22))
+        ctx.fillStyle = YELLOW
+        ctx.font = MONO(V ? 16 : 14)
+        ctx.fillText(fit(ctx, tr.artists.toUpperCase(), (s) => MONO(s), cellW - 4, V ? 16 : 14, 11), x, y + cs + (V ? 52 : 42))
+      }, (hash(i, 3) - 0.5) * 0.3)
+    })
+  } else {
+    const sleeve = Math.min(V ? 520 : 380, bodyH * 0.4)
+    const sx = V ? (W - sleeve) / 2 : pad + 10
+    const sy = V ? bodyTop + 24 : bodyTop + (bodyH - sleeve) / 2
+    pop(ctx, ph(lt, 0.1, 0.45), sx + sleeve / 2, sy + sleeve / 2, () => {
+      ctx.fillStyle = YELLOW
+      ctx.fillRect(sx + 14, sy + 14, sleeve, sleeve)
+      cover(ctx, d.giftImg, sx, sy, sleeve, 8)
+    })
+    const tx = V ? pad : sx + sleeve + 48
+    const ty = V ? sy + sleeve + 80 : bodyTop + 70
+    const tw = V ? W - pad * 2 : W - tx - pad
+    slide(ctx, ph(lt, 0.4, 0.4), 0, 20, () => {
+      ctx.textAlign = V ? 'center' : 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillStyle = YELLOW
+      ctx.font = MONO(V ? 24 : 20)
+      spaced(ctx, copy.kicker, V ? W / 2 : tx, ty, 6, V ? 'center' : 'left')
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 48 : 40)
+      const lines = wrap(ctx, d.giftTitle.toUpperCase(), tw).slice(0, 3)
+      lines.forEach((ln, i) => ctx.fillText(ln, V ? W / 2 : tx, ty + 56 + i * (V ? 54 : 46)))
+      ctx.font = MONO(V ? 22 : 18)
+      ctx.fillStyle = YELLOW
+      spaced(ctx, copy.from, V ? W / 2 : tx, ty + 64 + lines.length * (V ? 54 : 46), 3, V ? 'center' : 'left')
+    })
+    const ctaY = V ? H - dock - 130 : ty + 250
+    pop(ctx, ph(lt, 1.1, 0.4), V ? W / 2 : tx + tw / 2, ctaY + 40, () => {
+      const bw = Math.min(tw, V ? 820 : 640)
+      const bx = V ? (W - bw) / 2 : tx
+      box(ctx, bx, ctaY, bw, 84, YELLOW, INK, 8, 5)
+      ctx.fillStyle = INK
+      ctx.font = HEAD(V ? 32 : 28)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(copy.cta, bx + bw / 2, ctaY + 42)
+    })
+  }
+  ctx.restore()
+
+  if (d.playing) {
+    const p = d.playing
+    const h = V ? 168 : 118
+    const y = H - h
+    ctx.save()
+    ctx.fillStyle = INK
+    ctx.fillRect(0, y, W, h)
+    ctx.fillStyle = YELLOW
+    ctx.fillRect(0, y, W, 8)
+    const cs = h - 36
+    cover(ctx, p.img, pad, y + 18, cs, 3)
+    const tx = pad + cs + 18
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillStyle = YELLOW
+    ctx.font = MONO(V ? 16 : 14)
+    spaced(ctx, es ? 'SUENA ENTERO' : 'PLAYING IN FULL', tx, y + 36, 3)
+    ctx.fillStyle = '#fff'
+    ctx.font = HEAD(V ? 26 : 22)
+    ctx.fillText(fit(ctx, p.title.toUpperCase(), HEAD, W - tx - pad, V ? 26 : 22, 13), tx, y + (V ? 72 : 62))
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.font = MONO(V ? 18 : 15)
+    ctx.fillText(fit(ctx, p.artists, (s) => MONO(s), W - tx - pad, V ? 18 : 15, 11), tx, y + (V ? 100 : 86))
+    const by = y + h - 22
+    const bw = W - tx - pad
+    ctx.fillStyle = 'rgba(255,255,255,0.2)'
+    ctx.fillRect(tx, by, bw, 6)
+    ctx.fillStyle = RED
+    ctx.fillRect(tx, by, bw * clamp(t / GIFT_DUR), 6)
+    ctx.restore()
+  }
+}
+
 // ===================== EVENTOS (próximos 14 días) =====================
 // Misma gramática que la quincena del blog: papel, cinta, titular con barra
 // amarilla, barrido rojo. Intro con el gancho, luego 5 s por evento (cartel

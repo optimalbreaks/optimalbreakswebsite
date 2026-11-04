@@ -37,6 +37,7 @@ import {
   resolveArtistSlug,
 } from '@/lib/artist-entity-match'
 import type { BeatportTopTrack, Mix } from '@/types/database'
+import { GIFT_BLOG_SLUG, isGiftDownloadTrack } from '@/lib/gift-download'
 
 export const runtime = 'nodejs'
 
@@ -488,6 +489,32 @@ async function mixStoryResponse(slug: string, es: boolean, json = false): Promis
   )
 }
 
+/** Lo más guardado del artículo del regalo, para el reel propio de ese tema. */
+async function loadGiftReelTracks(): Promise<{ title: string; artists: string; artwork: string | null; gift: boolean }[] | null> {
+  const supabase = createCachedSupabase()
+  const { data } = await supabase.from('blog_posts').select('beatport_tracks').eq('slug', GIFT_BLOG_SLUG).maybeSingle()
+  const raw = data?.beatport_tracks
+  if (!Array.isArray(raw)) return null
+  const tracks = raw.slice(0, 8).flatMap((row) => {
+    if (!row || typeof row !== 'object') return []
+    const t = row as {
+      title?: string
+      mix_name?: string
+      artists?: { name?: string }[]
+      artwork_url?: string | null
+      full_audio_url?: string | null
+    }
+    const title0 = (t.title || '').trim()
+    if (!title0) return []
+    const mix = (t.mix_name || '').trim()
+    const title = mix && !/^original/i.test(mix) ? `${title0} (${mix})` : title0
+    const artists = (Array.isArray(t.artists) ? t.artists : []).map((a) => a?.name).filter(Boolean).join(', ')
+    return [{ title, artists, artwork: t.artwork_url || null, gift: isGiftDownloadTrack(t.full_audio_url) }]
+  })
+  if (!tracks.some((t) => t.gift)) return null
+  return tracks
+}
+
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams
   const lang = sp.get('lang') === 'en' ? 'en' : 'es'
@@ -567,6 +594,7 @@ export async function GET(request: NextRequest) {
       ? (row.release_date as string).slice(0, 10)
       : null
     const reelMeta = releaseDate ? row.label || '' : metaBits
+    const giftTracks = isGiftDownloadTrack(row.full_audio_url) ? await loadGiftReelTracks() : null
     return NextResponse.json(
       {
         title: `${row.title}${reelMix ? ` (${reelMix})` : ''}`.slice(0, 90),
@@ -585,6 +613,8 @@ export async function GET(request: NextRequest) {
         audio: shareAudioSrc(row),
         // Exclusiva alojada: el reel lleva el banner «tema entero en la web».
         fullTrack: Boolean((row.full_audio_url || '').trim()),
+        // Solo el regalo de Woter: R y F dibujan la pieza propia, no el reel de tema.
+        giftTracks,
       },
       { headers: { 'Cache-Control': 'private, no-store' } },
     )
