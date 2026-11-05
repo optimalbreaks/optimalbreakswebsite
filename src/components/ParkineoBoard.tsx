@@ -6,7 +6,8 @@ import { useAuth } from '@/components/AuthProvider'
 import FavoriteButton from '@/components/FavoriteButton'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
-import { formatParkineoPublished, parkineoOpenHref } from '@/lib/parkineo'
+import { extractYouTubeId } from '@/lib/mix-sessions'
+import { formatParkineoPublished, parkineoOpenHref, readYouTubeEmbedDuration } from '@/lib/parkineo'
 
 const PAGE = 24
 
@@ -87,8 +88,8 @@ export default function ParkineoBoard({
   const submit = async () => {
     setBusy(true)
     setError(null)
-    try {
-      const res = await fetch('/api/parkineo', {
+    const post = (durationSeconds?: number) =>
+      fetch('/api/parkineo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,9 +100,20 @@ export default function ParkineoBoard({
           phone,
           url,
           confirm,
+          ...(durationSeconds ? { duration_seconds: durationSeconds } : {}),
         }),
       })
-      const json = await res.json()
+    try {
+      let res = await post()
+      let json = await res.json()
+      if (!res.ok && json.code === 'duration_unknown') {
+        const videoId = extractYouTubeId(url.trim())
+        const seconds = videoId ? await readYouTubeEmbedDuration(videoId) : null
+        if (seconds) {
+          res = await post(seconds)
+          json = await res.json()
+        }
+      }
       if (!res.ok) {
         setError(json.error || (es ? 'No se ha podido enviar.' : 'Could not send it.'))
         if (json.code === 'pending_exists') setHasPending(true)

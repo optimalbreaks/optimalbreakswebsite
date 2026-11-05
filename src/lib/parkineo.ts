@@ -151,13 +151,13 @@ export function parkineoOpenHref(row: {
 type Fail = { ok: false; code: ParkineoErrorCode }
 type Ok = { ok: true; link: ResolvedParkineoLink }
 
-export async function resolveParkineoLink(raw: string): Promise<Ok | Fail> {
+export async function resolveParkineoLink(raw: string, hintedSeconds?: number | null): Promise<Ok | Fail> {
   const url = parseHttps(raw)
   if (!url) return { ok: false, code: 'invalid_url' }
   const host = url.hostname.toLowerCase().replace(/^www\./, '')
 
   if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com' || host === 'youtu.be') {
-    return resolveYouTube(url)
+    return resolveYouTube(url, hintedSeconds)
   }
   if (host === 'soundcloud.com' || host === 'on.soundcloud.com' || host === 'm.soundcloud.com') {
     return resolveSoundCloud(url.toString())
@@ -212,10 +212,19 @@ function pack(
   }
 }
 
-async function resolveYouTube(url: URL): Promise<Ok | Fail> {
+async function resolveYouTube(url: URL, hintedSeconds?: number | null): Promise<Ok | Fail> {
   const id = extractYouTubeId(url.toString())
   if (!id) return { ok: false, code: 'unsupported' }
-  const seconds = await youtubeDuration(id)
+  const fromServer = await youtubeDuration(id)
+  const hinted =
+    fromServer == null &&
+    hintedSeconds != null &&
+    Number.isFinite(hintedSeconds) &&
+    hintedSeconds > 0 &&
+    hintedSeconds < 12 * 60 * 60
+      ? Math.round(hintedSeconds)
+      : null
+  const seconds = fromServer ?? hinted
   const verdict = durationVerdict(seconds)
   if (verdict) return { ok: false, code: verdict }
   const watch = `https://www.youtube.com/watch?v=${id}`
@@ -231,13 +240,31 @@ async function resolveYouTube(url: URL): Promise<Ok | Fail> {
 }
 
 /**
- * El cliente WEB, desde Vercel, contesta «video unavailable» y se deja
- * `lengthSeconds` fuera. El de Android sigue mandando la duración.
+ * Desde Vercel, YouTube a menudo contesta sin `lengthSeconds` (cliente web,
+ * Android y la página). Se preguntan a la vez. Si ninguno la trae, el móvil
+ * de quien manda la sesión la lee del embed y la manda como respaldo.
  */
 const YOUTUBE_PLAYER_CLIENTS: { ua: string; client: Record<string, string | number> }[] = [
   {
     ua: 'com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip',
     client: { clientName: 'ANDROID', clientVersion: '20.10.38', androidSdkVersion: 34, hl: 'en', gl: 'US' },
+  },
+  {
+    ua: 'com.google.ios.youtube/20.11.6 (iPhone16,2; U; CPU iOS 18_2 like Mac OS X)',
+    client: {
+      clientName: 'IOS',
+      clientVersion: '20.11.6',
+      deviceMake: 'Apple',
+      deviceModel: 'iPhone16,2',
+      osName: 'iPhone',
+      osVersion: '18.2.22C152',
+      hl: 'en',
+      gl: 'US',
+    },
+  },
+  {
+    ua: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    client: { clientName: 'MWEB', clientVersion: '2.20250301.01.00', hl: 'en', gl: 'US' },
   },
   {
     ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -246,16 +273,44 @@ const YOUTUBE_PLAYER_CLIENTS: { ua: string; client: Record<string, string | numb
 ]
 
 async function youtubeDuration(videoId: string): Promise<number | null> {
-  for (const client of YOUTUBE_PLAYER_CLIENTS) {
-    const seconds = await youtubePlayerSeconds(videoId, client)
-    if (seconds) return seconds
-  }
+  const ctrl = new AbortController()
+  const fromPlayers = await firstSeconds(
+    YOUTUBE_PLAYER_CLIENTS.map((client) => youtubePlayerSeconds(videoId, client, ctrl.signal)),
+  )
+  ctrl.abort()
+  if (fromPlayers) return fromPlayers
   return youtubeHtmlSeconds(videoId)
+}
+
+function firstSeconds(tasks: Promise<number | null>[]): Promise<number | null> {
+  return new Promise((resolve) => {
+    let left = tasks.length
+    let settled = false
+    if (!left) {
+      resolve(null)
+      return
+    }
+    for (const task of tasks) {
+      task.then(
+        (seconds) => {
+          if (!settled && seconds) {
+            settled = true
+            resolve(seconds)
+          }
+          if (--left === 0 && !settled) resolve(null)
+        },
+        () => {
+          if (--left === 0 && !settled) resolve(null)
+        },
+      )
+    }
+  })
 }
 
 async function youtubePlayerSeconds(
   videoId: string,
   client: (typeof YOUTUBE_PLAYER_CLIENTS)[number],
+  stop?: AbortSignal,
 ): Promise<number | null> {
   try {
     const res = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
@@ -266,7 +321,7 @@ async function youtubePlayerSeconds(
         'Accept-Language': 'en',
       },
       body: JSON.stringify({ videoId, context: { client: client.client } }),
-      signal: AbortSignal.timeout(8000),
+      signal: stop ? AbortSignal.any([AbortSignal.timeout(8000), stop]) : AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
     const json = (await res.json()) as { videoDetails?: { lengthSeconds?: string | number } }
@@ -281,7 +336,7 @@ async function youtubeHtmlSeconds(videoId: string): Promise<number | null> {
   try {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: {
-        'User-Agent': YOUTUBE_PLAYER_CLIENTS[1].ua,
+        'User-Agent': YOUTUBE_PLAYER_CLIENTS[3].ua,
         'Accept-Language': 'en',
       },
       signal: AbortSignal.timeout(8000),
@@ -296,6 +351,56 @@ async function youtubeHtmlSeconds(videoId: string): Promise<number | null> {
   } catch {
     return null
   }
+}
+
+/**
+ * Duración leída en el navegador de quien envía. El embed no se reproduce:
+ * solo se escucha el mensaje del reproductor y se quita. Hace falta porque
+ * desde el servidor YouTube a menudo no manda la duración.
+ */
+export function readYouTubeEmbedDuration(videoId: string, timeoutMs = 10000): Promise<number | null> {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return Promise.resolve(null)
+  return new Promise((resolve) => {
+    const widgetId = `ob-dur-${Date.now().toString(36)}`
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('title', 'YouTube')
+    iframe.setAttribute('aria-hidden', 'true')
+    iframe.tabIndex = -1
+    iframe.style.cssText =
+      'position:fixed;left:0;bottom:0;width:240px;height:135px;opacity:0;pointer-events:none;border:0'
+    iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?enablejsapi=1&playsinline=1&origin=${encodeURIComponent(window.location.origin)}&widgetid=${encodeURIComponent(widgetId)}`
+    let done = false
+    const finish = (seconds: number | null) => {
+      if (done) return
+      done = true
+      window.clearTimeout(timer)
+      window.removeEventListener('message', onMessage)
+      iframe.remove()
+      resolve(seconds)
+    }
+    const timer = window.setTimeout(() => finish(null), timeoutMs)
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.youtube.com' || event.source !== iframe.contentWindow) return
+      let data: { event?: string; id?: string | number; info?: { duration?: number } } | null = null
+      try {
+        data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+      } catch {
+        return
+      }
+      if (data?.id != null && String(data.id) !== widgetId) return
+      const seconds = Number(data?.info?.duration)
+      if (Number.isFinite(seconds) && seconds > 0) finish(seconds)
+      else if (data?.event === 'onError') finish(null)
+    }
+    window.addEventListener('message', onMessage)
+    iframe.addEventListener('load', () => {
+      iframe.contentWindow?.postMessage(
+        JSON.stringify({ event: 'listening', id: widgetId, channel: 'widget' }),
+        'https://www.youtube.com',
+      )
+    })
+    document.body.appendChild(iframe)
+  })
 }
 
 async function resolveSoundCloud(raw: string): Promise<Ok | Fail> {
