@@ -1,11 +1,30 @@
 ---
-description: Audio completo alojado (exclusivas de artistas) — MP3 protegido en /api/audio, columna full_audio_url y receta paso a paso
+description: Tema entero en la web — dos tratos, streaming (se oye, no se baja) y descarga (se oye y se baja MP3 + WAV). Receta del MP3 en /api/audio.
 alwaysApply: true
 ---
 
 # Audio completo alojado (exclusivas cedidas por artistas)
 
-Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuito en la web. Cuando un artista pase otra canción completa, la receta es esta — no reinventar.
+Cuando un artista cede un tema para que **en la web esté entero**, hay dos tratos. Los dos se oyen de principio a fin. Se pregunta cuál es antes de publicar. No se pasa uno al otro si Narciso no lo dice.
+
+| | **Streaming** | **Descarga** |
+|---|---|---|
+| Qué cede | Que se oiga entero. El archivo no se baja: quien lo quiera, lo compra. | Que se oiga entero **y** que se pueda bajar el archivo. |
+| Quién | Kritycal System, Kaos Beat, BrainBass. Toda la tabla de abajo salvo Woter. | Hoy solo Woter, *Gone Gone Gone*. Hace falta que el artista lo autorice. |
+| En la web | MP3 a 192 kbps por `/api/audio`. Fila amarilla, banner rojo, ▶ PLAY FULL. **Sin** botón de descarga. | El mismo MP3 a 192 kbps, la misma fila. Además, **DESCARGAR** justo después del play: abre el artículo, no el archivo. |
+| Qué se baja | Nada. | En el artículo, tras cuenta y dos capturas: **MP3** (el de la web) y **WAV** (el máster, tal cual nos lo pasaron). |
+| El máster | Se queda en `private/music/`, gitignorado. No se sube a ningún sitio. | El mismo sitio, gitignorado. Para poder bajarlo, además va al bucket privado `gift-masters`. |
+| Reel R / vídeo F | Banner **FULL TRACK / STREAMING ON OUR SITE**. | Vídeo propio `animGift`: entero, descarga, los dos follows y lo demás que más se guarda. |
+
+## Caso descarga — cómo sale el WAV (5 nov 2026)
+
+El visitante recibe **un solo WAV, el original**. No se comprime para que quepa en un hueco: bajaría la calidad y el trato es el máster.
+
+Storage del proyecto rechaza un objeto de más de **50 MB**. *Gone Gone Gone* pesa **54 MB**, así que va en dos trozos (`woter-gone-gone-gone.wav.1` y `.wav.2`, migración 102). `/api/gifts/woter-gone-gone-gone/file?format=wav` los junta y manda el archivo entero, con la cookie de quien ya está aprobado. El MP3 de esa misma ruta sale de la lambda, sin trozos. Ni el WAV ni el MP3 van en `public/`, ni en un enlace firmado, ni en GitHub. El botón de las listas no sirve el archivo.
+
+Si el próximo máster pesa 50 MB o menos, entra como un solo objeto en `gift-masters`. Si pesa más, se parte igual y la ruta lo junta. El original se queda siempre en `private/music/`.
+
+Contexto (sep 2026): Kritycal System fue el primer streaming. La receta de abajo es ese caso. La descarga se le suma, no lo sustituye.
 
 | Tema | Semana NR | Archivo | Nota |
 |---|---|---|---|
@@ -20,7 +39,7 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 | **Lost In Desire** | `2026-08-03` | `private/music/kritycal-system-lost-in-desire.mp3` | Kritycal System. Máster 4:52. Ya estaba (`/track/lost-in-desire/28568728`). |
 | **Updating** | `2026-08-17` | `private/music/brainbass-updating.mp3` | BrainBass. Máster 4:29. Drum & Bass, Beatport lo lista a 88 BPM. `/track/updating/28597008`. |
 | **Control** | `2026-08-31` | `private/music/kritycal-system-brainbass-control.mp3` | Kritycal System y BrainBass. Máster 4:09. Ya estaba (`/track/control/30177482`). |
-| **Gone Gone Gone (WoTeR Breaks Mix)** | `2026-11-02` | `private/music/woter-gone-gone-gone.mp3` | Woter (`/artists/woter`). Máster 5:02, FL Studio, 192 kbps. No está en Beatport: `platform: hosted`, release `2026-11-04`. Sin botón de tienda ni búsqueda de Spotify (abriría el tema oficial). |
+| **Gone Gone Gone (WoTeR Breaks Mix)** | `2026-11-02` | `private/music/woter-gone-gone-gone.mp3` | **Descarga**, no solo streaming. Woter (`/artists/woter`). Máster 5:02, FL Studio. En la web, MP3 192 kbps. El WAV original (54 MB) se baja desde el artículo. No está en Beatport: `platform: hosted`, release `2026-11-04`. Sin botón de tienda ni búsqueda de Spotify (abriría el tema oficial). |
 
 ## Arquitectura (no negociable)
 
@@ -30,7 +49,9 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 4. **Columna `chart_featured_tracks.full_audio_url`** (migración `078`). Nulo = solo preview de tienda; relleno (`/api/audio/<slug>.mp3`) = streaming completo. En `src/types/database.ts` es **opcional** (`full_audio_url?: string | null`) en `ChartFeaturedTrack` y `SavedChartTrackSnapshot` — hacerla obligatoria rompe `featured-import` y `artist-related-content`.
 5. **Esto no es DRM.** Barrera media tipo SoundCloud/Bandcamp: el usuario normal no descarga; alguien técnico siempre puede capturar el stream. No prometer blindaje absoluto al artista; el MP3 publicado es 192 kbps, el WAV master no sale del disco/Dropbox.
 
-## Receta — próxima exclusiva
+## Receta — próximo streaming
+
+Si el trato es **descarga**, se hace esta receta (el tema también se oye entero) y encima el caso del artículo, las capturas y el WAV. No se ofrece descarga en un streaming.
 
 1. Dejar el WAV y la carátula en `private/music/` (gitignorados; no se suben).
 2. `ffmpeg -i <wav> -map 0:a:0 -vn -codec:a libmp3lame -b:a 192k private/music/<slug>.mp3` y artwork → WebP subido al bucket `media` de Supabase (`music/<slug>.webp`). El `-vn` es obligatorio: un WAV de FL Studio trae la carátula como vídeo y sin él el MP3 pesa el doble. El WebP local, si se genera ahí, tampoco se versiona.
