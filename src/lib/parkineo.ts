@@ -230,29 +230,46 @@ async function resolveYouTube(url: URL): Promise<Ok | Fail> {
   )
 }
 
+/**
+ * El cliente WEB, desde Vercel, contesta «video unavailable» y se deja
+ * `lengthSeconds` fuera. El de Android sigue mandando la duración.
+ */
+const YOUTUBE_PLAYER_CLIENTS: { ua: string; client: Record<string, string | number> }[] = [
+  {
+    ua: 'com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip',
+    client: { clientName: 'ANDROID', clientVersion: '20.10.38', androidSdkVersion: 34, hl: 'en', gl: 'US' },
+  },
+  {
+    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    client: { clientName: 'WEB', clientVersion: '2.20241018.01.00', hl: 'en', gl: 'US' },
+  },
+]
+
 async function youtubeDuration(videoId: string): Promise<number | null> {
-  const fromPlayer = await youtubePlayerSeconds(videoId)
-  if (fromPlayer) return fromPlayer
+  for (const client of YOUTUBE_PLAYER_CLIENTS) {
+    const seconds = await youtubePlayerSeconds(videoId, client)
+    if (seconds) return seconds
+  }
   return youtubeHtmlSeconds(videoId)
 }
 
-async function youtubePlayerSeconds(videoId: string): Promise<number | null> {
+async function youtubePlayerSeconds(
+  videoId: string,
+  client: (typeof YOUTUBE_PLAYER_CLIENTS)[number],
+): Promise<number | null> {
   try {
     const res = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0',
+        'User-Agent': client.ua,
         'Accept-Language': 'en',
       },
-      body: JSON.stringify({
-        videoId,
-        context: { client: { clientName: 'WEB', clientVersion: '2.20241018.01.00', hl: 'en', gl: 'US' } },
-      }),
+      body: JSON.stringify({ videoId, context: { client: client.client } }),
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
-    const json = (await res.json()) as { videoDetails?: { lengthSeconds?: string } }
+    const json = (await res.json()) as { videoDetails?: { lengthSeconds?: string | number } }
     const seconds = Number(json.videoDetails?.lengthSeconds)
     return Number.isFinite(seconds) && seconds > 0 ? seconds : null
   } catch {
@@ -263,14 +280,18 @@ async function youtubePlayerSeconds(videoId: string): Promise<number | null> {
 async function youtubeHtmlSeconds(videoId: string): Promise<number | null> {
   try {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-      headers: { 'User-Agent': 'OptimalBreaks/1.0', 'Accept-Language': 'en' },
+      headers: {
+        'User-Agent': YOUTUBE_PLAYER_CLIENTS[1].ua,
+        'Accept-Language': 'en',
+      },
       signal: AbortSignal.timeout(8000),
       redirect: 'follow',
     })
     if (!res.ok) return null
     const html = await res.text()
     const dur = html.match(/"lengthSeconds":"(\d+)"/)
-    const seconds = dur ? Number(dur[1]) : NaN
+    const approx = html.match(/"approxDurationMs":"(\d+)"/)
+    const seconds = dur ? Number(dur[1]) : approx ? Math.round(Number(approx[1]) / 1000) : NaN
     return Number.isFinite(seconds) && seconds > 0 ? seconds : null
   } catch {
     return null

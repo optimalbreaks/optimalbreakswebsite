@@ -6,7 +6,7 @@ Página pública `/parkineo`. No es `/mixes` y no es un alta de artista.
 
 1. **La lista pública solo enseña lo publicado** (`status = published`). Mandar exige cuenta. Nada se publica solo: la cola está en `/administrator/parkineo`.
 2. **Sesiones: un enlace, no un archivo.** SoundCloud, YouTube o Mixcloud. Prohibido aceptar MP3/WAV de una sesión o meterla en `private/music`, `/api/audio` o `mixes.download_url`. El MP3 de un tema va por el cajón del punto 9, no por aquí.
-3. **Duración.** 15 minutos o menos es un tema y se rechaza al enviar. Más de 3 horas también. El servidor lee la duración del enlace; si no puede, no entra en la cola.
+3. **Duración.** 15 minutos o menos es un tema y se rechaza al enviar. Más de 3 horas también. El servidor lee la duración del enlace; si no puede, no entra en la cola. En YouTube el cliente de la web, desde Vercel, contesta «video unavailable» y omite `lengthSeconds`: se pide primero al cliente Android (`youtubeDuration` en `parkineo.ts`). El `?si=` de un enlace compartido no forma parte del id.
 4. **Una en cola por cuenta.** Puede haber varias publicadas o descartadas. El mismo enlace no se repite mientras esté en cola o publicado.
 5. **No es artista.** No se crea fila en `artists`, no se escribe `claimed_by`, no se abren bookings, no cuenta en el Top de artistas ni en `/mixes`. El nombre de la tarjeta es el que escribió, sin enlace a `/artists`.
 6. **`user_id` y `contact_phone` no se seleccionan** en la página pública ni los puede leer el cliente anónimo. El móvil se pide al mandar la sesión (las anteriores quedan sin él). En el admin hay enlace `tel:` y WhatsApp. La ficha de cada sesión es `/parkineo/<slug>`.
