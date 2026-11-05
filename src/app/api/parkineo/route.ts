@@ -73,8 +73,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
   if (pending) return fail(lang, 'pending_exists', 409)
 
-  const hinted = Number(body.duration_seconds)
-  const resolved = await resolveParkineoLink(url, Number.isFinite(hinted) ? hinted : null)
+  const resolved = await resolveParkineoLink(url)
   if (!resolved.ok) return fail(lang, resolved.code, 400)
 
   const { data: live } = await svc

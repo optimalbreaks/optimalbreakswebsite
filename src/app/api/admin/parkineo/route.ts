@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { parkineoMessage, resolveParkineoLink } from '@/lib/parkineo'
 import { notifyParkineoPublished } from '@/lib/transactional-mail'
 import { revalidateParkineo } from '@/lib/revalidate-public'
 import type { ParkineoSession } from '@/types/database'
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
   const svc = createServiceSupabase()
   const { data: existing, error: readError } = await svc
     .from('parkineo_sessions')
-    .select('id, user_id, dj_name, title, slug, status, source_key')
+    .select('id, user_id, dj_name, title, slug, status, source_key, source_url, duration_minutes')
     .eq('id', id)
     .maybeSingle()
   if (readError) return NextResponse.json({ error: readError.message }, { status: 500 })
@@ -105,6 +106,14 @@ export async function POST(request: NextRequest) {
   }
 
   const now = new Date().toISOString()
+  let durationMinutes: number | null = null
+  if (action === 'publish' && existing.duration_minutes == null && existing.source_url) {
+    const resolved = await resolveParkineoLink(existing.source_url)
+    if (!resolved.ok && (resolved.code === 'too_short' || resolved.code === 'too_long')) {
+      return NextResponse.json({ error: parkineoMessage(resolved.code, 'es') }, { status: 400 })
+    }
+    if (resolved.ok) durationMinutes = resolved.link.durationMinutes
+  }
   const patch =
     action === 'publish'
       ? {
@@ -113,6 +122,7 @@ export async function POST(request: NextRequest) {
           decided_at: now,
           decided_by: auth.userId,
           reject_reason: null,
+          ...(durationMinutes != null ? { duration_minutes: durationMinutes } : {}),
         }
       : {
           status: 'rejected' as const,

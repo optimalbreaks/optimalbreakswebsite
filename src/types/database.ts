@@ -1513,7 +1513,7 @@ export interface ParkineoSession extends Record<string, unknown> {
   embed_url: string | null
   video_url: string | null
   image_url: string | null
-  duration_minutes: number
+  duration_minutes: number | null
   slug: string
   status: ParkineoStatus
   reject_reason: string | null

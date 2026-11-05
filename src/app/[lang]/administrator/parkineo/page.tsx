@@ -13,7 +13,7 @@ type Row = ParkineoPlayable & {
   city: string
   contact_phone: string | null
   source_url: string
-  duration_minutes: number
+  duration_minutes: number | null
   slug: string
   status: 'pending' | 'published' | 'rejected'
   reject_reason: string | null
@@ -158,7 +158,7 @@ export default function ParkineoAdminPage() {
                   {' · '}
                   {row.platform.toUpperCase()}
                   {' · '}
-                  {row.duration_minutes} min
+                  {row.duration_minutes != null ? `${row.duration_minutes} min` : 'SIN DURACIÓN'}
                 </p>
                 <h2 className="mt-1 mb-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: '20px', textTransform: 'uppercase' }}>
                   {row.title}

@@ -52,8 +52,8 @@ export type ResolvedParkineoLink = {
   embedUrl: string | null
   videoUrl: string | null
   imageUrl: string | null
-  durationSeconds: number
-  durationMinutes: number
+  durationSeconds: number | null
+  durationMinutes: number | null
 }
 
 const COPY: Record<ParkineoLang, Record<ParkineoErrorCode, string>> = {
@@ -151,13 +151,13 @@ export function parkineoOpenHref(row: {
 type Fail = { ok: false; code: ParkineoErrorCode }
 type Ok = { ok: true; link: ResolvedParkineoLink }
 
-export async function resolveParkineoLink(raw: string, hintedSeconds?: number | null): Promise<Ok | Fail> {
+export async function resolveParkineoLink(raw: string): Promise<Ok | Fail> {
   const url = parseHttps(raw)
   if (!url) return { ok: false, code: 'invalid_url' }
   const host = url.hostname.toLowerCase().replace(/^www\./, '')
 
   if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com' || host === 'youtu.be') {
-    return resolveYouTube(url, hintedSeconds)
+    return resolveYouTube(url)
   }
   if (host === 'soundcloud.com' || host === 'on.soundcloud.com' || host === 'm.soundcloud.com') {
     return resolveSoundCloud(url.toString())
@@ -195,7 +195,7 @@ function pack(
   embedUrl: string | null,
   videoUrl: string | null,
   imageUrl: string | null,
-  seconds: number,
+  seconds: number | null,
 ): Ok {
   return {
     ok: true,
@@ -207,26 +207,23 @@ function pack(
       videoUrl,
       imageUrl,
       durationSeconds: seconds,
-      durationMinutes: Math.max(16, Math.round(seconds / 60)),
+      durationMinutes: seconds == null ? null : Math.max(16, Math.round(seconds / 60)),
     },
   }
 }
 
-async function resolveYouTube(url: URL, hintedSeconds?: number | null): Promise<Ok | Fail> {
+/** Fuera de rango se rechaza. Si no se ha podido leer, el enlace entra igual: la cola lo completa. */
+function gateDuration(seconds: number | null): ParkineoErrorCode | null {
+  const verdict = durationVerdict(seconds)
+  return verdict === 'too_short' || verdict === 'too_long' ? verdict : null
+}
+
+async function resolveYouTube(url: URL): Promise<Ok | Fail> {
   const id = extractYouTubeId(url.toString())
   if (!id) return { ok: false, code: 'unsupported' }
-  const fromServer = await youtubeDuration(id)
-  const hinted =
-    fromServer == null &&
-    hintedSeconds != null &&
-    Number.isFinite(hintedSeconds) &&
-    hintedSeconds > 0 &&
-    hintedSeconds < 12 * 60 * 60
-      ? Math.round(hintedSeconds)
-      : null
-  const seconds = fromServer ?? hinted
-  const verdict = durationVerdict(seconds)
-  if (verdict) return { ok: false, code: verdict }
+  const seconds = await youtubeDuration(id)
+  const blocked = gateDuration(seconds)
+  if (blocked) return { ok: false, code: blocked }
   const watch = `https://www.youtube.com/watch?v=${id}`
   return pack(
     'youtube',
@@ -235,14 +232,13 @@ async function resolveYouTube(url: URL, hintedSeconds?: number | null): Promise<
     watch,
     watch,
     `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
-    seconds as number,
+    seconds != null && seconds > PARKINEO_MIN_SECONDS && seconds <= PARKINEO_MAX_SECONDS ? seconds : null,
   )
 }
 
 /**
- * Desde Vercel, YouTube a menudo contesta sin `lengthSeconds` (cliente web,
- * Android y la página). Se preguntan a la vez. Si ninguno la trae, el móvil
- * de quien manda la sesión la lee del embed y la manda como respaldo.
+ * Desde Vercel, YouTube a menudo contesta sin `lengthSeconds`. Se preguntan
+ * a la vez. Si ninguno la trae, la sesión entra igual y la cola la completa.
  */
 const YOUTUBE_PLAYER_CLIENTS: { ua: string; client: Record<string, string | number> }[] = [
   {
@@ -353,56 +349,6 @@ async function youtubeHtmlSeconds(videoId: string): Promise<number | null> {
   }
 }
 
-/**
- * Duración leída en el navegador de quien envía. El embed no se reproduce:
- * solo se escucha el mensaje del reproductor y se quita. Hace falta porque
- * desde el servidor YouTube a menudo no manda la duración.
- */
-export function readYouTubeEmbedDuration(videoId: string, timeoutMs = 10000): Promise<number | null> {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return Promise.resolve(null)
-  return new Promise((resolve) => {
-    const widgetId = `ob-dur-${Date.now().toString(36)}`
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('title', 'YouTube')
-    iframe.setAttribute('aria-hidden', 'true')
-    iframe.tabIndex = -1
-    iframe.style.cssText =
-      'position:fixed;left:0;bottom:0;width:240px;height:135px;opacity:0;pointer-events:none;border:0'
-    iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?enablejsapi=1&playsinline=1&origin=${encodeURIComponent(window.location.origin)}&widgetid=${encodeURIComponent(widgetId)}`
-    let done = false
-    const finish = (seconds: number | null) => {
-      if (done) return
-      done = true
-      window.clearTimeout(timer)
-      window.removeEventListener('message', onMessage)
-      iframe.remove()
-      resolve(seconds)
-    }
-    const timer = window.setTimeout(() => finish(null), timeoutMs)
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== 'https://www.youtube.com' || event.source !== iframe.contentWindow) return
-      let data: { event?: string; id?: string | number; info?: { duration?: number } } | null = null
-      try {
-        data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
-      } catch {
-        return
-      }
-      if (data?.id != null && String(data.id) !== widgetId) return
-      const seconds = Number(data?.info?.duration)
-      if (Number.isFinite(seconds) && seconds > 0) finish(seconds)
-      else if (data?.event === 'onError') finish(null)
-    }
-    window.addEventListener('message', onMessage)
-    iframe.addEventListener('load', () => {
-      iframe.contentWindow?.postMessage(
-        JSON.stringify({ event: 'listening', id: widgetId, channel: 'widget' }),
-        'https://www.youtube.com',
-      )
-    })
-    document.body.appendChild(iframe)
-  })
-}
-
 async function resolveSoundCloud(raw: string): Promise<Ok | Fail> {
   const page = await fetchText(raw, 12000)
   if (!page.ok && !page.text) return { ok: false, code: 'unreachable' }
@@ -422,8 +368,8 @@ async function resolveSoundCloud(raw: string): Promise<Ok | Fail> {
   const canonical = `https://soundcloud.com${path}`
   const ms = page.text.match(/"duration":(\d+)/)
   const seconds = soundCloudSeconds(ms ? Number(ms[1]) : null)
-  const verdict = durationVerdict(seconds)
-  if (verdict) return { ok: false, code: verdict }
+  const blocked = gateDuration(seconds)
+  if (blocked) return { ok: false, code: blocked }
   const trackId = page.text.match(/soundcloud:tracks:(\d+)/)?.[1] || null
   const secret = path.match(/\/(s-[A-Za-z0-9]+)\/?$/)?.[1] || null
   const embedUrl = trackId
@@ -432,7 +378,15 @@ async function resolveSoundCloud(raw: string): Promise<Ok | Fail> {
       : `https://api.soundcloud.com/tracks/${trackId}`
     : canonical
   const artwork = await soundCloudArtwork(canonical)
-  return pack('soundcloud', canonical, `sc:${path.toLowerCase()}`, embedUrl, canonical, artwork, seconds as number)
+  return pack(
+    'soundcloud',
+    canonical,
+    `sc:${path.toLowerCase()}`,
+    embedUrl,
+    canonical,
+    artwork,
+    seconds != null && seconds > PARKINEO_MIN_SECONDS && seconds <= PARKINEO_MAX_SECONDS ? seconds : null,
+  )
 }
 
 function soundCloudSeconds(raw: number | null): number | null {
@@ -474,10 +428,18 @@ async function resolveMixcloud(url: URL): Promise<Ok | Fail> {
   const page = await fetchText(canonical, 12000)
   if (!page.ok && !page.text) return { ok: false, code: 'unreachable' }
   const seconds = mixcloudSeconds(page.text)
-  const verdict = durationVerdict(seconds)
-  if (verdict) return { ok: false, code: verdict }
+  const blocked = gateDuration(seconds)
+  if (blocked) return { ok: false, code: blocked }
   const artwork = await mixcloudArtwork(canonical)
-  return pack('mixcloud', canonical, `mc:${path.toLowerCase()}`, canonical, canonical, artwork, seconds as number)
+  return pack(
+    'mixcloud',
+    canonical,
+    `mc:${path.toLowerCase()}`,
+    canonical,
+    canonical,
+    artwork,
+    seconds != null && seconds > PARKINEO_MIN_SECONDS && seconds <= PARKINEO_MAX_SECONDS ? seconds : null,
+  )
 }
 
 function mixcloudSeconds(html: string): number | null {

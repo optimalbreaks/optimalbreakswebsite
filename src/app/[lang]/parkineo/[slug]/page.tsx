@@ -77,8 +77,9 @@ export default async function ParkineoSessionPage({
         <p className="mt-0 mb-6" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '14px', letterSpacing: '0.5px' }}>
           {session.dj_name} · {session.city}
           {published ? ` · ${published}` : ''}
+          {session.duration_minutes ? ` · ${session.duration_minutes} min` : ''}
           {' · '}
-          {session.duration_minutes} min · {session.platform.toUpperCase()}
+          {session.platform.toUpperCase()}
           {open ? (
             <>
               {' · '}

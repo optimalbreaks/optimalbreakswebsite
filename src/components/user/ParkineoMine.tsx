@@ -11,7 +11,7 @@ type Mine = {
   city: string
   title: string
   platform: string
-  duration_minutes: number
+  duration_minutes: number | null
   status: 'pending' | 'published' | 'rejected'
   reject_reason: string | null
   created_at: string
@@ -107,7 +107,8 @@ export default function ParkineoMine({ lang }: { lang: string }) {
               )}
             </p>
             <p className="mt-1 mb-0" style={{ ...MONO, fontSize: '12px' }}>
-              {row.dj_name} · {row.city} · {row.duration_minutes} min · {statusLabel(row.status, es)}
+              {row.dj_name} · {row.city}
+              {row.duration_minutes ? ` · ${row.duration_minutes} min` : ''} · {statusLabel(row.status, es)}
             </p>
             {row.status === 'rejected' && row.reject_reason ? (
               <p className="mt-2 mb-0" style={{ ...MONO, fontSize: '13px' }}>{row.reject_reason}</p>
