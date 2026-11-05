@@ -4,6 +4,10 @@ export const GIFT_SLUG = 'woter-gone-gone-gone'
 export const GIFT_BLOG_SLUG = 'woter-regala-gone-gone-gone'
 export const GIFT_FILE = 'woter-gone-gone-gone.mp3'
 export const GIFT_DOWNLOAD_NAME = 'Gone-Gone-Gone-WoTeR-Breaks-Mix.mp3'
+/** Máster. No va en la lambda ni en Git. Dos trozos: el tope del proyecto es 50 MB y el WAV pesa 54. */
+export const GIFT_MASTER_BUCKET = 'gift-masters'
+export const GIFT_WAV_PARTS = ['woter-gone-gone-gone.wav.1', 'woter-gone-gone-gone.wav.2'] as const
+export const GIFT_WAV_DOWNLOAD_NAME = 'Gone-Gone-Gone-WoTeR-Breaks-Mix.wav'
 /** La cuenta de la web es @optimal.breaks. @optimalbreaks (sin punto) es otra cuenta. */
 export const GIFT_IG_SITE = 'optimal.breaks'
 export const GIFT_IG_ARTIST = 'woter_dj'

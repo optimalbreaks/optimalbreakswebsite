@@ -175,8 +175,8 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
       </h2>
       <p className="mb-4 text-[15px] leading-snug" style={MONO}>
         {es
-          ? `Entra con tu cuenta y sube dos capturas del móvil: una en la que se vea que sigues a @${GIFT_IG_SITE} y otra en la que se vea que sigues a @${GIFT_IG_ARTIST}. Las miramos. Si las dos se leen, aquí aparece Descargar. Una foto cualquiera no lo abre.`
-          : `Sign in and upload two phone screenshots: one showing you follow @${GIFT_IG_SITE}, and one showing you follow @${GIFT_IG_ARTIST}. We look at them. When both are clear, Download shows up here. A random photo does not unlock it.`}
+          ? `Entra con tu cuenta y sube dos capturas del móvil: una en la que se vea que sigues a @${GIFT_IG_SITE} y otra en la que se vea que sigues a @${GIFT_IG_ARTIST}. Las miramos. Si las dos se leen, aquí aparecen el MP3 y el WAV. Una foto cualquiera no lo abre.`
+          : `Sign in and upload two phone screenshots: one showing you follow @${GIFT_IG_SITE}, and one showing you follow @${GIFT_IG_ARTIST}. We look at them. When both are clear, the MP3 and the WAV show up here. A random photo does not unlock it.`}
       </p>
       <p className="mb-4 flex flex-wrap gap-3 text-[13px]" style={MONO}>
         <a href={giftInstagramUrl(GIFT_IG_SITE)} target="_blank" rel="noopener noreferrer" className="underline">
@@ -202,20 +202,36 @@ export default function GiftDownloadBox({ lang }: { lang: 'es' | 'en' }) {
       )}
 
       {loggedIn && status === 'approved' && (
-        <a
-          href={`/api/gifts/${GIFT_SLUG}/file`}
-          className="inline-block border-4 border-[var(--ink)] bg-[var(--red)] px-5 py-3 text-white shadow-[4px_4px_0_var(--ink)]"
-          style={{ ...MONO, fontWeight: 700 }}
-        >
-          {es ? 'DESCARGAR MP3' : 'DOWNLOAD MP3'}
-        </a>
+        <div>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`/api/gifts/${GIFT_SLUG}/file`}
+              className="inline-block border-4 border-[var(--ink)] bg-[var(--red)] px-5 py-3 text-white shadow-[4px_4px_0_var(--ink)]"
+              style={{ ...MONO, fontWeight: 700 }}
+            >
+              {es ? 'DESCARGAR MP3' : 'DOWNLOAD MP3'}
+            </a>
+            <a
+              href={`/api/gifts/${GIFT_SLUG}/file?format=wav`}
+              className="inline-block border-4 border-[var(--ink)] bg-[var(--ink)] px-5 py-3 text-white shadow-[4px_4px_0_var(--ink)]"
+              style={{ ...MONO, fontWeight: 700 }}
+            >
+              {es ? 'DESCARGAR WAV' : 'DOWNLOAD WAV'}
+            </a>
+          </div>
+          <p className="mt-3 text-[13px] leading-snug" style={MONO}>
+            {es
+              ? 'El MP3 es el que suena en la web. El WAV es el máster, el mismo archivo que nos pasó.'
+              : 'The MP3 is the one that plays on the site. The WAV is the master, the same file we were given.'}
+          </p>
+        </div>
       )}
 
       {loggedIn && status === 'pending' && (
         <p className="border-4 border-[var(--ink)] bg-[var(--paper)] p-4 text-[15px]" style={MONO}>
           {es
-            ? 'Recibido. Si en las dos se lee que ya sigues, el botón sale solo al recargar. Si la lectura no es clara, lo mira una persona y vuelves con la misma cuenta.'
-            : 'Received. If both screenshots clearly show you already follow, reload and the button is here. If the reading is not clear, a person looks at them. Come back with the same account.'}
+            ? 'Recibido. Si en las dos se lee que ya sigues, los dos botones salen solos al recargar. Si la lectura no es clara, lo mira una persona y vuelves con la misma cuenta.'
+            : 'Received. If both screenshots clearly show you already follow, reload and both buttons are here. If the reading is not clear, a person looks at them. Come back with the same account.'}
         </p>
       )}
 
