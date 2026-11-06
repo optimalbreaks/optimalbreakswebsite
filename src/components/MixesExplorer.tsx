@@ -164,7 +164,7 @@ function getMixTrack(m: Mix): MixTrack | null {
       artist: m.artist_name,
       imageUrl: m.image_url,
       source: 'mp3',
-      src: `/descargar/${m.slug}.mp3`,
+      src: `/descargar/${m.slug}.mp3?play=1`,
     }
   }
   return null

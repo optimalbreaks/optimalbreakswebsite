@@ -75,3 +75,94 @@ export async function streamAudioUpstream(
     headers,
   })
 }
+
+/** Trozo máximo de una sesión (el MP3 entero son ~140 MB; un rango abierto lo pide todo). */
+const SESSION_PLAY_CHUNK = 8 * 1024 * 1024
+
+/**
+ * El `<audio>` del móvil pide `Range`. Si el rango es abierto (`bytes=0-`)
+ * lo cerramos: si no, la función se queda abierta toda la hora y Vercel la corta.
+ */
+function sessionPlayRange(header: string | null): string {
+  const cap = SESSION_PLAY_CHUNK - 1
+  const fallback = `bytes=0-${cap}`
+  if (!header) return fallback
+  const m = /^bytes=(\d+)-(\d*)$/i.exec(header.trim())
+  if (!m) return fallback
+  const start = Number(m[1])
+  if (!Number.isFinite(start) || start < 0) return fallback
+  const requestedEnd = m[2] === '' ? start + cap : Number(m[2])
+  if (!Number.isFinite(requestedEnd) || requestedEnd < start) return fallback
+  const end = Math.min(requestedEnd, start + cap)
+  return `bytes=${start}-${end}`
+}
+
+/**
+ * Reproduce un asset de la release `sesiones-descarga`.
+ * GitHub responde 302 y el CDN final manda `application/octet-stream` +
+ * `Content-Disposition: attachment`. El iPhone no lo decodifica en `<audio>`
+ * (el aviso rojo «no se pudo cargar este mix»). Aquí el salto se hace en el
+ * servidor, se reenvía el `Range` (un `fetch` que sigue el 302 lo tira) y
+ * el móvil recibe `audio/mpeg`.
+ */
+export async function streamReleaseMp3(request: Request, releaseUrl: string): Promise<NextResponse> {
+  const range = sessionPlayRange(request.headers.get('range'))
+  const ctl = new AbortController()
+  const timer = setTimeout(() => ctl.abort(), 20_000)
+  let upstream: Response | undefined
+  let failed = false
+  try {
+    let url = releaseUrl
+    for (let hop = 0; hop < 4; hop++) {
+      const res = await fetch(url, {
+        method: 'GET',
+        redirect: 'manual',
+        headers: { 'User-Agent': AUDIO_PROXY_UA, Range: range },
+        signal: ctl.signal,
+        cache: 'no-store',
+      })
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get('location')
+        await res.body?.cancel()
+        if (!loc) {
+          failed = true
+          break
+        }
+        url = new URL(loc, url).toString()
+        continue
+      }
+      upstream = res
+      break
+    }
+  } catch {
+    failed = true
+  } finally {
+    clearTimeout(timer)
+  }
+
+  if (failed || !upstream || (!upstream.ok && upstream.status !== 416)) {
+    await upstream?.body?.cancel()
+    return NextResponse.json({ error: failed ? 'Upstream timeout' : `Upstream ${upstream?.status ?? 'none'}` }, { status: failed ? 504 : 502 })
+  }
+
+  const len = upstream.headers.get('content-length')
+  if (upstream.status === 200 && len && Number.parseInt(len, 10) > SESSION_PLAY_CHUNK) {
+    await upstream.body?.cancel()
+    return NextResponse.json({ error: 'Range required' }, { status: 502 })
+  }
+
+  const headers = new Headers({
+    'Content-Type': 'audio/mpeg',
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'private, no-store',
+  })
+  for (const h of ['content-length', 'content-range']) {
+    const v = upstream.headers.get(h)
+    if (v) headers.set(h, v)
+  }
+
+  return new NextResponse(upstream.status === 416 ? null : upstream.body, {
+    status: upstream.status,
+    headers,
+  })
+}
