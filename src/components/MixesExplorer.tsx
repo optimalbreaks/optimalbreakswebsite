@@ -137,17 +137,23 @@ function LazySoundCloudEmbed({
   )
 }
 
+function mixPageTrack(m: Mix, source: 'mp3' | 'soundcloud', src: string): MixTrack {
+  return {
+    id: m.id,
+    title: m.title,
+    artist: m.artist_name,
+    imageUrl: m.image_url,
+    source,
+    src,
+    slug: m.slug || null,
+  }
+}
+
 function getMixTrack(m: Mix): MixTrack | null {
   const audioUrl = m.audio_url
-  if (audioUrl) {
-    return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'mp3', src: audioUrl }
-  }
-  if (m.embed_url?.includes('soundcloud.com')) {
-    return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'soundcloud', src: m.embed_url }
-  }
-  if (m.embed_url && /\.mp3(\?|$)/i.test(m.embed_url)) {
-    return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'mp3', src: m.embed_url }
-  }
+  if (audioUrl) return mixPageTrack(m, 'mp3', audioUrl)
+  if (m.embed_url?.includes('soundcloud.com')) return mixPageTrack(m, 'soundcloud', m.embed_url)
+  if (m.embed_url && /\.mp3(\?|$)/i.test(m.embed_url)) return mixPageTrack(m, 'mp3', m.embed_url)
   // Sesión solo MP3 (sin YouTube ni SoundCloud): se oye el mismo archivo de la descarga.
   // No se rellena audio_url: eso cambiaría las tarjetas que ya tienen vídeo.
   if (
@@ -158,14 +164,7 @@ function getMixTrack(m: Mix): MixTrack | null {
     !isSoundCloudTrackEmbedUrl(m.embed_url) &&
     !isSoundCloudTrackEmbedUrl(m.video_url)
   ) {
-    return {
-      id: m.id,
-      title: m.title,
-      artist: m.artist_name,
-      imageUrl: m.image_url,
-      source: 'mp3',
-      src: `/descargar/${m.slug}.mp3?play=1`,
-    }
+    return mixPageTrack(m, 'mp3', `/descargar/${m.slug}.mp3?play=1`)
   }
   return null
 }

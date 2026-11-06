@@ -89,6 +89,8 @@ export interface MixTrack {
   imageUrl?: string | null
   source: 'mp3' | 'soundcloud'
   src: string
+  /** Slug de la ficha `/mixes/<slug>`. El título de la barra vuelve ahí. */
+  slug?: string | null
 }
 
 /**
@@ -1159,8 +1161,17 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
 function MiniMixBar({ lang }: { lang: Locale }) {
   const { currentMix, mixPlaying, mixError, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
   const { mixProgress, mixDuration } = useDeckAudioProgress()
+  const router = useRouter()
   const es = lang === 'es'
+  const goToSession = useCallback(() => {
+    const slug = currentMix?.slug
+    if (!slug || typeof window === 'undefined') return
+    const path = `/${lang}/mixes/${slug}`
+    if (window.location.pathname === path) return
+    router.push(path)
+  }, [currentMix, lang, router])
   if (!currentMix) return null
+  const canGo = !!currentMix.slug
 
   return (
     <MiniPlayerShell
@@ -1171,6 +1182,8 @@ function MiniMixBar({ lang }: { lang: Locale }) {
       onSeekRatio={seekMixToRatio}
       fmt={fmt}
       title={currentMix.title}
+      onTitleClick={canGo ? goToSession : undefined}
+      titleClickHint={canGo ? (es ? 'Ir a la sesión' : 'Go to the set') : undefined}
       subtitleBelow={
         mixError ? (
           <span className="font-bold text-[var(--red)]">
