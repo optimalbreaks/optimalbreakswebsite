@@ -27,10 +27,9 @@ type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
 function dayShareClips(day: DayReelInput) {
   const picks = day.picks.slice(0, 5)
   const cardSec = dayCardSeconds(picks.length)
-  const hasRest = day.rest.length > 0
-  const total = dayReelDuration(picks.length, hasRest)
+  const total = dayReelDuration(picks.length)
   const audible = picks.flatMap((p, i) => (p.audio ? [i] : []))
-  const slots = dayAudioSlots(picks.length, audible, cardSec, hasRest)
+  const slots = dayAudioSlots(picks.length, audible, cardSec)
   if (!slots.length) return null
   return slots.map((slot) => {
     const p = picks[slot.i]

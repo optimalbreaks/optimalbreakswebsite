@@ -232,7 +232,7 @@ async function renderDayReel(
   const picks = day.picks.slice(0, 5)
   const rest = day.rest.slice(0, 8)
   const cardSec = dayCardSeconds(picks.length)
-  const total = dayReelDuration(picks.length, rest.length > 0)
+  const total = dayReelDuration(picks.length)
   const urls = [...picks.map((p) => p.artwork), ...rest.map((r) => r.artwork)]
   const imgs = await loadArtworks(urls)
   const cards = picks.map((p, i) => ({
@@ -243,7 +243,7 @@ async function renderDayReel(
   }))
   const restImgs = rest.map((_, i) => imgs[picks.length + i] ?? null)
   const audible = picks.flatMap((p, i) => (p.audio ? [i] : []))
-  const slots = dayAudioSlots(picks.length, audible, cardSec, rest.length > 0)
+  const slots = dayAudioSlots(picks.length, audible, cardSec)
   const cues = slots.map((slot) => {
     const p = picks[slot.i]
     return {

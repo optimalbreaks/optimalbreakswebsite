@@ -2604,32 +2604,30 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 }
 
 // ===================== DÍA (artículo /topreleases/dia) =====================
-// Primero una portada negra (4 s), ya con el tema más destacado sonando.
+// Primero una portada negra (3 s), ya con el tema más destacado sonando.
 // Luego el recuento del día, una card por tema, y el último hasta el final.
-export const DAY_TITLE = 4
-export const DAY_INTRO = 5
-export const DAY_REST = 5.4
-export const DAY_OUTRO = 4.6
+// 5 fichas de 9 s + portada 3 + lista 3 + despedida 4 = 55 s (dentro del minuto).
+export const DAY_TITLE = 3
+export const DAY_INTRO = 3
+export const DAY_OUTRO = 4
 
 export function dayCardSeconds(n: number): number {
   if (n <= 1) return 12
-  // 5 cards + la estantería = 90 s, más los 4 s de la portada negra.
-  return 15
+  return 9
 }
 
 /**
  * Dónde suena cada tema con preview. El primero arranca en el segundo 0
- * (cubre la entrada) y el último llega hasta el final (carátulas y despedida).
+ * (cubre la entrada) y el último llega hasta el final (despedida).
  * Entre medias no queda un hueco mudo: cada uno llega hasta el siguiente.
  */
 export function dayAudioSlots(
   count: number,
   audible: number[],
   cardSec: number,
-  hasRest: boolean,
 ): { i: number; at: number; seconds: number }[] {
   if (!audible.length || count <= 0) return []
-  const total = dayReelDuration(count, hasRest)
+  const total = dayReelDuration(count)
   const open = DAY_TITLE + DAY_INTRO
   return audible.map((i, k) => {
     const at = k === 0 ? 0 : open + i * cardSec
@@ -2639,9 +2637,9 @@ export function dayAudioSlots(
   })
 }
 
-export function dayReelDuration(cards: number, hasRest: boolean): number {
+export function dayReelDuration(cards: number): number {
   const n = Math.max(0, cards)
-  return DAY_TITLE + DAY_INTRO + n * dayCardSeconds(n) + (hasRest ? DAY_REST : 0) + DAY_OUTRO
+  return DAY_TITLE + DAY_INTRO + n * dayCardSeconds(n) + DAY_OUTRO
 }
 
 export type DayCardAnim = {
@@ -2666,9 +2664,9 @@ export type DayAnim = {
   } | null
 }
 
-type DayScene = { k: 'title' | 'intro' | 'card' | 'rest' | 'outro'; i: number; a: number; b: number }
+type DayScene = { k: 'title' | 'intro' | 'card' | 'outro'; i: number; a: number; b: number }
 
-function dayScenes(n: number, rest: boolean, cardSec: number): DayScene[] {
+function dayScenes(n: number, cardSec: number): DayScene[] {
   const open = DAY_TITLE + DAY_INTRO
   const out: DayScene[] = [
     { k: 'title', i: -1, a: 0, b: DAY_TITLE },
@@ -2678,47 +2676,27 @@ function dayScenes(n: number, rest: boolean, cardSec: number): DayScene[] {
     const a = open + i * cardSec
     out.push({ k: 'card', i, a, b: a + cardSec })
   }
-  let a = open + n * cardSec
-  if (rest) {
-    out.push({ k: 'rest', i: -1, a, b: a + DAY_REST })
-    a += DAY_REST
-  }
+  const a = open + n * cardSec
   out.push({ k: 'outro', i: -1, a, b: a + DAY_OUTRO })
   return out
 }
 
-function dayStripCols(n: number, wide: boolean): number {
-  if (n <= 1) return 1
-  if (wide) return Math.min(n, 5)
-  if (n <= 3) return n
-  if (n === 4) return 2
-  return 3
-}
-
-/** Carátulas grandes, centradas en el hueco. La última fila también va centrada. */
-function dayCoverStrip(
-  ctx: C, imgs: (Img | null)[], x: number, y: number, w: number, h: number, wide: boolean, lt: number, pinTop = false,
+/** Una sola fila. En la despedida no hay tiempo para una estantería. */
+function dayOutroRow(
+  ctx: C, imgs: (Img | null)[], x: number, y: number, w: number, h: number, lt: number,
 ) {
   const n = imgs.length
-  if (!n || w < 40 || h < 40) return
-  const gap = 16
-  const cols = dayStripCols(n, wide)
-  const rows = Math.ceil(n / cols)
-  const cs = Math.floor(Math.min((w - gap * (cols - 1)) / cols, (h - gap * (rows - 1)) / rows))
-  if (cs < 48) return
-  const gridH = rows * cs + (rows - 1) * gap
-  const oy = pinTop ? y : y + Math.max(0, (h - gridH) / 2)
+  if (!n || h < 36 || w < 40) return
+  const gap = 12
+  const cs = Math.floor(Math.min(h, (w - gap * (n - 1)) / n))
+  if (cs < 36) return
+  const rowW = n * cs + (n - 1) * gap
+  const ox = x + (w - rowW) / 2
   imgs.forEach((im, i) => {
-    const r = Math.floor(i / cols)
-    const c = i % cols
-    const inRow = Math.min(cols, n - r * cols)
-    const rowW = inRow * cs + (inRow - 1) * gap
-    const rx = x + (w - rowW) / 2
-    const ix = rx + c * (cs + gap)
-    const iy = oy + r * (cs + gap)
-    pop(ctx, ph(lt, 0.15 + i * 0.08, 0.4), ix + cs / 2, iy + cs / 2, () => {
-      cover(ctx, im, ix, iy, cs, 4)
-    }, (hash(i, 4) - 0.5) * 0.2)
+    const ix = ox + i * (cs + gap)
+    pop(ctx, ph(lt, 0.1 + i * 0.06, 0.35), ix + cs / 2, y + cs / 2, () => {
+      cover(ctx, im, ix, y, cs, 3)
+    }, (hash(i, 3) - 0.5) * 0.12)
   })
 }
 
@@ -2831,9 +2809,17 @@ function dayEndPoster(
     + 40
     + logo + 36
     + pad
-  const cardH = Math.min(h - 8, block)
+  const avail = Math.max(40, h - 8)
+  const posterFit = Math.min(1, avail / block)
+  const cardH = block
   const cardX = x + (w - cardW) / 2
-  const cardY = y + Math.max(0, (h - cardH) / 2)
+  const cardY = y + (h - cardH) / 2
+  ctx.save()
+  const mx = x + w / 2
+  const my = y + h / 2
+  ctx.translate(mx, my)
+  ctx.scale(posterFit, posterFit)
+  ctx.translate(-mx, -my)
   box(ctx, cardX, cardY, cardW, cardH, YELLOW, INK, 14, 6)
   const cx = cardX + cardW / 2
   let cy = cardY + pad + 28
@@ -2878,6 +2864,7 @@ function dayEndPoster(
   ctx.fillStyle = INK
   ctx.textAlign = 'center'
   spaced(ctx, es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE', cx, cy + logo + 8, 3, 'center')
+  ctx.restore()
 }
 
 const ORD_ES = ['', 'PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO']
@@ -3042,7 +3029,7 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
   const L = dayLayout(V)
   const n = d.cards.length
   const cardSec = dayCardSeconds(n)
-  const scenes = dayScenes(n, d.rest.length > 0, cardSec)
+  const scenes = dayScenes(n, cardSec)
   const total = scenes[scenes.length - 1]?.b ?? DAY_TITLE + DAY_INTRO + DAY_OUTRO
   const found = scenes.findIndex((s) => t >= s.a && t < s.b)
   const si = found === -1 ? scenes.length - 1 : found
@@ -3158,23 +3145,26 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
         }
       }, (hash(sc.i, 6) - 0.5) * 0.25)
     }
-  } else if (sc.k === 'rest') {
-    fnHeader(
-      ctx, L, lt,
-      es ? 'TAMBIÉN' : 'ALSO',
-      es ? 'EL RESTO\nDEL DÍA' : 'THE REST\nOF THE DAY',
-      es
-        ? `${Math.max(d.rest.length, d.outCount - d.cards.length)} MÁS EN EL ARTÍCULO`
-        : `${Math.max(d.rest.length, d.outCount - d.cards.length)} MORE IN THE ARTICLE`,
-      INK,
-    )
-    const stripTop = V ? 540 : 560
-    dayCoverStrip(ctx, d.rest.slice(0, 8), V ? L.hx : 80, stripTop, V ? L.hW : W - 160, L.foot.y - 28 - stripTop, !V, lt)
   } else {
     const top = V ? 118 : 108
-    const x = 120
-    const w = V ? 840 : 1680
-    dayEndPoster(ctx, x, top, w, L.foot.y - 20 - top, es, tense)
+    const x = V ? 70 : 80
+    const w = V ? 940 : 1760
+    const bottom = L.foot.y - 20
+    const covers = d.rest.slice(0, 8)
+    let posterH = bottom - top
+    if (covers.length) {
+      const stripH = V ? 150 : 108
+      const gap = 10
+      posterH = Math.max(160, bottom - top - stripH - gap)
+      const sy = top + posterH + gap
+      ctx.fillStyle = RED
+      ctx.font = MONO(V ? 18 : 16)
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      spaced(ctx, es ? 'Y EL RESTO DEL DÍA' : 'AND THE REST OF THE DAY', x, sy + (V ? 16 : 14), 3)
+      dayOutroRow(ctx, covers, x, sy + (V ? 26 : 22), w, stripH - (V ? 30 : 26), lt)
+    }
+    dayEndPoster(ctx, 120, top, V ? 840 : 1680, posterH, es, tense)
   }
   ctx.restore()
 
