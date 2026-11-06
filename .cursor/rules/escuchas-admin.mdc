@@ -1,6 +1,6 @@
 ---
 description: Escuchas admin — la reproducción es la urna, no el «+»
-globs: src/lib/awards-board.ts,src/app/**/escuchas/**,src/app/api/admin/escuchas/**
+globs: src/lib/awards-board.ts,src/app/**/escuchas/**,src/app/api/admin/escuchas/**,src/app/api/admin/stats/route.ts,src/app/**/administrator/page.tsx
 alwaysApply: false
 ---
 
@@ -11,6 +11,8 @@ Spec: `docs/USER_ENGAGEMENT.md` (*Admin Escuchas*). Panel: `/administrator/escuc
 ## El número (no negociable)
 
 Una fila de `track_play_events` es una escucha. El registro empieza el **6 oct 2026**. No es un «+» de `saved_chart_tracks`. Awards sigue siendo la urna de votos.
+
+La tarjeta **Escuchas** de la home admin (`/api/admin/stats`, clave `plays`) es el `count(*)` de **todas** las filas. El KPI de esta página es el corte abierto. Prohibido igualarlos.
 
 - Orden de **temas**: escuchas, luego oyentes con sesión.
 - El anónimo (`user_id` null) suma escuchas y no entra en «Quién escucha».

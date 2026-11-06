@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending')
       .then(({ count }) => ['import_pending', count ?? 0] as const),
+    // Home tile «Escuchas»: every row of track_play_events. The Escuchas page KPI is the open cut.
+    sb
+      .from('track_play_events')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count }) => ['plays', count ?? 0] as const),
   ])
 
   const stats = Object.fromEntries(counts)

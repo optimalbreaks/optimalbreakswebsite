@@ -17,6 +17,8 @@ interface Stats {
   /** Filas en `chart_featured_tracks` (New Releases de /charts). */
   new_releases: number
   import_pending: number
+  /** Todas las filas de `track_play_events`. El KPI de /escuchas es el corte abierto. */
+  plays: number
 }
 
 const CARDS = [
@@ -29,6 +31,7 @@ const CARDS = [
   { key: 'new_releases', label: 'New Releases', icon: '✚', href: '/imports', accent: 'var(--cyan)' },
   { key: 'import_pending', label: 'Por aprobar', icon: '👂', href: '/imports', accent: 'var(--yellow)' },
   { key: 'saved_tracks', label: 'Saved Tracks', icon: '♪', href: '/tracks', accent: 'var(--red)' },
+  { key: 'plays', label: 'Escuchas', icon: '◉', href: '/escuchas', accent: 'var(--red)' },
   { key: 'history_entries', label: 'Historia', icon: '↻', href: '/history', accent: 'var(--yellow)' },
   { key: 'users', label: 'Usuarios', icon: '☻', href: '/users', accent: 'var(--paper-dark)' },
 ] as const
