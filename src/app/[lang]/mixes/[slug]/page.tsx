@@ -35,7 +35,7 @@ import { buildArtistSlugLookup, fetchAllArtistLinkRows, flattenLineupArtistNames
 import { splitProseForDisplay } from '@/lib/bio-format'
 import { formatMixDateLine } from '@/lib/mix-datetime-local'
 import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
-import { MixSessionGrid, MixSessionPlayer } from '@/components/MixesExplorer'
+import { MixSessionGrid, MixSessionListenButton, MixSessionPlayer } from '@/components/MixesExplorer'
 import ShareButtons from '@/components/ShareButtons'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
@@ -193,19 +193,22 @@ export default async function MixDetailPage({ params }: Props) {
           </div>
 
           {mix.download_url?.startsWith('https://') && (
-            <a
-              href={`/descargar/${mix.slug}.mp3`}
-              download
-              rel="noopener"
-              className="mt-5 inline-flex max-w-full flex-col border-4 border-[var(--ink)] bg-[var(--yellow)] px-5 py-3 text-[var(--ink)] no-underline shadow-[6px_6px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0_var(--ink)]"
-            >
-              <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(15px, 2.6vw, 19px)', textTransform: 'uppercase' }}>
-                ⬇ {es ? 'Descargar sesión en MP3' : 'Download set as MP3'}
-              </span>
-              <span className="mt-1" style={{ fontFamily: MONO, fontWeight: 700, fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {es ? 'Gratis · cedida para descarga' : 'Free · shared for download'}
-              </span>
-            </a>
+            <div className="mt-5 flex flex-wrap items-stretch gap-3">
+              <MixSessionListenButton mix={mix} lang={lang} />
+              <a
+                href={`/descargar/${mix.slug}.mp3`}
+                download
+                rel="noopener"
+                className="inline-flex max-w-full flex-col border-4 border-[var(--ink)] bg-[var(--yellow)] px-5 py-3 text-[var(--ink)] no-underline shadow-[6px_6px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0_var(--ink)]"
+              >
+                <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(15px, 2.6vw, 19px)', textTransform: 'uppercase' }}>
+                  ⬇ {es ? 'Descargar sesión en MP3' : 'Download set as MP3'}
+                </span>
+                <span className="mt-1" style={{ fontFamily: MONO, fontWeight: 700, fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {es ? 'Gratis · cedida para descarga' : 'Free · shared for download'}
+                </span>
+              </a>
+            </div>
           )}
 
           <div className="mt-5 flex flex-wrap items-center gap-2">

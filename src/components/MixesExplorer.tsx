@@ -211,6 +211,29 @@ function MixPlayButton({ mix, size = 'lg' }: { mix: Mix; size?: 'lg' | 'sm' | 'x
   )
 }
 
+/** ▶ de la ficha, al lado de «Descargar sesión en MP3». Solo sesiones sin vídeo. */
+export function MixSessionListenButton({ mix, lang }: { mix: Mix; lang: string }) {
+  const { playMix, stopMix, currentMix, mixPlaying } = useMixAudioGated()
+  const track = getMixTrack(mix)
+  if (!track || track.source !== 'mp3') return null
+  const es = lang === 'es'
+  const isStoppable = currentMix?.id === mix.id && mixPlaying
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (isStoppable) stopMix()
+        else playMix(track)
+      }}
+      className="inline-flex items-center justify-center border-4 border-[var(--ink)] bg-[var(--red)] px-5 py-3 text-white shadow-[6px_6px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0_var(--ink)] cursor-pointer"
+    >
+      <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(15px, 2.6vw, 19px)', textTransform: 'uppercase' }}>
+        {isStoppable ? (es ? '■ Parar' : '■ Stop') : (es ? '▶ Escuchar' : '▶ Play')}
+      </span>
+    </button>
+  )
+}
+
 export { getMixTrack }
 
 type YearGroupKey = number | 'undated'
@@ -766,7 +789,7 @@ export function MixSessionPlayer({ mix, lang }: { mix: Mix; lang: string }) {
       ) : (
         <div className="relative">
           <CardThumbnail src={mix.image_url} alt={mix.title} aspectClass="aspect-video" />
-          {getMixTrack(mix) || mix.embed_url ? <PlayLink mix={mix} /> : null}
+          {!getMixTrack(mix) && mix.embed_url ? <PlayLink mix={mix} /> : null}
         </div>
       )}
     </div>
