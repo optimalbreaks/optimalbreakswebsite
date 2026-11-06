@@ -2606,7 +2606,8 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 // ===================== DÍA (artículo /topreleases/dia) =====================
 // Primero una portada negra (3 s), ya con el tema más destacado sonando.
 // Luego el recuento del día, una card por tema, y el último hasta el final.
-// 5 fichas de 9 s + portada 3 + lista 3 + despedida 4 = 55 s (dentro del minuto).
+// 5 fichas de 9 s + portada 3 + lista 3 + despedida 4 = 55 s.
+// 6 nov 2026: tope de 60 s (guía de Reels de Instagram, punto dulce 15–60). Antes, 94 s.
 export const DAY_TITLE = 3
 export const DAY_INTRO = 3
 export const DAY_OUTRO = 4

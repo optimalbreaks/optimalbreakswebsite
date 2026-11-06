@@ -148,6 +148,24 @@ Piezas:
 - `src/app/api/admin/share-reel-images`: carátulas como data URL cuadradas (500 px) para el canvas (evita CORS).
 - `src/components/VideoShareButtons.tsx`: botones R/F genéricos (estado, %, compartir/descargar, portapapeles). También los usan las sesiones.
 
+## Reel del día (`/topreleases/dia`, 6 nov 2026)
+
+R y F del artículo del día usan el mismo vídeo. Suena la selección de Optimal Breaks, como mucho **5 temas**: los que en ese momento tienen más «+» de otra gente y, a igualdad, más escuchas. No cuentan el «+» de la cuenta de la casa, el auto-voto de un fichado ni una lista privada. El sexto se queda en el artículo y en el texto.
+
+Hasta el 6 nov 2026 el archivo duraba **94 segundos** (portada 4, lista 5, cinco fichas de 15, estantería del resto 5,4 y despedida 4,6). Instagram, en su guía de Reels ([How to make Instagram Reels](https://about.instagram.com/blog/tips-and-tricks/how-to-make-instagram-reels)), pone el punto dulce para que un vídeo se vea entero y llegue a quien no sigue la cuenta en **15 a 60 segundos**. De 3 a 15 es un chiste o una tendencia. De 1 a 3 minutos lo reserva para un relato largo, y ahí se acaba menos. Narciso pidió cerrar como mucho en un minuto y seguir con las cinco canciones. La otra forma de no pasar del minuto, tres canciones a 15 segundos, se dejó.
+
+| Tramo | Tiempo |
+|---|---|
+| Portada negra | 3 s |
+| Lista de los que van a sonar | 3 s |
+| Cada ficha, si hay más de una | 9 s |
+| Despedida | 4 s |
+| **Cinco temas** | **55 s** |
+
+Lo que se oye, con cinco temas y preview: la primera **15 s** (portada, lista y su ficha), las tres del medio **9 s**, la última **13 s** (su ficha y la despedida). Un día de un solo tema usa fichas de 12 s y ese tema suena el vídeo entero (22 s). Las otras carátulas, hasta 8, salen en la despedida con «Y EL RESTO DEL DÍA» y no tienen escena propia. Un MP4 ya bajado sigue en 1:34 hasta que se genera otra vez.
+
+Constantes: `DAY_TITLE`, `DAY_INTRO`, `DAY_OUTRO`, `dayCardSeconds`, `dayReelDuration` y `dayAudioSlots` en `src/lib/page-reel-design.ts`. El render es `renderDayReel` en `src/lib/page-reel.ts`.
+
 ## Texto del post con GPT‑5.6 (todos los R/F)
 
 `/api/admin/share-caption` escribe el pie con GPT‑5.6 (`OPENAI_SHARE_CAPTION_MODEL` u `OPENAI_MODEL`) con un tono por tipo (`track`, `set`, `top100`, `week`, `blog`, `events`, `digest`). **`digest` (24 oct 2026)** es el resumen de `/topreleases` (quincena, trimestre o adelantos de la semana): recibe las cifras del vídeo (temas, artistas, sellos, periodo anterior, top 5 de escuchas y de «+», artistas y sellos más activos, estrellas del Top 100, BPM, tonalidad, debutantes) y escribe un pie largo como el de un tema. Antes iba como `blog` con solo título y extracto, y el texto no decía nada de los datos. **Pie bilingüe (25 oct 2026):** español arriba y, tras «🇬🇧 EN», un bloque en inglés con su propio gancho, datos clave y pregunta. Siempre en ese orden, también si se genera desde `/en`: el público y los artistas son sobre todo españoles (decisión de Narciso). Los rótulos del vídeo de tema y de sesión siguen en inglés. Tema y resumen: 1.100–1.300 + 500–600 caracteres (≤ 2.050 con hashtags; Instagram corta en 2.200). El resto: 450–550 cada idioma. Enlace («🔗 Enlace en la bio · Link in bio») y hashtags una sola vez, al final. Se eligió frente a publicar dos veces (Instagram resta alcance al contenido repetido y reparte la interacción) y frente a 50/50 (señal de idioma difusa; el público es sobre todo español). La plantilla sin IA se monta igual (`bilingualCaption` en `share-caption.ts`). En todos: gancho en la primera línea, datos reales, llamada a comentar/guardar, «enlace en la bio» (IG) o la URL (FB) y **máx. 5 hashtags genéricos de gran difusión**. Nunca hashtags de artistas, sellos, festivales ni de Optimal Breaks (se filtran también en el servidor): esos los etiqueta quien publica, a mano. El admin puede pedir los cinco tipos. Un artista reclamado solo `track` y `set`.
