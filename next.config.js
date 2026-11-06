@@ -97,6 +97,12 @@ const nextConfig = {
         destination: '/:lang/artists/dj-superbreak',
         permanent: true,
       },
+      /** El chat leyó CIRCUS como CIRKUS. Es el 13º aniversario de FunkTasty, 16 ene 2027. */
+      {
+        source: '/:lang/events/cirkus-rave-aniversario',
+        destination: '/:lang/events/circus-by-funktasty-13-aniversario-2027',
+        permanent: true,
+      },
       /** RitMika x ARÁ: el chat leyó el adhesivo AKA de Instagram. Es RITMIKA XXL, 21 nov 2026. */
       {
         source: '/:lang/events/ritmika-x-ara',
