@@ -34,7 +34,7 @@ export default function MixesSection({ lang }: { lang: string }) {
     setMixesLoading(true)
     const supabase = createBrowserSupabase()
     ;(async () => {
-      const { data, error } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url').in('id', saved)
+      const { data, error } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url, download_url').in('id', saved)
       if (!cancelled) {
         setMixes(data || [])
         setMixesLoading(false)

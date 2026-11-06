@@ -148,6 +148,25 @@ function getMixTrack(m: Mix): MixTrack | null {
   if (m.embed_url && /\.mp3(\?|$)/i.test(m.embed_url)) {
     return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'mp3', src: m.embed_url }
   }
+  // Sesión solo MP3 (sin YouTube ni SoundCloud): se oye el mismo archivo de la descarga.
+  // No se rellena audio_url: eso cambiaría las tarjetas que ya tienen vídeo.
+  if (
+    m.slug &&
+    m.download_url?.startsWith('https://') &&
+    !extractYouTubeId(m.video_url) &&
+    !extractYouTubeId(m.embed_url) &&
+    !isSoundCloudTrackEmbedUrl(m.embed_url) &&
+    !isSoundCloudTrackEmbedUrl(m.video_url)
+  ) {
+    return {
+      id: m.id,
+      title: m.title,
+      artist: m.artist_name,
+      imageUrl: m.image_url,
+      source: 'mp3',
+      src: `/descargar/${m.slug}.mp3`,
+    }
+  }
   return null
 }
 

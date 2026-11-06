@@ -69,7 +69,7 @@ export default function FavoritesSection({ lang }: { lang: string }) {
       }
       if (mixIds.length === 0) { if (!cancelled) setMixes([]) }
       else {
-        const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url').in('id', mixIds)
+        const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url, download_url').in('id', mixIds)
         if (!cancelled) setMixes(data || [])
       }
     })()
