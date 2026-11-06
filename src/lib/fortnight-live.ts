@@ -229,10 +229,12 @@ export async function loadDayReleases(sb: SupabaseClient<Database>, day: string)
 }
 
 /**
- * Orden del reel del día. El grupo sigue siendo la selección de Optimal Breaks.
- * Entre ellos, primero quien tiene más «+» de otra gente y, a igualdad, más
- * escuchas de otra gente. El «+» propio no desempata: todos los de la selección
- * lo tienen. Si nadie más ha guardado ni escuchado, se queda el orden por nombre.
+ * Orden del reel del día (6 nov 2026).
+ * 1. Solo entran los «+» de la cuenta editorial (`loadDayReleases` → `picks`).
+ *    Un tema del resto del día no suena. Su carátula puede salir en la despedida.
+ * 2. Entre esos, más «+» de otra gente y, a igualdad, más escuchas de otra gente.
+ *    El «+» de la casa no desempata: todos lo tienen. Tampoco el auto-voto de un
+ *    fichado ni una lista privada. Si nadie más ha guardado ni escuchado, orden por nombre.
  */
 export async function rankDayReelTracks(tracks: FortnightDigestTrack[]): Promise<FortnightDigestTrack[]> {
   if (tracks.length <= 1) return tracks
