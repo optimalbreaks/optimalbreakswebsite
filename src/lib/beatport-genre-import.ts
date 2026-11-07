@@ -673,6 +673,7 @@ async function editionFor(
  * Misma canción ya publicada (título + versión + artistas), aunque Beatport
  * le haya dado otro id en un álbum. No se crea otra fila y no se mueve la
  * fecha del primer lanzamiento. Un mix con nombre propio sí es otro corte.
+ * Radio Edit también: no es el Original Mix.
  */
 export async function findFeaturedIdentityMatch(
   sb: ReturnType<typeof createServiceSupabase>,

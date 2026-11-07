@@ -54,13 +54,14 @@ function foldTrackText(s: string | null | undefined): string {
 
 /**
  * Versión genérica del mismo corte (no es un remix con nombre).
- * Original Mix e Instrumental de PITBULL son la misma canción en las
- * listas únicas; «Freestylers Remix» o un VIP con nombre se quedan aparte.
+ * Original Mix e Instrumental son la misma canción en las listas únicas.
+ * Radio Edit es otro corte y entra aparte. Un remix con nombre o un VIP
+ * también se quedan aparte.
  */
 export function isGenericVersionMixName(mix: string | null | undefined): boolean {
   const m = foldTrackText(mix)
   if (!m) return true
-  return /^(original(\s+mix)?|instrumental|extended(\s+(mix|version))?|radio(\s+(edit|mix))?|club(\s+mix)?|vocal(\s+(mix|version))?)$/i.test(
+  return /^(original(\s+mix)?|instrumental|extended(\s+(mix|version))?|club(\s+mix)?|vocal(\s+(mix|version))?)$/i.test(
     m,
   )
 }
