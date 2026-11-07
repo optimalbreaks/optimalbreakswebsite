@@ -931,13 +931,13 @@ Un tema cedido para que esté **entero** en la web es uno de estos dos tratos. L
 | | Streaming | Descarga |
 |---|---|---|
 | Trato | Se oye entero. El archivo no se baja. | Se oye entero y, además, se puede bajar. |
-| Quién | Kritycal System, Kaos Beat, BrainBass. | Hoy solo Woter, *Gone Gone Gone*. |
+| Quién | Kritycal System, Kaos Beat, BrainBass, Lady Waks y Orebeat. | Hoy solo Woter, *Gone Gone Gone*. |
 | En las listas | Fila amarilla, banner rojo, ▶ PLAY FULL. Sin descarga. | La misma fila, y **DESCARGAR** justo después del play. Ese botón abre el artículo. |
 | Archivo | MP3 a 192 kbps. El WAV se queda guardado y no se publica. | El mismo MP3. En el artículo, tras cuenta y dos capturas, también el WAV original. |
 
 Son picks de New Releases con `chart_featured_tracks.full_audio_url` relleno (migración `078`). Detalle operativo: `.cursor/rules/audio-completo-exclusivas.mdc`.
 
-Casos (Kritycal System, Kaos Beat y BrainBass; el lote del 17 oct 2026 engancha el máster a la semana del release en Beatport):
+Casos (Kritycal System, Kaos Beat, BrainBass, Lady Waks y Orebeat; el lote del 17 oct 2026 engancha el máster a la semana del release en Beatport):
 
 | Tema | Semana | MP3 | Qué pasó |
 |---|---|---|---|
@@ -952,6 +952,7 @@ Casos (Kritycal System, Kaos Beat y BrainBass; el lote del 17 oct 2026 engancha 
 | *Take My Home* | 14 sep | `kritycal-system-take-my-home.mp3` | Primera exclusiva. |
 | *Bandido & Maleante* | 28 sep | `kritycal-system-bandido-maleante.mp3` | El primer archivo era una demo de 1:25. El máster dura 3:58 (igual que Spotify y Beatport `/track/bandido-maleante/29540534`). Se sustituyó el mismo MP3; el enlace de la web no cambió. |
 | *Caught Up* | 12 oct | `kritycal-system-caught-up.mp3` | Máster de 4:23. Ya estaba en Beatport (`/track/caught-up/29550498`); el audio completo se enganchó a esa misma fila. |
+| *Back To Minimal* | 12 oct | `lady-waks-orebeat-back-to-minimal.mp3` | Lady Waks y Orebeat. Máster de 3:56. Ya estaba (`/track/back-to-minimal/30678915`); el audio completo se enganchó a esa misma fila. |
 | *Gone Gone Gone (WoTeR Breaks Mix)* | 2 nov | `woter-gone-gone-gone.mp3` | **Descarga.** Woter. Máster de 5:02. En la web suena el MP3; el WAV original se baja desde el artículo. No está en Beatport: fila propia de la semana del 2 nov (`platform: hosted`, release 4 nov). Sin botón de tienda ni búsqueda de Spotify. |
 
 - **Almacenamiento:** el MP3 (192 kbps desde el WAV del artista, ffmpeg) vive en **`private/music/`** y es lo único de esa carpeta que entra en Git — *no* en `public/`, para que no sea descargable por URL directa. El WAV y la carátula se quedan en el mismo `private/music/` y están gitignorados (`private/music/*` salvo `*.mp3`): no van a GitHub ni a Vercel. El artwork público va al bucket `media` de Supabase en WebP. Si llega después el máster de verdad, se vuelve a codificar **encima del mismo archivo** y se hace push: hasta el deploy, la web sigue sirviendo la versión anterior.

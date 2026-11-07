@@ -907,15 +907,16 @@
       "platform": "beatport",
       "link_url": "https://www.beatport.com/track/back-to-minimal/30678915",
       "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/17ab1af1-4e1c-48ea-9d83-0c691f5f037e.jpg",
+      "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/lady-waks-orebeat-back-to-minimal.webp",
       "sample_url": "https://geo-samples.beatport.com/track/7f30a244-a151-4428-8ad9-8431b0d136d5.LOFI.mp3",
       "bpm": 134,
       "music_key": "Eb Minor",
       "release_year": 2026,
       "release_date": "2026-10-15",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 37
+      "note_en": "Exclusive full track — Lady Waks and Orebeat share the full audio with Optimal Breaks. Hit play and listen to it all, right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Lady Waks y Orebeat nos ceden el tema entero. Dale al play y escúchalo completo, aquí mismo.",
+      "sort_order": 37,
+      "full_audio_url": "/api/audio/lady-waks-orebeat-back-to-minimal.mp3"
     },
     {
       "title": "Style Of Rockin'",
