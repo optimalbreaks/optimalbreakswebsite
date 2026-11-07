@@ -50,6 +50,39 @@ export async function getActivePageFreeze(): Promise<PublicFreeze | null> {
   return { key: `page:${row.id}`, until: row.until }
 }
 
+/**
+ * Artículo congelado a mano (`article_freezes`). El del mes no lleva las 72 h
+ * automáticas: cuando hay reel, se abre una fila y solo ese artículo para.
+ * Se nota en ≤ 60 s. No toca el Top 100.
+ */
+export async function getArticleHold(slug: string): Promise<PublicFreeze | null> {
+  if (!slug) return null
+  let row: { until: string } | null = null
+  try {
+    row = await unstable_cache(
+      async () => {
+        const { data, error } = await createServiceSupabase()
+          .from('article_freezes')
+          .select('until')
+          .eq('slug', slug)
+          .is('ended_at', null)
+          .gt('until', new Date().toISOString())
+          .order('frozen_at', { ascending: false })
+          .limit(1)
+        if (error) throw new Error(error.message)
+        return (data?.[0] as { until: string } | undefined) ?? null
+      },
+      ['article-freeze', slug],
+      { revalidate: 60, tags: [PUBLIC_CATALOG_CACHE_TAG] },
+    )()
+  } catch (err) {
+    console.warn('[public-freeze] artículo', err instanceof Error ? err.message : err)
+    return null
+  }
+  if (!row || Date.parse(row.until) <= Date.now()) return null
+  return { key: `article:${slug}`, until: row.until }
+}
+
 /** Las 72 h que siguen a la publicación de un artículo. */
 export function articleFreeze(slug: string, publishedAt: string | null | undefined): PublicFreeze | null {
   const at = publishedAt ? Date.parse(publishedAt) : NaN

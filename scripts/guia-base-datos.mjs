@@ -706,11 +706,11 @@ const ACTIONS = [
   },
   {
     id: 'top-freeze',
-    run: 'node scripts/guia-base-datos.mjs run top-freeze status | freeze [--hours=72] [--note=…] [--no-warm] | unfreeze',
+    run: 'node scripts/guia-base-datos.mjs run top-freeze status | freeze [--hours=72] [--note=…] [--no-warm] | unfreeze | freeze-article <slug> [--hours=96] [--note=…] [--no-warm] | unfreeze-article [slug]',
     npm: 'npm run db:top:freeze -- status|freeze|unfreeze',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      '«Congela los tops» / «descongela el top» (migración 097). freeze: 72 h de foto fija en Top 100 de temas, artistas y países, Top 10 y quincena de la home, /topreleases y números de las fichas de artista; los votos se siguen guardando y salen al descongelar. unfreeze: vuelve a directo ya. Sin unfreeze, se descongela sola. Las 72 h de cada artículo de quincena/trimestre van solas.',
+      '«Congela los tops» / «descongela el top» (migración 097). freeze: 72 h de foto fija en Top 100 de temas, artistas y países, Top 10 y quincena de la home, /topreleases y números de las fichas de artista; los votos se siguen guardando y salen al descongelar. unfreeze: vuelve a directo ya. Sin unfreeze, se descongela sola. Las 72 h de cada artículo de quincena/trimestre van solas. freeze-article (migración 104): solo ese artículo, por defecto 96 h (hoy y 72 h desde mañana); el Top 100 sigue en directo.',
   },
   {
     id: 'purge-featured-week-dates',

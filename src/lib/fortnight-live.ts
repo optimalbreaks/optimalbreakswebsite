@@ -12,7 +12,7 @@ import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { isArtistSelfCreditSave, loadSelfCreditSkipMap, playCountsExcludingSelfCredit } from '@/lib/artist-self-credit'
 import { fetchAllPages, fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
-import { articleFreeze, frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
+import { articleFreeze, frozenSnapshot, getActivePageFreeze, getArticleHold } from '@/lib/public-freeze'
 import type { Locale } from '@/lib/i18n-config'
 import type { Database, FortnightDigest, FortnightDigestTrack } from '@/types/database'
 
@@ -509,7 +509,9 @@ export async function getFortnightLive(
   article?: { slug: string; publishedAt: string | null },
 ): Promise<FortnightLive | null> {
   try {
-    const freeze = (article ? articleFreeze(article.slug, article.publishedAt) : null) ?? (await getActivePageFreeze())
+    const posted = article ? articleFreeze(article.slug, article.publishedAt) : null
+    const held = article && !posted ? await getArticleHold(article.slug) : null
+    const freeze = posted ?? held ?? (await getActivePageFreeze())
     if (freeze) {
       try {
         const snap = await frozenSnapshot(freeze, `fortnight:${from}:${until}:${topN}`, () => loadFortnightLive(from, until, topN))
@@ -736,8 +738,23 @@ export function dayReleaseBlurb(lang: Locale, picks: number, rest: number): stri
 }
 
 /** null si la BD falla: la página se queda con las cifras guardadas en el digest. */
-export async function getPeriodStats(from: string, until: string, prevFrom: string): Promise<PeriodStats | null> {
+export async function getPeriodStats(
+  from: string,
+  until: string,
+  prevFrom: string,
+  article?: { slug: string; publishedAt: string | null },
+): Promise<PeriodStats | null> {
   try {
+    const posted = article ? articleFreeze(article.slug, article.publishedAt) : null
+    const held = article && !posted ? await getArticleHold(article.slug) : null
+    const freeze = posted ?? held
+    if (freeze) {
+      try {
+        return (await frozenSnapshot(freeze, `period:${from}:${until}`, () => loadPeriodStats(from, until, prevFrom))).data
+      } catch (err) {
+        console.warn('[period-stats] foto', err instanceof Error ? err.message : err)
+      }
+    }
     return await unstable_cache(() => loadPeriodStats(from, until, prevFrom), ['period-stats', from, until, prevFrom], {
       revalidate: 300,
       tags: [PUBLIC_CATALOG_CACHE_TAG],

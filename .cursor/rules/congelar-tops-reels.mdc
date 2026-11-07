@@ -9,7 +9,17 @@ Godino graba un reel sobre un artículo o sobre el Top 100 y se sube a Instagram
 
 ## Artículo de quincena o trimestre: solo, sin hacer nada
 
-Desde el 29 oct 2026 el artículo es **mensual** (`mes-breakbeat-*`) y **no** lleva estas 72 h: se publica con el mes abierto y va en directo (decisión de Narciso). Para un reel del mes, «congela los tops». Trimestre (y quincenas antiguas): 72 h desde `published_at` el artículo enseña una foto (la hace el primer render tras publicar). La comparten el artículo, su tarjeta en `/topreleases` y la tarjeta de quincena de la home. Luego vuelve a directo. **No** hay que lanzar ningún script al publicar.
+Desde el 29 oct 2026 el artículo es **mensual** (`mes-breakbeat-*`) y **no** lleva estas 72 h: se publica con el mes abierto y va en directo (decisión de Narciso). Trimestre (y quincenas antiguas): 72 h desde `published_at` el artículo enseña una foto (la hace el primer render tras publicar). La comparten el artículo, su tarjeta en `/topreleases` y la tarjeta de la home. Luego vuelve a directo. **No** hay que lanzar ningún script al publicar.
+
+## Reel de un artículo del mes → congelar solo ese artículo
+
+El Top 100 no se para. Por defecto dura desde ahora hasta **72 h después de mañana** (96 h): cubre el día de hoy y las 72 h que siguen a la publicación del reel.
+
+```powershell
+$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; node scripts/top-freeze.mjs freeze-article <slug> --note="<motivo>"
+```
+
+`--hours=N` si pide otra cifra. `unfreeze-article [slug]` lo suelta antes. `unfreeze` de los tops **no** lo toca. Tabla `article_freezes` (migración 104).
 
 ## «Congela los tops» → congelar
 

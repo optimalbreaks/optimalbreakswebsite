@@ -476,6 +476,12 @@ export interface Database {
         Update: Partial<Pick<TopFreezeRow, 'until' | 'ended_at' | 'note'>>
         Relationships: DbRelationship[]
       }
+      article_freezes: {
+        Row: ArticleFreezeRow
+        Insert: Pick<ArticleFreezeRow, 'slug' | 'until'> & Partial<Pick<ArticleFreezeRow, 'frozen_at' | 'note'>>
+        Update: Partial<Pick<ArticleFreezeRow, 'until' | 'ended_at' | 'note'>>
+        Relationships: DbRelationship[]
+      }
       public_freeze_snapshots: {
         Row: PublicFreezeSnapshotRow
         Insert: Omit<PublicFreezeSnapshotRow, 'captured_at'>
@@ -724,6 +730,16 @@ export interface PlayerDiagnosticRow extends Record<string, unknown> {
 /** «Congela los tops» (migración 097). Activa = `ended_at` null y ahora < `until`. */
 export interface TopFreezeRow extends Record<string, unknown> {
   id: number
+  frozen_at: string
+  until: string
+  ended_at: string | null
+  note: string | null
+}
+
+/** Un artículo concreto (migración 104). El Top 100 no se entera. */
+export interface ArticleFreezeRow extends Record<string, unknown> {
+  id: number
+  slug: string
   frozen_at: string
   until: string
   ended_at: string | null

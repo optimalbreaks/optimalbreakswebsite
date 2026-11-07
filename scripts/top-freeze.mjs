@@ -4,7 +4,13 @@
  *   node scripts/top-freeze.mjs status
  *   node scripts/top-freeze.mjs freeze [--hours=72] [--note="reel Top 100 artistas"] [--no-warm]
  *   node scripts/top-freeze.mjs unfreeze
+ *   node scripts/top-freeze.mjs freeze-article <slug> [--hours=96] [--note=…] [--no-warm]
+ *   node scripts/top-freeze.mjs unfreeze-article [slug]
  *
+ * freeze-article: solo ese artículo (ficha, tarjeta y home). El Top 100 sigue
+ * en directo. Por defecto, desde ahora hasta 72 h después de mañana (96 h):
+ * cubre el día de hoy y las 72 h que siguen a la publicación del reel.
+
  * freeze: abre una fila en `top_freezes` (72 h por defecto). Pasados 65 s (la
  * web cachea el estado 60 s) pide las páginas para que la foto se haga ya, no
  * con la primera visita. Congela Top 100 de temas, artistas y países
@@ -75,12 +81,33 @@ async function snapshots(freezeKey) {
   return data ?? []
 }
 
+async function openArticles(slug) {
+  let q = sb
+    .from('article_freezes')
+    .select('id, slug, frozen_at, until, note')
+    .is('ended_at', null)
+    .gt('until', new Date().toISOString())
+    .order('frozen_at', { ascending: false })
+  if (slug) q = q.eq('slug', slug)
+  const { data, error } = await q
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
 async function status() {
+  const articles = await openArticles()
+  for (const f of articles) {
+    console.log(`ARTÍCULO ${f.slug} #${f.id} desde ${madrid(f.frozen_at)} hasta ${madrid(f.until)}${f.note ? ` · ${f.note}` : ''}`)
+    const snaps = await snapshots(`article:${f.slug}`)
+    for (const s of snaps) console.log(`  foto ${s.item_key} · ${madrid(s.captured_at)}`)
+    if (!snaps.length) console.log('  (sin fotos aún: se hacen con la primera visita)')
+  }
   const open = await openFreezes()
-  if (!open.length) {
+  if (!open.length && !articles.length) {
     console.log('Tops en directo: no hay ninguna congelación abierta.')
     return
   }
+  if (!open.length) return
   for (const f of open) {
     console.log(`CONGELADO #${f.id} desde ${madrid(f.frozen_at)} hasta ${madrid(f.until)}${f.note ? ` · ${f.note}` : ''}`)
     const snaps = await snapshots(`page:${f.id}`)
@@ -132,6 +159,62 @@ async function freeze() {
   await status()
 }
 
+async function warmArticle(slug) {
+  const paths = [`/es/topreleases/${slug}`, `/en/topreleases/${slug}`, '/es/topreleases', '/es']
+  for (const p of paths) {
+    try {
+      const res = await fetch(`${SITE}${p}`, { headers: { 'cache-control': 'no-cache' } })
+      console.log(`  ${res.status} ${p}`)
+    } catch (err) {
+      console.log(`  ✗ ${p}: ${err instanceof Error ? err.message : err}`)
+    }
+  }
+}
+
+async function freezeArticle() {
+  const slug = rest.find((a) => !a.startsWith('--'))
+  if (!slug) throw new Error('Falta el slug: freeze-article <slug>')
+  const open = await openArticles(slug)
+  if (open.length) {
+    console.log(`Ese artículo ya está congelado (#${open[0].id}, hasta ${madrid(open[0].until)}).`)
+    return
+  }
+  const now = new Date()
+  const hours = Number(flag('hours') || 96)
+  if (!Number.isFinite(hours) || hours <= 0 || hours > 24 * 14) throw new Error('--hours entre 1 y 336')
+  const until = new Date(now.getTime() + hours * 3600 * 1000)
+  const { data, error } = await sb
+    .from('article_freezes')
+    .insert({ slug, frozen_at: now.toISOString(), until: until.toISOString(), note: flag('note') || null })
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+  console.log(`Artículo ${slug} #${data.id}: ${madrid(now.toISOString())} → ${madrid(until.toISOString())} (${hours} h). El Top 100 sigue en directo.`)
+  if (rest.includes('--no-warm')) return
+  console.log('Espero 65 s a que la web vea la congelación y hago la foto…')
+  await new Promise((r) => setTimeout(r, 65_000))
+  await warmArticle(slug)
+  await status()
+}
+
+async function unfreezeArticle() {
+  const slug = rest.find((a) => !a.startsWith('--'))
+  const open = await openArticles(slug)
+  if (!open.length) {
+    console.log('No había ningún artículo congelado.')
+    return
+  }
+  const ids = open.map((f) => f.id)
+  const { error } = await sb.from('article_freezes').update({ ended_at: new Date().toISOString() }).in('id', ids)
+  if (error) throw new Error(error.message)
+  const { error: delErr } = await sb
+    .from('public_freeze_snapshots')
+    .delete()
+    .in('freeze_key', [...new Set(open.map((f) => `article:${f.slug}`))])
+  if (delErr) throw new Error(delErr.message)
+  console.log(`Artículo descongelado: ${[...new Set(open.map((f) => f.slug))].join(', ')}. Vuelve a directo en ≤ 1 min.`)
+}
+
 async function unfreeze() {
   const open = await openFreezes()
   if (!open.length) {
@@ -149,9 +232,9 @@ async function unfreeze() {
   console.log(`Descongelado ${ids.map((id) => `#${id}`).join(', ')}. La web vuelve a directo en ≤ 1 min (Top 10 de la home ≤ 5 min).`)
 }
 
-const run = { status, freeze, unfreeze }[cmd]
+const run = { status, freeze, unfreeze, 'freeze-article': freezeArticle, 'unfreeze-article': unfreezeArticle }[cmd]
 if (!run) {
-  console.error('Uso: node scripts/top-freeze.mjs status | freeze [--hours=72] [--note=…] [--no-warm] | unfreeze')
+  console.error('Uso: node scripts/top-freeze.mjs status | freeze [--hours=72] [--note=…] [--no-warm] | unfreeze | freeze-article <slug> [--hours=96] [--note=…] [--no-warm] | unfreeze-article [slug]')
   process.exit(1)
 }
 run().catch((err) => {

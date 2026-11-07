@@ -174,7 +174,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
     : null
   // El mes también recalcula cifras, artistas, sellos, sonido y debutantes (temas con salida en el mes).
   const stats = storedDigest && month
-    ? await getPeriodStats(storedDigest.from, storedDigest.until, previousMonthStart(storedDigest.from))
+    ? await getPeriodStats(storedDigest.from, storedDigest.until, previousMonthStart(storedDigest.from), { slug: post.slug, publishedAt: post.published_at })
     : null
   const liveDigest = storedDigest && stats ? { ...storedDigest, ...stats } : storedDigest
   const digest = liveDigest && live
