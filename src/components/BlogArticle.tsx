@@ -552,7 +552,9 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
                 ? safeLang === 'es'
                   ? `LAS ${albumTracks.length} IMPRESCINDIBLES ${quarter ? 'DEL TRIMESTRE' : month ? 'DEL MES' : 'DE LA QUINCENA'}`
                   : `THE ${quarter ? "QUARTER'S" : month ? "MONTH'S" : "FORTNIGHT'S"} ${albumTracks.length} ESSENTIALS`
-                : safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'
+                : post.beatport_release_url
+                  ? safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'
+                  : safeLang === 'es' ? 'DALE AL PLAY' : 'HIT PLAY'
             }
             defaultExpanded
             badgeVariant="index"
