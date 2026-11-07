@@ -825,11 +825,11 @@ export function buildVideoCaption(
   const listen = d.fullTrack
     ? opts.platform === 'instagram'
       ? es
-        ? '🎧 Tema entero en Optimal Breaks: enlace en la bio.'
-        : '🎧 Full track on Optimal Breaks: link in bio.'
+        ? '🎧 Tema entero y gratis en Optimal Breaks: enlace en la bio.'
+        : '🎧 Full track, free, on Optimal Breaks: link in bio.'
       : es
-        ? `🎧 Tema entero en Optimal Breaks: ${opts.url}`
-        : `🎧 Full track on Optimal Breaks: ${opts.url}`
+        ? `🎧 Tema entero y gratis en Optimal Breaks: ${opts.url}`
+        : `🎧 Full track, free, on Optimal Breaks: ${opts.url}`
     : opts.platform === 'instagram'
       ? es
         ? '🎧 Escúchalo en Optimal Breaks: enlace en la bio.'

@@ -574,7 +574,7 @@ function drawSplatter(ctx: CanvasRenderingContext2D, cx: number, cy: number, spr
 function drawFullTrackBanner(ctx: CanvasRenderingContext2D, p: number, es: boolean, maxW: number) {
   if (p <= 0) return
   const line1 = es ? 'TEMA ENTERO' : 'FULL TRACK'
-  const line2 = es ? 'EN NUESTRA WEB' : 'STREAMING ON OUR SITE'
+  const line2 = es ? 'GRATIS EN NUESTRA WEB' : 'FREE STREAMING ON OUR SITE'
   let size2 = 32
   ctx.font = font(HEAD, size2)
   while (size2 > 18 && ctx.measureText(line2).width > maxW - 80) {
@@ -1148,7 +1148,7 @@ export function drawReelFrame(
       ctx.globalAlpha = p
       ctx.rotate((-5 * Math.PI) / 180)
       ctx.scale(s, s)
-      const big = data.fullTrack ? (es ? 'ENTERO AQUÍ' : 'FULL TRACK') : es ? 'ESCÚCHALO' : 'LISTEN NOW'
+      const big = data.fullTrack ? (es ? 'ENTERO Y GRATIS' : 'FREE FULL TRACK') : es ? 'ESCÚCHALO' : 'LISTEN NOW'
       ctx.font = font(HEAD, 96)
       const bw = Math.min(900, ctx.measureText(big).width)
       ctx.fillStyle = INK

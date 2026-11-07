@@ -913,7 +913,7 @@ export type FortnightAnim = {
   debutTotal: number
   debut: string[]
   /** Tema que suena en el vídeo: reproductor abajo a la izquierda. `env` = volumen por fotograma (30 fps). */
-  playing?: { title: string; artists: string; img: Img | null; env: Float32Array | null } | null
+  playing?: { title: string; artists: string; img: Img | null; env: Float32Array | null; full?: boolean } | null
 }
 /** Cada escena dura ~7 s: da tiempo a leer el titular, los datos y el recuadro «WHAT YOU SEE». */
 export const FORTNIGHT_DUR = 60
@@ -1564,7 +1564,7 @@ function fnPlayer(ctx: C, x: number, y: number, w: number, h: number, p: NonNull
   ctx.fill()
   ctx.font = MONO(V ? 17 : 15)
   ctx.fillStyle = YELLOW
-  spaced(ctx, 'SUENA · NOW PLAYING', tx + tri + 8, ty, 3)
+  spaced(ctx, p.full ? 'FULL TRACK · FREE' : 'SUENA · NOW PLAYING', tx + tri + 8, ty, 3)
   ctx.fillStyle = '#fff'
   ctx.fillText(fit(ctx, p.title.toUpperCase(), HEAD, tw, V ? 28 : 23, 14), tx, ty + (V ? 38 : 32))
   ctx.fillStyle = 'rgba(255,255,255,0.7)'
@@ -1590,6 +1590,8 @@ export type AlbumAnim = {
   label: string
   tracks: AlbumTrackAnim[]
   playing?: FortnightAnim['playing']
+  /** No es un disco: los textos dicen «playlist», no «album». */
+  playlist?: boolean
 }
 
 type AlbumScene = { k: 'intro' | 'list' | 'outro'; a: number; b: number; from: number }
@@ -1609,12 +1611,11 @@ function albumScenes(n: number): AlbumScene[] {
   })
 }
 
-function albumNote(k: AlbumScene['k']): { es: string; en: string } {
+function albumNote(k: AlbumScene['k'], playlist: boolean): { es: string; en: string } {
   if (k === 'intro') {
-    return {
-      es: 'La portada del álbum y cuántos cortes trae.',
-      en: 'The album cover and how many cuts it holds.',
-    }
+    return playlist
+      ? { es: 'Los temas del artículo y cuántos son.', en: 'The tracks in the article and how many.' }
+      : { es: 'La portada del álbum y cuántos cortes trae.', en: 'The album cover and how many cuts it holds.' }
   }
   if (k === 'outro') {
     return {
@@ -1622,10 +1623,36 @@ function albumNote(k: AlbumScene['k']): { es: string; en: string } {
       en: 'Every cover. The article is in the link.',
     }
   }
-  return {
-    es: 'El orden del álbum en Beatport, con el BPM de cada corte.',
-    en: 'The Beatport running order, with each cut’s BPM.',
+  return playlist
+    ? { es: 'Los temas en el orden del artículo, con su BPM.', en: 'The tracks in article order, with their BPM.' }
+    : { es: 'El orden del álbum en Beatport, con el BPM de cada corte.', en: 'The Beatport running order, with each cut’s BPM.' }
+}
+
+/** Adhesivo sobre el reproductor: el tema que suena está entero y gratis en la web. */
+function fullTrackSticker(ctx: C, x: number, y: number, maxW: number, t: number, V: boolean) {
+  const p = clamp((t - 0.4) / 0.35)
+  if (p <= 0) return
+  const text = 'FULL TRACK · FREE ON OUR SITE'
+  let size = V ? 26 : 22
+  ctx.font = HEAD(size)
+  while (size > 14 && ctx.measureText(text).width > maxW - 40) {
+    size -= 1
+    ctx.font = HEAD(size)
   }
+  const w = ctx.measureText(text).width + 40
+  const h = size + 24
+  const s = (1 + 0.5 * (1 - ease(p))) * (1 + 0.03 * beatPulse(t))
+  ctx.save()
+  ctx.globalAlpha = Math.min(1, p * 1.5)
+  ctx.translate(x + w / 2, y)
+  ctx.rotate(-0.035)
+  ctx.scale(s, s)
+  box(ctx, -w / 2, -h / 2, w, h, YELLOW, INK, 6, 4)
+  ctx.fillStyle = RED
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, 0, 2)
+  ctx.restore()
 }
 
 export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number) {
@@ -1648,10 +1675,12 @@ export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number)
   const bpms = tracks.map((tr) => tr.bpm).filter((n): n is number => typeof n === 'number' && n > 0)
   const lo = bpms.length ? Math.min(...bpms) : 0
   const hi = bpms.length ? Math.max(...bpms) : 0
+  const kind = d.playlist ? 'PLAYLIST' : 'ALBUM'
   paper(ctx, W, H, '#ece2cf')
 
   const facts = [
-    'ALBUM',
+    kind,
+    d.playing?.full ? 'FULL TRACK · FREE ON OUR SITE' : '',
     d.artist.toUpperCase(),
     d.label.toUpperCase(),
     `${tracks.length} TRACKS`,
@@ -1689,12 +1718,12 @@ export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number)
     ctx.translate(-W * 0.35 * ex, 0)
     ctx.globalAlpha = 1 - ex
   }
-  fnNote(ctx, L, lt, albumNote(sc.k))
+  fnNote(ctx, L, lt, albumNote(sc.k, !!d.playlist))
 
   if (sc.k === 'intro') {
     const head = (d.artist || d.title).toUpperCase()
     const sub = [d.label ? `ON ${d.label.toUpperCase()}` : '', `${tracks.length} TRACKS`].filter(Boolean).join(' · ')
-    fnHeader(ctx, L, lt, 'ALBUM', head, sub, RED)
+    fnHeader(ctx, L, lt, kind, head, sub, RED)
     const gap = 22
     const cw = (S.w - gap) / 2
     const ch = V ? 180 : 220
@@ -1734,7 +1763,7 @@ export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number)
     const to = sc.from + slice.length
     fnHeader(
       ctx, L, lt,
-      'ALBUM ORDER',
+      d.playlist ? 'THE PLAYLIST' : 'ALBUM ORDER',
       `CUTS ${sc.from + 1}–${to}`,
       slice[0] ? `«${slice[0].title}»` : `${tracks.length} TRACKS`,
       RED,
@@ -1812,13 +1841,13 @@ export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number)
     ctx.fillStyle = MUTED
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
-    spaced(ctx, 'THE BREAKBEAT ALBUM', F.x, F.y + (V ? 156 : 116), 4)
+    spaced(ctx, d.playlist ? 'BREAKBEAT ON OUR SITE' : 'THE BREAKBEAT ALBUM', F.x, F.y + (V ? 156 : 116), 4)
     return
   }
   const small = V ? 32 : 26
   ctx.font = HEAD(small)
   const logoW = ctx.measureText('OPTIMAL ').width + 3 + ctx.measureText('BREAKS').width
-  const tag = 'THE BREAKBEAT ALBUM'
+  const tag = d.playlist ? 'BREAKBEAT ON OUR SITE' : 'THE BREAKBEAT ALBUM'
   ctx.font = MONO(V ? 20 : 16)
   const tagW = [...tag].reduce((a, c) => a + ctx.measureText(c).width, 0) + 3 * (tag.length - 1)
   const lx = F.x + F.w - logoW
@@ -1830,7 +1859,9 @@ export function animAlbum(ctx: C, W: number, H: number, d: AlbumAnim, t: number)
   ctx.fillStyle = MUTED
   ctx.textBaseline = 'alphabetic'
   spaced(ctx, tag, F.x + F.w, py + pH * 0.5 + (V ? 38 : 30), 3, 'right')
-  fnPlayer(ctx, F.x, py, Math.min(V ? 640 : 470, blockX - F.x - 28), pH, d.playing, t, V)
+  const pW = Math.min(V ? 640 : 470, blockX - F.x - 28)
+  fnPlayer(ctx, F.x, py, pW, pH, d.playing, t, V)
+  if (d.playing.full) fullTrackSticker(ctx, F.x + 20, py - 16, pW, t, V)
 }
 
 // ===================== REGALO (Woter — Gone Gone Gone) =====================
@@ -1901,7 +1932,7 @@ export function animGift(ctx: C, W: number, H: number, d: GiftAnim, t: number) {
         kicker: 'REGALO DE ' + d.artist.toUpperCase(),
         full: 'TEMA ENTERO',
         hear: 'SE OYE DE PRINCIPIO A FIN',
-        down: 'Y SE PUEDE DESCARGAR',
+        down: 'DESCARGA GRATIS EN LA WEB',
         how: 'PARA BAJARLO',
         s1: 'CUENTA EN LA WEB',
         s2: 'SIGUE A @optimal.breaks',
@@ -1916,7 +1947,7 @@ export function animGift(ctx: C, W: number, H: number, d: GiftAnim, t: number) {
         kicker: 'A GIFT FROM ' + d.artist.toUpperCase(),
         full: 'FULL TRACK',
         hear: 'HEAR IT START TO FINISH',
-        down: 'AND YOU CAN DOWNLOAD IT',
+        down: 'FREE DOWNLOAD ON OUR SITE',
         how: 'TO GET THE FILE',
         s1: 'AN ACCOUNT ON THE SITE',
         s2: 'FOLLOW @optimal.breaks',

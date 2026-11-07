@@ -329,6 +329,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           artist: pageReel.artist,
           label: pageReel.label,
           albumTracks: pageReel.tracks.map((t) => t.title),
+          fullTrack: pageReel.albumFull ? pageReel.albumAudio?.title || null : null,
         },
       })
     }

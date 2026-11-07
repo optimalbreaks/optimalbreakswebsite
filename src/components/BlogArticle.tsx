@@ -392,6 +392,13 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
             artwork: t.artwork_url,
           }
         })(),
+    albumFull:
+      !digest &&
+      (() => {
+        const t = albumTracks.find((row) => (row.full_audio_url || '').trim().startsWith('/') || row.sample_url)
+        return !!t && (t.full_audio_url || '').trim().startsWith('/')
+      })(),
+    playlist: !post.beatport_release_url,
     gift:
       safeSlug === GIFT_BLOG_SLUG && albumTracks.some((t) => isGiftDownloadTrack(t.full_audio_url))
         ? { es: safeLang !== 'en' }

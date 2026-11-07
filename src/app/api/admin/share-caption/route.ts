@@ -38,7 +38,7 @@ const KIND_ES: Record<Kind, string> = {
     '· new_release (NEW RELEASE): salió hace poco (días en `daysSinceRelease`). Es novedad: está en nuestras New Releases, invita a escucharlo, guardarlo y meterlo en sus sets.',
     '· archive_pick (ARCHIVE PICK): tema con meses o años. Rescate del archivo: por qué sigue sonando hoy, el año en que salió, invita a recordar si lo pinchaban o lo bailaban. No lo vendas como novedad.',
     '· sin releaseStatus: recomendación sin fecha; no hables de novedad ni de archivo.',
-    'Si `fullTrack` es true, el artista ha cedido el tema entero: se oye completo en optimalbreaks.com, no es un preview de tienda. Dilo en las dos primeras líneas. No hables de preview, de fragmento ni de un trozo.',
+    'Si `fullTrack` es true, el artista ha cedido el tema entero: se oye completo y gratis en optimalbreaks.com, no es un preview de tienda. Dilo en las dos primeras líneas, con la palabra «gratis». No hables de preview, de fragmento ni de un trozo.',
   ].join('\n'),
   set:
     'Una sesión (DJ set) grabada en directo en un festival o evento. Transmite el directo con los datos que hay: festival o evento, ciudad, fecha, quién la pinchó y si se puede descargar gratis en MP3 (`freeDownload`) o escuchar entera. Si se descarga, dilo arriba: es lo que más se guarda.',
@@ -47,7 +47,7 @@ const KIND_ES: Record<Kind, string> = {
   week:
     'Los nuevos lanzamientos (New Releases) de breakbeat de la semana seleccionados por Optimal Breaks. Destaca el volumen y algunos nombres, e invita a descubrir la selección.',
   blog:
-    'Un artículo del blog de Optimal Breaks. Da ganas de leerlo con un gancho sobre el tema del artículo, sin contarlo todo.',
+    'Un artículo del blog de Optimal Breaks. Da ganas de leerlo con un gancho sobre el tema del artículo, sin contarlo todo. Si `fullTrack` trae un título, ese tema se oye entero y gratis en optimalbreaks.com (lo cedió el artista): dilo en las dos primeras líneas, con la palabra «gratis».',
   events:
     'La agenda de breakbeat de los próximos 14 días. El vídeo abre con «te los vas a perder» y luego enseña el cartel, la fecha, la ciudad y el lineup de cada evento, cinco segundos por cita. Nombra varias con ciudad y día. Invita a decir a cuál van.',
   digest: [
@@ -61,7 +61,7 @@ const KIND_ES: Record<Kind, string> = {
   ].join('\n'),
   gift: [
     'El regalo de Woter: el vídeo es solo de «Gone Gone Gone (WoTeR Breaks Mix)». No es el reel de un álbum ni el de una exclusiva que solo se oye.',
-    'Primera línea: es un regalo suyo, el tema está entero y se puede descargar.',
+    'Primera línea: es un regalo suyo, el tema está entero y se puede descargar gratis en la web.',
     'Después, en frases cortas: se oye de principio a fin en optimalbreaks.com. Para descargarlo hace falta una cuenta, seguir a @optimal.breaks (con el punto; @optimalbreaks sin punto es otra cuenta y no vale) y a @woter_dj, y subir dos capturas donde se lea «Siguiendo» o «Following».',
     'Esos dos @ van en el texto: son el requisito, no una mención de cortesía.',
     'Nombra dos o tres temas de `also`: son lo demás que más se guarda de él. No inventes discografía.',
@@ -76,12 +76,12 @@ const KIND_EN: Record<Kind, string> = {
     '· new_release (NEW RELEASE): out recently (days in `daysSinceRelease`). It is new: it is in our New Releases, invite people to listen, save it and play it in their sets.',
     '· archive_pick (ARCHIVE PICK): months or years old. An archive pick: why it still works today, the year it came out, ask whether people played or danced to it back then. Do not sell it as new.',
     '· no releaseStatus: a recommendation without a date; do not talk about new or archive.',
-    'If `fullTrack` is true, the artist gifted the whole track: it streams in full on optimalbreaks.com, not a store preview. Say so in the first two lines. Do not call it a preview, a clip or a snippet.',
+    'If `fullTrack` is true, the artist gifted the whole track: it streams in full and free on optimalbreaks.com, not a store preview. Say so in the first two lines, with the word «free». Do not call it a preview, a clip or a snippet.',
   ].join('\n'),
   set: 'A DJ set recorded live at a festival or event. Convey the live set with the facts you have: festival or event, city, date, who played it and whether it is a free MP3 download (`freeDownload`) or can be streamed in full. If it downloads, say so near the top: that is what gets saved most.',
   top100: 'The Optimal Breaks community Top 100: the tracks users saved the most (the video counts down from 10 to 1). Highlight the #1 and spark debate about the ranking.',
   week: "This week's new breakbeat releases (New Releases) curated by Optimal Breaks. Highlight the volume and a few names, and invite people to dig into the selection.",
-  blog: 'An Optimal Breaks blog article. Make people want to read it with a hook about the topic, without giving everything away.',
+  blog: 'An Optimal Breaks blog article. Make people want to read it with a hook about the topic, without giving everything away. If `fullTrack` holds a title, that track streams in full and free on optimalbreaks.com (the artist gave it to us): say so in the first two lines, with the word «free».',
   events:
     "The next 14 days of breakbeat events. The video opens with “you're gonna miss them”, then shows each night's poster, date, city and lineup, five seconds each. Name a few with city and day. Ask which one people are going to.",
   digest: [
@@ -95,7 +95,7 @@ const KIND_EN: Record<Kind, string> = {
   ].join('\n'),
   gift: [
     'Woter’s gift: the video is only about “Gone Gone Gone (WoTeR Breaks Mix)”. It is not an album reel and not a stream-only exclusive.',
-    'First line: it is a gift from him, the track is complete, and it can be downloaded.',
+    'First line: it is a gift from him, the track is complete, and it can be downloaded for free on the site.',
     'Then, in short lines: it plays start to finish on optimalbreaks.com. The download needs an account, a follow of @optimal.breaks (with the dot; @optimalbreaks without a dot is a different account and does not count) and of @woter_dj, plus two screenshots that show “Following” or “Siguiendo”.',
     'Those two @ handles belong in the text: they are the requirement, not a courtesy tag.',
     'Name two or three tracks from `also`: the rest of what people save most from him. Do not invent a discography.',

@@ -67,6 +67,10 @@ export type PageReelInput =
        * Preview del primer corte con audio, para el selector de R/F.
        */
       albumAudio?: FortnightReelInput['audio']
+      /** El corte que suena es una exclusiva entera (`full_audio_url`): el vídeo dice que es gratis en la web. */
+      albumFull?: boolean
+      /** El artículo no es un disco (sin release de Beatport): el vídeo no dice «álbum». */
+      playlist?: boolean
       /**
        * Regalo de Woter. El audio es el tema cedido y el vídeo es `animGift`,
        * no el molde de álbum ni el banner de exclusiva.
@@ -381,9 +385,10 @@ export async function renderPageReel(
             artists: input.albumAudio.artists,
             img: next(),
             env: audioEnvelope(audio, FORTNIGHT_DUR, 30),
+            full: !!input.albumFull,
           }
         : null
-    const data = { title: input.title, artist: input.artist, label: input.label, tracks, playing }
+    const data = { title: input.title, artist: input.artist, label: input.label, tracks, playing, playlist: !!input.playlist }
     const draw = (c: CanvasRenderingContext2D, t: number) => animAlbum(c, W, H, data, t)
     return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress, audio)
   } else {
