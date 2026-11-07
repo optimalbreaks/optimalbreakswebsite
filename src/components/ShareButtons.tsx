@@ -12,15 +12,17 @@ import VideoShareButtons from '@/components/VideoShareButtons'
 import {
   buildAbsoluteShareUrl,
   buildMixVideoCaption,
+  buildVideoCaption,
   copyShareLink,
   openFacebookShareDialog,
+  releaseBadge,
 } from '@/lib/share-track'
 import { aiShareCaption, appendInstagramMentions, buildGiftVideoCaption, buildPageVideoCaption, dayReelTense, type SharePlatform } from '@/lib/share-caption'
 import { GIFT_IG_ARTIST, GIFT_IG_SITE } from '@/lib/gift-download'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
 import { dayAudioSlots, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
-import type { ShareAudioSegment } from '@/lib/share-audio'
+import { SHARE_SEGMENT_SEC, type ShareAudioSegment } from '@/lib/share-audio'
 type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
 
 /** Hasta 5 destacados con preview. El primero suena desde el segundo 0. */
@@ -44,7 +46,13 @@ function dayShareClips(day: DayReelInput) {
   })
 }
 /** JSON de `/api/og/story?play=mix:…&format=json`. */
-type SetVideoData = ReelData & { eventName?: string | null; place?: string | null }
+type SetVideoData = ReelData & {
+  eventName?: string | null
+  place?: string | null
+  /** Solo en el JSON de un tema (`featured:<id>`). */
+  label?: string | null
+  musicKey?: string | null
+}
 
 interface ShareButtonsProps {
   url: string
@@ -142,11 +150,15 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
     }
   }
 
-  /** Datos de la sesión para los vídeos (en inglés, como los de los temas); una sola petición para R y F. */
+  /**
+   * Datos del vídeo (en inglés, como los de los temas); una sola petición para R y F.
+   * Sesión (`storyPlay`) o la exclusiva de un artículo (`pageReel.trackPlay`).
+   */
   const setDataRef = useRef<Promise<SetVideoData> | null>(null)
   const getSetData = () => {
     if (!setDataRef.current) {
-      const params = new URLSearchParams({ play: storyPlay as string, lang: 'en', format: 'json' })
+      const play = pageReel?.trackPlay || (storyPlay as string)
+      const params = new URLSearchParams({ play, lang: 'en', format: 'json' })
       setDataRef.current = fetch(`/api/og/story?${params.toString()}`)
         .then(async (res) => {
           if (!res.ok) throw new Error(`video data ${res.status}`)
@@ -162,6 +174,11 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
 
   /** R/F: sesión (`storyPlay` mix:…) o artículo del blog (`pageReel`). */
   const makeVideo = async (format: ReelFormat, onProgress: (r: number) => void, audio: ShareAudioSegment | null) => {
+    if (pageReel?.trackPlay) {
+      const data = await getSetData()
+      const { renderReel } = await import('@/lib/reel-renderer')
+      return renderReel(data, { format, durationSec: SHARE_SEGMENT_SEC, audio, onProgress })
+    }
     if (pageReel) {
       const { renderPageReel } = await import('@/lib/page-reel')
       return renderPageReel(pageReel, format, onProgress, audio)
@@ -172,6 +189,34 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
   }
 
   const makeCaption = async (platform: SharePlatform) => {
+    if (pageReel?.trackPlay) {
+      const data = await getSetData()
+      const status = releaseBadge(data.releaseDate, data.year)
+      return aiShareCaption({
+        kind: 'track',
+        platform,
+        lang,
+        url: fullUrl,
+        fallback: (l) => buildVideoCaption({ ...data, fullTrack: true }, { lang: l, url: fullUrl, platform }),
+        context: {
+          title: data.title,
+          artists: data.artists,
+          label: data.label,
+          releaseDate: data.releaseDate,
+          year: data.year,
+          bpm: data.bpm,
+          key: data.musicKey,
+          section: data.kicker,
+          releaseStatus: status
+            ? { soon: 'coming_soon', new: 'new_release', archive: 'archive_pick' }[status.tone]
+            : null,
+          daysSinceRelease: status?.days ?? null,
+          videoSticker: status ? `${status.word} · ${status.sub}` : null,
+          fullTrack: true,
+          article: pageReel.title,
+        },
+      })
+    }
     if (pageReel?.day && pageReel.day.picks.length > 0) {
       const d = pageReel.day
       const name = (t?: { title: string; artists: string }) => (t ? `${t.artists} — ${t.title}` : undefined)

@@ -41,6 +41,7 @@ import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } 
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
 import { FORTNIGHT_DUR, GIFT_DUR } from '@/lib/page-reel-design'
+import { SHARE_SEGMENT_SEC } from '@/lib/share-audio'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 
@@ -341,6 +342,16 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   // Vídeos R/F del artículo (solo admins; ver src/lib/page-reel.ts).
   const firstTrack = albumTracks[0]
   const trackArtists = (t: BeatportTopTrack) => (t.artists || []).map((a) => a.name).filter(Boolean).join(', ')
+  // Artículo de una exclusiva cedida (no un disco): R y F son el reel del tema.
+  const exclusiveRef =
+    !digest &&
+    !post.beatport_release_url &&
+    firstTrack &&
+    (firstTrack.full_audio_url || '').trim().startsWith('/') &&
+    !isGiftDownloadTrack(firstTrack.full_audio_url)
+      ? saveRefsByUrl?.[(firstTrack.beatport_url || '').trim()]?.find((r) => r.source === 'featured')
+      : undefined
+  const trackPlay = exclusiveRef ? `featured:${exclusiveRef.id}` : undefined
   const blogReel = {
     kind: 'blog' as const,
     title,
@@ -386,7 +397,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
             src,
             key: t.beatport_url || `album:${name}`,
             label: `${name} — ${trackArtists(t)}`,
-            seconds: gifted ? GIFT_DUR : FORTNIGHT_DUR,
+            seconds: gifted ? GIFT_DUR : trackPlay ? SHARE_SEGMENT_SEC : FORTNIGHT_DUR,
             title: name,
             artists: trackArtists(t),
             artwork: t.artwork_url,
@@ -399,6 +410,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
         return !!t && (t.full_audio_url || '').trim().startsWith('/')
       })(),
     playlist: !post.beatport_release_url,
+    trackPlay,
     gift:
       safeSlug === GIFT_BLOG_SLUG && albumTracks.some((t) => isGiftDownloadTrack(t.full_audio_url))
         ? { es: safeLang !== 'en' }

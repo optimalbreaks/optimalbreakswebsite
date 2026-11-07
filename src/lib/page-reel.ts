@@ -72,6 +72,11 @@ export type PageReelInput =
       /** El artículo no es un disco (sin release de Beatport): el vídeo no dice «álbum». */
       playlist?: boolean
       /**
+       * Artículo de una exclusiva cedida (`featured:<id>`): R y F son el reel
+       * de ese tema (`renderReel`, banner de tema entero y gratis), no el molde de álbum.
+       */
+      trackPlay?: string
+      /**
        * Regalo de Woter. El audio es el tema cedido y el vídeo es `animGift`,
        * no el molde de álbum ni el banner de exclusiva.
        */
