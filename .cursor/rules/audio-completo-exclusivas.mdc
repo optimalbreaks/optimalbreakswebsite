@@ -41,6 +41,7 @@ Contexto (sep 2026): Kritycal System fue el primer streaming. La receta de abajo
 | **Control** | `2026-08-31` | `private/music/kritycal-system-brainbass-control.mp3` | Kritycal System y BrainBass. Máster 4:09. Ya estaba (`/track/control/30177482`). |
 | **Back To Minimal** | `2026-10-12` | `private/music/lady-waks-orebeat-back-to-minimal.mp3` | Lady Waks y Orebeat. Máster 3:56, FL Studio. Ya estaba (`/track/back-to-minimal/30678915`); el audio completo se enganchó a esa misma fila. Distorsion Records. |
 | **Gone Gone Gone (WoTeR Breaks Mix)** | `2026-11-02` | `private/music/woter-gone-gone-gone.mp3` | **Descarga**, no solo streaming. Woter (`/artists/woter`). Máster 5:02, FL Studio. En la web, MP3 192 kbps. El WAV original (54 MB) se baja desde el artículo. No está en Beatport: `platform: hosted`, release `2026-11-04`. Sin botón de tienda ni búsqueda de Spotify (abriría el tema oficial). |
+| **Dont Wake Up** | `2026-11-09` | `private/music/kritycal-system-dont-wake-up.mp3` | Kritycal System. Máster **4:23** (FL Studio), 192 kbps. Ya estaba en Beatport (`/track/dont-wake-up/29688516`, Creative Sound Records, 135 BPM, sol menor); se rellenó `full_audio_url` en la misma fila. Streaming, sin descarga. |
 
 ## Arquitectura (no negociable)
 
