@@ -632,6 +632,10 @@ export interface Database {
         Args: { p_keys: string[] }
         Returns: { canonical_key: string; user_id: string | null; play_count: number }[]
       }
+      track_play_user_counts_until: {
+        Args: { p_keys: string[]; p_until: string }
+        Returns: { canonical_key: string; user_id: string | null; play_count: number }[]
+      }
       increment_blog_post_view: {
         Args: { p_slug: string }
         Returns: null

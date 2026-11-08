@@ -32,6 +32,16 @@ $env:NODE_TLS_REJECT_UNAUTHORIZED='0'; node scripts/top-freeze.mjs freeze --note
 - Si ya hay una abierta, no abre otra. Para rehacer la foto: `unfreeze` y luego `freeze`.
 - Contestar a Narciso con la hora de congelar y la de descongelar (las imprime el script).
 
+## El vídeo se grabó antes y el top ya se ha movido → congelar una foto del pasado
+
+`scripts/top-freeze-asof.ts` rehace el Top 100 y el tablero de artistas contando solo votos y escuchas hasta `--asof=ISO` (migración 106, `track_play_user_counts_until`). Con `--freeze --until=ISO` lo congela con esa foto, sin pasar por el directo. `--dump=archivo` guarda la foto y `--from=archivo` congela esa foto.
+
+El reloj del archivo no basta: manda lo que dice el vídeo. Un «+» que se quita después ya no está en la tabla, y la reconstrucción no lo ve. Caso del 8 nov 2026 (reels de Godino: Top 100 de temas y Top 10 de artistas, grabados el 7 nov): a las 19:14 la web decía Huda Hudia 125 (4.º) y NXTU 8 (20.º). Al día siguiente, contando hasta esa misma hora, salían 119 y 7: alguien había quitado votos. La foto congelada (#2) es la reconstrucción de las 19:16 con los 50 primeros artistas leídos en directo y el voto que perdieron *NXTU* y *My Love* (Huda Hudia Remix). Raving Again, AI Killer y Calypso solo se movieron dentro de su bloque de empatados. Ningún puesto tiene menos fans que el de debajo.
+
+Esa congelación no caduca a las 72 h: queda abierta hasta que Narciso diga que los vídeos están publicados. Entonces se pone `top_freezes.until` = hora de publicación + 72 h en esa fila (#2). No se hace `unfreeze` + `freeze`: rehacer la foto enseñaría el directo.
+
+Tras congelar, la web tarda hasta 5 min en enseñar la foto (caché de lectura), no 1.
+
 ## «Descongela el top» → descongelar
 
 ```powershell

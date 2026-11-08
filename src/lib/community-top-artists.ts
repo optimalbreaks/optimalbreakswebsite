@@ -205,7 +205,7 @@ function boardTrackKey(
  * (fichado, claim, familiar y sello). Una lectura cacheada 5 min para
  * todas las fichas; no es el contador de favoritos de la estrella.
  */
-async function loadCommunityArtistBoard(sb: ServiceClient): Promise<Record<string, CommunityArtistCounts>> {
+export async function loadCommunityArtistBoard(sb: ServiceClient, asofMs?: number): Promise<Record<string, CommunityArtistCounts>> {
   const [saves, privateProfiles, selfCreditSkip, labelCreditSkip] = await Promise.all([
     fetchAllPagesParallel<BoardSaveRow>(
       () => sb.from('saved_chart_tracks').select('id', { count: 'exact', head: true }),
@@ -224,7 +224,12 @@ async function loadCommunityArtistBoard(sb: ServiceClient): Promise<Record<strin
   const privateSet = new Set(
     ((privateProfiles.data as { id: string }[] | null) ?? []).map((p) => p.id),
   )
-  const rows = saves.filter((s) => !privateSet.has(s.user_id))
+  const rows = saves.filter((s) => {
+    if (privateSet.has(s.user_id)) return false
+    if (asofMs == null) return true
+    const t = s.created_at ? Date.parse(s.created_at) : NaN
+    return Number.isFinite(t) && t <= asofMs
+  })
 
   const chartIds = rows.filter((s) => s.track_source === 'chart').map((s) => s.track_id)
   const featIds = rows.filter((s) => s.track_source === 'featured').map((s) => s.track_id)

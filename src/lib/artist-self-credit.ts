@@ -170,6 +170,7 @@ export async function playCountsExcludingSelfCredit(
   keys: string[],
   creditForKey: (canonicalKey: string) => PlayCredit | null | undefined,
   selfSkip?: SelfCreditSkipMap,
+  untilIso?: string,
 ): Promise<Map<string, number>> {
   const counts = new Map<string, number>()
   const unique = [...new Set(keys.map((k) => k.replace(/\/$/, '')).filter(Boolean))]
@@ -178,7 +179,9 @@ export async function playCountsExcludingSelfCredit(
   const queryKeys = unique.flatMap((k) => [k, `${k}/`])
   for (let i = 0; i < queryKeys.length; i += 400) {
     const slice = queryKeys.slice(i, i + 400)
-    const { data, error } = await sb.rpc('track_play_user_counts_for_keys', { p_keys: slice })
+    const { data, error } = untilIso
+      ? await sb.rpc('track_play_user_counts_until', { p_keys: slice, p_until: untilIso })
+      : await sb.rpc('track_play_user_counts_for_keys', { p_keys: slice })
     if (error) throw new Error(error.message)
     for (const row of (data || []) as {
       canonical_key: string

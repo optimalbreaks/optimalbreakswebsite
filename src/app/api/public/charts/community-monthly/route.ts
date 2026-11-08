@@ -488,18 +488,22 @@ export async function GET(request: NextRequest) {
   return computeCommunityTop(url)
 }
 
-async function computeCommunityTop(url: URL): Promise<NextResponse> {
+export async function computeCommunityTop(url: URL): Promise<NextResponse> {
   const { limit, artistsOnly, artistsLimit, cdnCache } = topParams(url)
   const ymdParam = (name: string) => {
     const v = (url.searchParams.get(name) || '').trim()
     return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null
   }
+  const asofRaw = (url.searchParams.get('asof') || '').trim()
+  const asofMs = Date.parse(asofRaw)
+  const asof = asofRaw.includes('T') && Number.isFinite(asofMs) ? asofMs : null
   const since = ymdParam('since')
   const until = ymdParam('until')
-  const scope = since || until ? 'window' : 'all_time'
+  const scope = asof != null ? 'asof' : since || until ? 'window' : 'all_time'
   const inWindow = (createdAt: string | null) => {
     if (scope === 'all_time') return true
     if (!createdAt) return false
+    if (scope === 'asof') return Date.parse(createdAt) <= (asof as number)
     const day = new Date(createdAt).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
     return (!since || day >= since) && (!until || day <= until)
   }
@@ -1006,7 +1010,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     ? await playCountsExcludingSelfCredit(sb, allKeys, (k) => {
         const a = aggByKey.get(k)
         return a ? { artists: a.artists, mixName: a.mix_name } : null
-      }, selfCreditSkip)
+      }, selfCreditSkip, asof != null ? new Date(asof).toISOString() : undefined)
     : new Map<string, number>()
 
   // Ordenamos por usuarios únicos primero (un mismo usuario no infla el ranking
@@ -1072,7 +1076,7 @@ async function computeCommunityTop(url: URL): Promise<NextResponse> {
     )
     .slice(0, artistsLimit)
 
-  const now = new Date()
+  const now = asof != null ? new Date(asof) : new Date()
   const thisMonday = isoMondayUtc(now)
   // Los lunes ISO solo sirven para «X sem.» (semanas seguidas en el tablero /
   // en el nº 1). Las flechas ya no se apoyan en ellos.
