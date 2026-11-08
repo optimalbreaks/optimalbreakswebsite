@@ -62,7 +62,10 @@ function plain(html: string): string {
 
 function txt(v: unknown, max: number): string {
   const s = typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : typeof v === 'number' ? String(v) : ''
-  return s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s
+  if (s.length <= max) return s
+  const cut = s.slice(0, max)
+  const sp = cut.lastIndexOf(' ')
+  return (sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,;:–-]+$/, '')
 }
 
 function trackTitle(t: BeatportTopTrack): string {
@@ -202,7 +205,7 @@ Devuelve JSON: {"escenas":[...]} con 5 a 7 escenas, en español de España. La p
 Tipos y campos (respeta los límites de caracteres):
 - gancho: kicker (≤22, mayúsculas, p. ej. "EXCLUSIVA" o "HISTORIA"), titulo (≤40, mayúsculas, golpe de efecto), sub (≤60), imagen.
 - cita: ano (año o ""), titulo (≤30, mayúsculas), texto (≤90, contexto), cita (≤110, frase literal del artículo o de alguien citado en él, sin comillas), imagen.
-- dato: ano (año o ""), titulo (≤30, mayúsculas), lineas (2 o 3 frases completas de ≤42 con datos concretos; nunca a medias).
+- dato: ano (año o ""), titulo (≤30, mayúsculas), lineas (2 o 3 frases completas de ≤42 con datos concretos; nunca a medias), imagen (opcional: logo del sello o carátula de la que hable, si no se ha usado).
 - artista: nombre (≤24, mayúsculas), lugar (≤24, mayúsculas, ciudad o país), frase (≤64), dato (≤56), imagen (su foto si está en la lista).
 - tema: ano, titulo (≤36, mayúsculas, el nombre del tema), sub (≤50, artistas), fichas (2 o 3 de ≤20: sello, BPM, año, versión), imagen (su carátula).
 Reglas:
@@ -286,7 +289,7 @@ function normalizar(list: unknown[], m: Material): Escena[] {
       if (cita) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), texto: txt(e.texto, 90), cita, imagen: pic(e.imagen) })
     } else if (tipo === 'dato') {
       const lineas = (Array.isArray(e.lineas) ? e.lineas : []).map((l) => txt(l, 60)).filter(Boolean).slice(0, 3)
-      if (lineas.length) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), lineas })
+      if (lineas.length) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), lineas, ...(e.imagen ? { imagen: pic(e.imagen) } : {}) })
     } else if (tipo === 'artista') {
       const nombre = up(e.nombre, 24)
       if (nombre) out.push({ tipo, seg: 0, nombre, lugar: up(e.lugar, 24), frase: txt(e.frase, 80), dato: txt(e.dato, 70), imagen: pic(e.imagen) })
