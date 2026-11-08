@@ -125,7 +125,8 @@ async function loadMaterial(slug: string) {
   const text = plain(String(p.content_es || ''))
   const imagenes: Imagen[] = []
   const push = (url: unknown, que: string) => {
-    const u = typeof url === 'string' ? url.trim() : ''
+    const raw = typeof url === 'string' ? url.trim() : ''
+    const u = /^\/[^/]/.test(raw) ? `${SITE}${raw}` : raw
     if (/^https:\/\//.test(u) && !imagenes.some((i) => i.url === u)) imagenes.push({ url: u, que })
   }
   push(p.image_url, 'portada del artículo')
