@@ -47,6 +47,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 import { canonicalKeyFromTrackPlaySave } from '@/lib/track-canonical-key'
+import { logParkineoPlayOnce } from '@/lib/parkineo'
 import { logTrackPlay } from '@/lib/track-play-log'
 // Coordinador "una sola fuente audible": los YouTube embebidos (vinilos,
 // /mixes, Mis Tracks…) y este reproductor global se excluyen mutuamente.
@@ -194,6 +195,11 @@ export interface PreviewTrack {
    *  (`<TrackShareButton>`) para que el usuario pueda compartir lo que está
    *  sonando sin tener que volver a la lista. */
   share?: PreviewShareData
+  /**
+   * Tema MP3 de Parkineo. Al arrancar se anota en `parkineo_play_events`.
+   * No lleva `save`: no entra en Mis Tracks ni en `track_play_events`.
+   */
+  parkineoTrackId?: string
 }
 
 export interface PreviewAudioApi {
@@ -2511,8 +2517,12 @@ export function DeckAudioProvider({
         playerDiag('play_ok', { idx, ms: Date.now() - previewLoadAtRef.current, rs: audio.readyState })
         setPreviewPlaying(true)
         setPreviewBlocked(false)
-        const playKey = queue[idx].save ? canonicalKeyFromTrackPlaySave(queue[idx].save!) : null
-        if (playKey && !skipNextPlayLogRef.current) logTrackPlay(playKey)
+        const item = queue[idx]
+        const playKey = item?.save ? canonicalKeyFromTrackPlaySave(item.save) : null
+        if (!skipNextPlayLogRef.current) {
+          if (playKey) logTrackPlay(playKey)
+          else if (item?.parkineoTrackId) logParkineoPlayOnce('track', item.parkineoTrackId)
+        }
         skipNextPlayLogRef.current = false
         // Android: la siguiente pista se baja a memoria desde `timeupdate`
         // (≥ 1,5 s), no aquí, para que la actual tenga la red al arrancar.

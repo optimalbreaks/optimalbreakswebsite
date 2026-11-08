@@ -476,6 +476,47 @@ async function mixcloudArtwork(canonical: string): Promise<string | null> {
   }
 }
 
+const PLAY_STORAGE_KEY = 'ob_parkineo_plays_v1'
+const playInFlight = new Set<string>()
+
+/** Una escucha por pestaña. La web pública llama esto al dar al play. El admin no. */
+export function logParkineoPlayOnce(kind: 'session' | 'track', id: string): void {
+  if (typeof window === 'undefined' || !id) return
+  const key = `${kind}:${id}`
+  try {
+    const raw = sessionStorage.getItem(PLAY_STORAGE_KEY)
+    const arr: string[] = raw ? JSON.parse(raw) : []
+    if (arr.includes(key)) return
+  } catch {
+    return
+  }
+  if (playInFlight.has(key)) return
+  playInFlight.add(key)
+
+  void fetch('/api/parkineo-play', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind, id }),
+  })
+    .then((r) => {
+      if (!r.ok) return
+      try {
+        const raw = sessionStorage.getItem(PLAY_STORAGE_KEY)
+        const arr: string[] = raw ? JSON.parse(raw) : []
+        if (!arr.includes(key)) {
+          arr.push(key)
+          sessionStorage.setItem(PLAY_STORAGE_KEY, JSON.stringify(arr))
+        }
+      } catch {
+        /* ignore */
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      playInFlight.delete(key)
+    })
+}
+
 async function fetchText(url: string, ms: number): Promise<{ ok: boolean; finalUrl: string; text: string }> {
   try {
     const res = await fetch(url, {

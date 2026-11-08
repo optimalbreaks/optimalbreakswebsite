@@ -1,108 +1,78 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import {
   formatTrackLength,
   PARKINEO_TRACK_MAX_BYTES,
   parkineoTrackCycleLabel,
   type ParkineoTrackPublic,
 } from '@/lib/parkineo-tracks'
-import {
-  registerYouTubeEmbed,
-  releaseYouTubePlay,
-  requestYouTubePlay,
-  subscribeYouTubePlay,
-} from '@/lib/youtube-play-coordinator'
 
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 const DISPLAY = { fontFamily: "'Unbounded', sans-serif", fontWeight: 900, textTransform: 'uppercase' } as const
 const BTN =
   'inline-block border-[3px] border-[var(--ink)] px-5 py-3 no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_var(--ink)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_var(--ink)]'
 
-let sharedAudio: HTMLAudioElement | null = null
-let sharedId: string | null = null
-const playListeners = new Set<(id: string | null) => void>()
+const PARKINEO_QUEUE = 'parkineo'
 
-function getSharedAudio(): HTMLAudioElement {
-  if (!sharedAudio) {
-    sharedAudio = new Audio()
-    sharedAudio.preload = 'none'
+function parkineoPreviewItem(
+  track: { id: string; title: string; artist: string; slug?: string },
+  lang: string,
+  count: boolean,
+): PreviewTrack {
+  return {
+    rowKey: `parkineo-track-${track.id}`,
+    src: `/api/parkineo-audio/${track.id}`,
+    title: track.title,
+    artist: track.artist,
+    album: 'Parkineo',
+    domId: track.slug ? `tema-${track.slug}` : undefined,
+    originPath: `/${lang}/parkineo`,
+    ...(count ? { parkineoTrackId: track.id } : {}),
   }
-  return sharedAudio
-}
-
-function setSharedId(id: string | null) {
-  sharedId = id
-  playListeners.forEach((listener) => listener(id))
 }
 
 export function ParkineoTrackPlayButton({
   trackId,
-  label,
+  title,
+  artist = '',
+  queue,
+  groupKey,
 }: {
   trackId: string
-  label: string
+  title: string
+  artist?: string
+  /** Cola completa. Sin ella suena solo este tema y no cuenta como escucha. */
+  queue?: PreviewTrack[]
+  groupKey?: string
 }) {
-  const [playing, setPlaying] = useState(false)
-  const [clock, setClock] = useState('0:00')
-  const slot = `parkineo-track-${trackId}`
-
-  useEffect(() => {
-    const onId = (id: string | null) => setPlaying(id === trackId)
-    playListeners.add(onId)
-    onId(sharedId)
-    const audio = getSharedAudio()
-    const onTime = () => {
-      if (sharedId === trackId) setClock(formatTrackLength(audio.currentTime))
-    }
-    const onEnd = () => {
-      if (sharedId !== trackId) return
-      releaseYouTubePlay(slot)
-      setSharedId(null)
-    }
-    audio.addEventListener('timeupdate', onTime)
-    audio.addEventListener('ended', onEnd)
-    const unsub = subscribeYouTubePlay((active) => {
-      if (active !== slot && sharedId === trackId) setSharedId(null)
-    })
-    return () => {
-      playListeners.delete(onId)
-      audio.removeEventListener('timeupdate', onTime)
-      audio.removeEventListener('ended', onEnd)
-      unsub()
-    }
-  }, [slot, trackId])
-
-  const toggle = () => {
-    const audio = getSharedAudio()
-    const src = `/api/parkineo-audio/${trackId}`
-    if (sharedId === trackId && !audio.paused) {
-      audio.pause()
-      releaseYouTubePlay(slot)
-      setSharedId(null)
-      return
-    }
-    requestYouTubePlay(slot)
-    registerYouTubeEmbed(slot, () => {
-      audio.pause()
-      if (sharedId === trackId) setSharedId(null)
-    })
-    if (audio.getAttribute('src') !== src) audio.src = src
-    setSharedId(trackId)
-    void audio.play().catch(() => setSharedId(null))
-  }
+  const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } =
+    usePreviewAudioGated()
+  const rowKey = `parkineo-track-${trackId}`
+  const items = queue && queue.length > 0 ? queue : [parkineoPreviewItem({ id: trackId, title, artist }, 'es', false)]
+  const index = Math.max(0, items.findIndex((item) => item.rowKey === rowKey))
+  const key = groupKey || (queue ? PARKINEO_QUEUE : `parkineo-one-${trackId}`)
+  const isActive = previewGroupKey === key && previewQueue[previewIndex]?.rowKey === rowKey
 
   return (
     <button
       type="button"
-      onClick={toggle}
-      aria-label={label}
+      onClick={() => {
+        if (isActive) {
+          togglePreview()
+          return
+        }
+        playPreviewQueue(items, index, key)
+      }}
+      aria-label={title}
       className="border-[3px] border-[var(--ink)] bg-[var(--red)] text-white px-3 py-2 cursor-pointer"
       style={{ ...DISPLAY, fontSize: '13px', letterSpacing: '0.5px' }}
     >
-      {playing ? `❚❚ ${clock}` : '▶'}
+      {isActive && previewPlaying ? '❚❚' : '▶'}
     </button>
   )
 }
@@ -125,6 +95,14 @@ export default function ParkineoTracks({
   const [hasPending, setHasPending] = useState(false)
   const [justSent, setJustSent] = useState(false)
   const [marked, setMarked] = useState<Set<string>>(new Set())
+  const queue = useMemo(
+    () => tracks.map((track) => parkineoPreviewItem(
+      { id: track.id, title: track.title, artist: track.artist_name, slug: track.slug },
+      lang,
+      true,
+    )),
+    [tracks, lang],
+  )
 
   useEffect(() => {
     if (!user) {
@@ -388,7 +366,13 @@ export default function ParkineoTracks({
                 return (
                   <li key={track.id} id={`tema-${track.slug}`} className="border-4 border-[var(--ink)] bg-[var(--paper)] p-4 shadow-[4px_4px_0_var(--ink)]">
                     <div className="flex flex-wrap items-center gap-3">
-                      <ParkineoTrackPlayButton trackId={track.id} label={track.title} />
+                      <ParkineoTrackPlayButton
+                        trackId={track.id}
+                        title={track.title}
+                        artist={track.artist_name}
+                        queue={queue}
+                        groupKey={PARKINEO_QUEUE}
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="m-0" style={{ ...DISPLAY, fontSize: '18px', lineHeight: 1.15 }}>
                           {track.title}

@@ -90,7 +90,7 @@ export default async function ParkineoSessionPage({
           ) : null}
         </p>
         <div className="border-4 border-[var(--ink)] shadow-[6px_6px_0_var(--ink)] overflow-hidden">
-          <ParkineoPlayer session={playable} />
+          <ParkineoPlayer session={playable} record />
         </div>
       </article>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
 import { buildSoundCloudVisualPlayerSrc, useSoundCloudExclusivePlayback } from '@/components/SoundCloudVisualEmbed'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import { logParkineoPlayOnce } from '@/lib/parkineo'
 import {
   registerYouTubeEmbed,
   requestYouTubePlay,
@@ -20,7 +21,15 @@ export type ParkineoPlayable = {
   image_url: string | null
 }
 
-export default function ParkineoPlayer({ session }: { session: ParkineoPlayable }) {
+export default function ParkineoPlayer({
+  session,
+  record = false,
+}: {
+  session: ParkineoPlayable
+  /** La web pública cuenta una escucha. El panel de admin no. */
+  record?: boolean
+}) {
+  const onPlay = record ? () => logParkineoPlayOnce('session', session.id) : undefined
   const ytId = session.platform === 'youtube' ? extractYouTubeId(session.video_url || session.embed_url) : null
   if (ytId) {
     return (
@@ -28,6 +37,7 @@ export default function ParkineoPlayer({ session }: { session: ParkineoPlayable 
         videoId={ytId}
         title={`${session.dj_name} — ${session.title}`}
         playSlotId={`parkineo-${session.id}`}
+        onPlayRecorded={onPlay}
         nowPlaying={{
           title: session.title,
           artist: session.dj_name,
@@ -38,22 +48,30 @@ export default function ParkineoPlayer({ session }: { session: ParkineoPlayable 
     )
   }
   if (session.platform === 'soundcloud' && session.embed_url) {
-    return <SoundCloudPoster session={session} trackUrl={session.embed_url} />
+    return <SoundCloudPoster session={session} trackUrl={session.embed_url} onPlay={onPlay} />
   }
   if (session.platform === 'mixcloud' && (session.video_url || session.embed_url)) {
-    return <MixcloudPoster session={session} feed={session.video_url || session.embed_url || ''} />
+    return <MixcloudPoster session={session} feed={session.video_url || session.embed_url || ''} onPlay={onPlay} />
   }
   return <CardThumbnail src={session.image_url} alt={session.title} aspectClass="aspect-video" frameClass="border-0" />
 }
 
-function SoundCloudPoster({ session, trackUrl }: { session: ParkineoPlayable; trackUrl: string }) {
+function SoundCloudPoster({
+  session,
+  trackUrl,
+  onPlay,
+}: {
+  session: ParkineoPlayable
+  trackUrl: string
+  onPlay?: () => void
+}) {
   const [mountIframe, setMountIframe] = useState(false)
   const slot = `parkineo-sc-${session.id}`
   const src = buildSoundCloudVisualPlayerSrc(trackUrl).replace('auto_play=false', 'auto_play=true')
   useSoundCloudExclusivePlayback(
     slot,
     slot,
-    undefined,
+    onPlay,
     mountIframe,
     {
       title: session.title,
@@ -90,7 +108,15 @@ function SoundCloudPoster({ session, trackUrl }: { session: ParkineoPlayable; tr
   )
 }
 
-function MixcloudPoster({ session, feed }: { session: ParkineoPlayable; feed: string }) {
+function MixcloudPoster({
+  session,
+  feed,
+  onPlay,
+}: {
+  session: ParkineoPlayable
+  feed: string
+  onPlay?: () => void
+}) {
   const [on, setOn] = useState(false)
   const slot = `parkineo-mc-${session.id}`
   const src = `https://www.mixcloud.com/widget/iframe/?hide_cover=1&light=1&autoplay=1&feed=${encodeURIComponent(feed)}`
@@ -115,6 +141,7 @@ function MixcloudPoster({ session, feed }: { session: ParkineoPlayable; feed: st
           type="button"
           onClick={() => {
             requestYouTubePlay(slot)
+            onPlay?.()
             setOn(true)
           }}
           aria-label={session.title}

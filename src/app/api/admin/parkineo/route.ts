@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { parkineoMessage, resolveParkineoLink } from '@/lib/parkineo'
 import { notifyParkineoPublished } from '@/lib/transactional-mail'
 import { revalidateParkineo } from '@/lib/revalidate-public'
@@ -10,6 +10,114 @@ export const dynamic = 'force-dynamic'
 
 const ADMIN_COLUMNS =
   'id, user_id, dj_name, city, title, contact_phone, source_url, platform, embed_url, video_url, image_url, duration_minutes, slug, status, reject_reason, published_at, created_at'
+
+type PlayRow = {
+  kind: string
+  session_id: string | null
+  track_id: string | null
+  user_id: string | null
+  created_at: string
+}
+
+type ListenBucket = {
+  plays: number
+  plays7d: number
+  accounts: Set<string>
+  anonymous: number
+  lastAt: string | null
+}
+
+function emptyListen(): ListenBucket {
+  return { plays: 0, plays7d: 0, accounts: new Set(), anonymous: 0, lastAt: null }
+}
+
+function addListen(bucket: ListenBucket, row: PlayRow, weekMs: number) {
+  bucket.plays += 1
+  if (new Date(row.created_at).getTime() >= weekMs) bucket.plays7d += 1
+  if (row.user_id) bucket.accounts.add(row.user_id)
+  else bucket.anonymous += 1
+  if (!bucket.lastAt || row.created_at > bucket.lastAt) bucket.lastAt = row.created_at
+}
+
+function packListen(bucket: ListenBucket, hearts?: number) {
+  return {
+    plays: bucket.plays,
+    plays7d: bucket.plays7d,
+    accounts: bucket.accounts.size,
+    anonymous: bucket.anonymous,
+    lastAt: bucket.lastAt,
+    ...(hearts != null ? { hearts } : {}),
+  }
+}
+
+async function loadParkineoStats(svc: ReturnType<typeof createServiceSupabase>) {
+  const weekMs = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const [playsRes, heartsRes] = await Promise.all([
+    fetchAllRows<PlayRow>((from, to) =>
+      svc
+        .from('parkineo_play_events')
+        .select('kind, session_id, track_id, user_id, created_at')
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ session_id: string }>((from, to) =>
+      svc
+        .from('favorite_parkineo')
+        .select('session_id')
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+  ])
+
+  const heartsBySession: Record<string, number> = {}
+  for (const row of heartsRes.data) {
+    heartsBySession[row.session_id] = (heartsBySession[row.session_id] || 0) + 1
+  }
+
+  const sessions = emptyListen()
+  const tracks = emptyListen()
+  const bySession = new Map<string, ListenBucket>()
+  const byTrack = new Map<string, ListenBucket>()
+  if (!playsRes.error) {
+    for (const row of playsRes.data) {
+      if (row.kind === 'session' && row.session_id) {
+        addListen(sessions, row, weekMs)
+        let bucket = bySession.get(row.session_id)
+        if (!bucket) {
+          bucket = emptyListen()
+          bySession.set(row.session_id, bucket)
+        }
+        addListen(bucket, row, weekMs)
+      } else if (row.kind === 'track' && row.track_id) {
+        addListen(tracks, row, weekMs)
+        let bucket = byTrack.get(row.track_id)
+        if (!bucket) {
+          bucket = emptyListen()
+          byTrack.set(row.track_id, bucket)
+        }
+        addListen(bucket, row, weekMs)
+      }
+    }
+  }
+
+  const sessionStats: Record<string, ReturnType<typeof packListen>> = {}
+  const ids = new Set<string>([...bySession.keys(), ...Object.keys(heartsBySession)])
+  for (const id of ids) {
+    sessionStats[id] = packListen(bySession.get(id) || emptyListen(), heartsBySession[id] || 0)
+  }
+  const trackStats: Record<string, ReturnType<typeof packListen>> = {}
+  for (const [id, bucket] of byTrack) trackStats[id] = packListen(bucket)
+
+  return {
+    playsReady: !playsRes.error,
+    sessions: { ...packListen(sessions), hearts: heartsRes.data.length },
+    tracks: packListen(tracks),
+    bySession: sessionStats,
+    byTrack: trackStats,
+  }
+}
 
 // GET /api/admin/parkineo — cola y decisiones recientes
 export async function GET(request: NextRequest) {
@@ -57,12 +165,15 @@ export async function GET(request: NextRequest) {
     return rank(a.status) - rank(b.status) || b.created_at.localeCompare(a.created_at)
   })
 
+  const stats = await loadParkineoStats(svc)
+
   return NextResponse.json({
     data: ordered.map((row) => ({
       ...row,
       account_name: names[row.user_id]?.display_name || names[row.user_id]?.username || null,
       account_email: names[row.user_id]?.email || null,
     })),
+    stats,
   })
 }
 

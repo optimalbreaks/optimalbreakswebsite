@@ -372,6 +372,13 @@ export interface Database {
         Update: Partial<Pick<FavoriteParkineoRow, 'user_id' | 'session_id'>>
         Relationships: DbRelationship[]
       }
+      parkineo_play_events: {
+        Row: ParkineoPlayEventRow
+        Insert: Pick<ParkineoPlayEventRow, 'kind'> &
+          Partial<Pick<ParkineoPlayEventRow, 'session_id' | 'track_id' | 'user_id'>>
+        Update: never
+        Relationships: DbRelationship[]
+      }
       event_attendance: {
         Row: EventAttendanceRow
         Insert: Pick<EventAttendanceRow, 'user_id' | 'event_id' | 'status'>
@@ -771,6 +778,16 @@ export interface FavoriteParkineoRow extends Record<string, unknown> {
   id: string
   user_id: string
   session_id: string
+  created_at: string
+}
+
+/** Escucha pública de Parkineo (migración 107). No se enseña en /parkineo. */
+export interface ParkineoPlayEventRow extends Record<string, unknown> {
+  id: string
+  kind: 'session' | 'track'
+  session_id: string | null
+  track_id: string | null
+  user_id: string | null
   created_at: string
 }
 
