@@ -218,6 +218,7 @@ Reglas:
 - Los titulares dicen algo ("RUSIA Y CÁDIZ", "NOMINADO EN 2008"), nunca son rótulos vacíos como "EL DETALLE FINAL", "DATOS" o "CURIOSIDADES".
 - imagen: copia tal cual una URL de la lista y que enseñe lo que dice la escena. Escena de un artista → su foto. Escena de un tema o un disco → su carátula. Una foto de artista nunca ilustra a otra persona ni a un tema. Cada imagen, una sola vez en todo el reel.
 - Escena "artista" solo si su foto está en la lista; si no hay foto, cuenta lo suyo en una escena "dato".
+- pie (opcional en cita, dato y tema, ≤24, mayúsculas): pie de foto cuando la imagen no es exactamente lo que dice la escena, p. ej. una escena de 2007 con la carátula de la reedición de 2020 → "REEDICIÓN DE 2020".
 - Frases cortas, de cartel de fanzine. Nada de hashtags ni emojis.`
 
 async function llmEscenas(m: Material): Promise<{ escenas: Escena[]; model: string } | null> {
@@ -277,6 +278,7 @@ function normalizar(list: unknown[], m: Material): Escena[] {
   const pic = (v: unknown) => (typeof v === 'string' && urls.has(v.trim()) ? v.trim() : cover)
   const up = (v: unknown, n: number) => txt(v, n).toUpperCase()
   const ano = (v: unknown) => (/^\d{4}$/.test(String(v ?? '').trim()) ? String(v).trim() : '')
+  const pie = (v: unknown) => (txt(v, 24) ? { pie: up(v, 24) } : {})
   const out: Escena[] = []
   for (const it of list) {
     if (!it || typeof it !== 'object') continue
@@ -287,16 +289,16 @@ function normalizar(list: unknown[], m: Material): Escena[] {
     if (tipo === 'gancho') out.push({ tipo, seg: 0, kicker: up(e.kicker, 22), titulo: up(e.titulo, 44), sub: txt(e.sub, 70), imagen: pic(e.imagen) })
     else if (tipo === 'cita') {
       const cita = txt(String(e.cita || '').replace(/^[«"“']+|[»"”']+$/g, ''), 110)
-      if (cita) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), texto: txt(e.texto, 90), cita, imagen: pic(e.imagen) })
+      if (cita) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), texto: txt(e.texto, 90), cita, imagen: pic(e.imagen), ...pie(e.pie) })
     } else if (tipo === 'dato') {
       const lineas = (Array.isArray(e.lineas) ? e.lineas : []).map((l) => txt(l, 60)).filter(Boolean).slice(0, 3)
-      if (lineas.length) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), lineas, ...(e.imagen ? { imagen: pic(e.imagen) } : {}) })
+      if (lineas.length) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), lineas, ...(e.imagen ? { imagen: pic(e.imagen), ...pie(e.pie) } : {}) })
     } else if (tipo === 'artista') {
       const nombre = up(e.nombre, 24)
       if (nombre) out.push({ tipo, seg: 0, nombre, lugar: up(e.lugar, 24), frase: txt(e.frase, 80), dato: txt(e.dato, 70), imagen: pic(e.imagen) })
     } else if (tipo === 'tema') {
       const fichas = (Array.isArray(e.fichas) ? e.fichas : []).map((f) => up(f, 24)).filter(Boolean).slice(0, 3)
-      out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 36), sub: txt(e.sub, 50), fichas, imagen: pic(e.imagen) })
+      out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 36), sub: txt(e.sub, 50), fichas, imagen: pic(e.imagen), ...pie(e.pie) })
     }
     if (out.length >= 7) break
   }
