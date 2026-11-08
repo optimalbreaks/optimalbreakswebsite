@@ -193,9 +193,9 @@ Devuelve JSON: {"escenas":[...]} con 5 a 7 escenas, en español de España. La p
 Tipos y campos (respeta los límites de caracteres):
 - gancho: kicker (≤22, mayúsculas, p. ej. "EXCLUSIVA" o "HISTORIA"), titulo (≤48, mayúsculas, golpe de efecto), sub (≤80), imagen.
 - cita: ano (año o ""), titulo (≤30, mayúsculas), texto (≤90, contexto), cita (≤110, frase literal del artículo o de alguien citado en él, sin comillas), imagen.
-- dato: ano (año o ""), titulo (≤30, mayúsculas), lineas (2 o 3 frases de ≤42 con datos concretos).
-- artista: nombre (≤24, mayúsculas), lugar (≤24, mayúsculas, ciudad o país), frase (≤70), dato (≤60), imagen (su foto si está en la lista).
-- tema: ano, titulo (≤36, mayúsculas, el nombre del tema), sub (≤50, artistas), fichas (2 a 4 de ≤26: sello, BPM, año, versión), imagen (su carátula).
+- dato: ano (año o ""), titulo (≤30, mayúsculas), lineas (2 o 3 frases completas de ≤42 con datos concretos; nunca a medias).
+- artista: nombre (≤24, mayúsculas), lugar (≤24, mayúsculas, ciudad o país), frase (≤64), dato (≤56), imagen (su foto si está en la lista).
+- tema: ano, titulo (≤36, mayúsculas, el nombre del tema), sub (≤50, artistas), fichas (2 o 3 de ≤20: sello, BPM, año, versión), imagen (su carátula).
 Reglas:
 - Solo hechos del artículo o de los datos. No inventes años, lugares, cifras ni citas. Si no sabes el año, "".
 - imagen: copia tal cual una URL de la lista de imágenes, la que mejor encaje; no repitas la misma imagen en escenas seguidas.
@@ -270,13 +270,13 @@ function normalizar(list: unknown[], m: Material): Escena[] {
       const cita = txt(String(e.cita || '').replace(/^[«"“']+|[»"”']+$/g, ''), 110)
       if (cita) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), texto: txt(e.texto, 90), cita, imagen: pic(e.imagen) })
     } else if (tipo === 'dato') {
-      const lineas = (Array.isArray(e.lineas) ? e.lineas : []).map((l) => txt(l, 42)).filter(Boolean).slice(0, 3)
+      const lineas = (Array.isArray(e.lineas) ? e.lineas : []).map((l) => txt(l, 60)).filter(Boolean).slice(0, 3)
       if (lineas.length) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), lineas })
     } else if (tipo === 'artista') {
       const nombre = up(e.nombre, 24)
-      if (nombre) out.push({ tipo, seg: 0, nombre, lugar: up(e.lugar, 24), frase: txt(e.frase, 70), dato: txt(e.dato, 60), imagen: pic(e.imagen) })
+      if (nombre) out.push({ tipo, seg: 0, nombre, lugar: up(e.lugar, 24), frase: txt(e.frase, 80), dato: txt(e.dato, 70), imagen: pic(e.imagen) })
     } else if (tipo === 'tema') {
-      const fichas = (Array.isArray(e.fichas) ? e.fichas : []).map((f) => up(f, 26)).filter(Boolean).slice(0, 4)
+      const fichas = (Array.isArray(e.fichas) ? e.fichas : []).map((f) => up(f, 24)).filter(Boolean).slice(0, 3)
       out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 36), sub: txt(e.sub, 50), fichas, imagen: pic(e.imagen) })
     }
     if (out.length >= 7) break
