@@ -210,6 +210,8 @@ Reglas:
 - Cuenta una historia de menos a más: gancho → contexto o historia → quién lo hace → el detalle que sorprende. Cada escena aporta algo nuevo: nunca repitas un dato, una idea ni un titular de otra escena.
 - Que el tema esté entero, gratis o descargable ya lo dicen el casete fijo y el cierre: no gastes ninguna escena en eso (el gancho puede nombrarlo una vez, como mucho).
 - Si el artículo trata de un solo tema, no hagas escena "tema": el gancho y el casete ya lo presentan.
+- El casete fijo enseña siempre título y artistas del tema que suena: no los repitas como dato, ni su BPM ni su duración.
+- Los titulares dicen algo ("RUSIA Y CÁDIZ", "NOMINADO EN 2008"), nunca son rótulos vacíos como "EL DETALLE FINAL", "DATOS" o "CURIOSIDADES".
 - imagen: copia tal cual una URL de la lista y que enseñe lo que dice la escena. Escena de un artista → su foto. Escena de un tema o un disco → su carátula. Una foto de artista nunca ilustra a otra persona ni a un tema. Cada imagen, una sola vez en todo el reel.
 - Escena "artista" solo si su foto está en la lista; si no hay foto, cuenta lo suyo en una escena "dato".
 - Frases cortas, de cartel de fanzine. Nada de hashtags ni emojis.`
