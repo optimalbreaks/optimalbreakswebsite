@@ -74,6 +74,11 @@ function artistNames(t: BeatportTopTrack): string[] {
   return (t.artists || []).map((a) => (a?.name || '').trim()).filter(Boolean)
 }
 
+/** Beatport sirve la carátula a 250 px en el JSONB; en el reel va a casi 600. */
+function bigArt(url: string | null | undefined): string | null {
+  return url ? url.replace(/\/image_size\/\d+x\d+\//, '/image_size/1400x1400/') : null
+}
+
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -121,18 +126,22 @@ async function loadMaterial(slug: string) {
     if (/^https:\/\//.test(u) && !imagenes.some((i) => i.url === u)) imagenes.push({ url: u, que })
   }
   push(p.image_url, 'portada del artículo')
-  for (const t of tracks.slice(0, 8)) push(t.artwork_url, `carátula de «${trackTitle(t)}» (${artistNames(t).join(', ')})`)
+  for (const t of tracks.slice(0, 8)) {
+    push(bigArt(t.artwork_url), `carátula del tema «${trackTitle(t)}» de ${artistNames(t).join(', ')}${t.release_year ? ` (${t.release_year})` : ''}`)
+  }
 
   const { data: allArtists } = await fetchAllRows<{ name: string; image_url: string | null; country: string | null }>((from, to) =>
     supabase.from('artists').select('name, image_url, country').order('slug').range(from, to),
   )
   const credited = new Set(tracks.flatMap(artistNames).map((n) => n.toLowerCase()))
-  const haystack = `${p.title_es || ''} ${text}`
+  // Una mención de pasada (un nombre en una lista) no merece foto: acreditado, en el titular o nombrado dos veces.
+  const head = `${p.title_es || ''} ${p.excerpt_es || ''}`
+  const veces = (name: string, s: string) => (s.match(new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(name)}(?=[^\\p{L}\\p{N}]|$)`, 'giu')) || []).length
   const artistas = (allArtists || [])
     .filter((a) => a.name && a.name.length >= 3)
-    .filter((a) => credited.has(a.name.toLowerCase()) || new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(a.name)}([^\\p{L}\\p{N}]|$)`, 'iu').test(haystack))
+    .filter((a) => credited.has(a.name.toLowerCase()) || veces(a.name, head) > 0 || veces(a.name, text) >= 2)
     .slice(0, 8)
-  for (const a of artistas) push(a.image_url, `foto de ${a.name}`)
+  for (const a of artistas) push(a.image_url, `foto del artista ${a.name}`)
 
   const labelNames = Array.from(new Set(tracks.map((t) => (t.label || '').trim()).filter(Boolean))).slice(0, 4)
   const { data: labels } = labelNames.length
@@ -182,7 +191,7 @@ function fallbackEscenas(m: Material): Escena[] {
     const fichas = [m.main.label && `SELLO · ${m.main.label}`, m.main.bpm && `${m.main.bpm} BPM`, m.main.key && `TONO · ${m.main.key}`]
       .filter(Boolean)
       .map((f) => txt(String(f).toUpperCase(), 28))
-    out.push({ tipo: 'tema', seg: 9, ano: m.main.release_year || '', titulo: txt(m.main.title.toUpperCase(), 40), sub: txt(artistNames(m.main).join(' × '), 50), fichas, imagen: m.main.artwork_url || cover })
+    out.push({ tipo: 'tema', seg: 9, ano: m.main.release_year || '', titulo: txt(m.main.title.toUpperCase(), 40), sub: txt(artistNames(m.main).join(' × '), 50), fichas, imagen: bigArt(m.main.artwork_url) || cover })
   }
   out.push(cierre(m))
   return out
@@ -191,14 +200,18 @@ function fallbackEscenas(m: Material): Escena[] {
 const SYSTEM = `Eres el editor de vídeo de Optimal Breaks, web de breakbeat. Conviertes un artículo del blog en el guion de un reel vertical de 60 segundos, sin voz: solo textos grandes sobre imágenes y la música del tema.
 Devuelve JSON: {"escenas":[...]} con 5 a 7 escenas, en español de España. La primera es "gancho". No escribas la escena de cierre: la pone el sistema.
 Tipos y campos (respeta los límites de caracteres):
-- gancho: kicker (≤22, mayúsculas, p. ej. "EXCLUSIVA" o "HISTORIA"), titulo (≤48, mayúsculas, golpe de efecto), sub (≤80), imagen.
+- gancho: kicker (≤22, mayúsculas, p. ej. "EXCLUSIVA" o "HISTORIA"), titulo (≤40, mayúsculas, golpe de efecto), sub (≤60), imagen.
 - cita: ano (año o ""), titulo (≤30, mayúsculas), texto (≤90, contexto), cita (≤110, frase literal del artículo o de alguien citado en él, sin comillas), imagen.
 - dato: ano (año o ""), titulo (≤30, mayúsculas), lineas (2 o 3 frases completas de ≤42 con datos concretos; nunca a medias).
 - artista: nombre (≤24, mayúsculas), lugar (≤24, mayúsculas, ciudad o país), frase (≤64), dato (≤56), imagen (su foto si está en la lista).
 - tema: ano, titulo (≤36, mayúsculas, el nombre del tema), sub (≤50, artistas), fichas (2 o 3 de ≤20: sello, BPM, año, versión), imagen (su carátula).
 Reglas:
 - Solo hechos del artículo o de los datos. No inventes años, lugares, cifras ni citas. Si no sabes el año, "".
-- imagen: copia tal cual una URL de la lista de imágenes, la que mejor encaje; no repitas la misma imagen en escenas seguidas.
+- Cuenta una historia de menos a más: gancho → contexto o historia → quién lo hace → el detalle que sorprende. Cada escena aporta algo nuevo: nunca repitas un dato, una idea ni un titular de otra escena.
+- Que el tema esté entero, gratis o descargable ya lo dicen el casete fijo y el cierre: no gastes ninguna escena en eso (el gancho puede nombrarlo una vez, como mucho).
+- Si el artículo trata de un solo tema, no hagas escena "tema": el gancho y el casete ya lo presentan.
+- imagen: copia tal cual una URL de la lista y que enseñe lo que dice la escena. Escena de un artista → su foto. Escena de un tema o un disco → su carátula. Una foto de artista nunca ilustra a otra persona ni a un tema. Cada imagen, una sola vez en todo el reel.
+- Escena "artista" solo si su foto está en la lista; si no hay foto, cuenta lo suyo en una escena "dato".
 - Frases cortas, de cartel de fanzine. Nada de hashtags ni emojis.`
 
 async function llmEscenas(m: Material): Promise<{ escenas: Escena[]; model: string } | null> {
@@ -265,7 +278,7 @@ function normalizar(list: unknown[], m: Material): Escena[] {
     const tipo = String(e.tipo || '')
     if (!(TIPOS as readonly string[]).includes(tipo)) continue
     if (tipo === 'gancho' && out.length) continue
-    if (tipo === 'gancho') out.push({ tipo, seg: 0, kicker: up(e.kicker, 22), titulo: up(e.titulo, 48), sub: txt(e.sub, 80), imagen: pic(e.imagen) })
+    if (tipo === 'gancho') out.push({ tipo, seg: 0, kicker: up(e.kicker, 22), titulo: up(e.titulo, 44), sub: txt(e.sub, 70), imagen: pic(e.imagen) })
     else if (tipo === 'cita') {
       const cita = txt(String(e.cita || '').replace(/^[«"“']+|[»"”']+$/g, ''), 110)
       if (cita) out.push({ tipo, seg: 0, ano: ano(e.ano), titulo: up(e.titulo, 30), texto: txt(e.texto, 90), cita, imagen: pic(e.imagen) })
@@ -282,6 +295,14 @@ function normalizar(list: unknown[], m: Material): Escena[] {
     if (out.length >= 7) break
   }
   if (!out.length || out[0].tipo !== 'gancho') return []
+  const que = new Map(m.imagenes.map((i) => [i.url, i.que]))
+  const usadas = new Set<string>()
+  for (const e of out) {
+    const u = typeof e.imagen === 'string' ? e.imagen : ''
+    const mala = !u || usadas.has(u) || (e.tipo === 'artista' && !String(que.get(u) || '').startsWith('foto del artista'))
+    if (mala && e.tipo !== 'gancho') delete e.imagen
+    else if (u) usadas.add(u)
+  }
   return repartir([...out, cierre(m)])
 }
 
@@ -333,7 +354,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
             artistas: artistNames(main).join(' × ').toUpperCase(),
             sello: (main.label || '').toUpperCase(),
             bpm: main.bpm || 0,
-            portada: main.artwork_url || m.imagenes[0]?.url || null,
+            portada: bigArt(main.artwork_url) || m.imagenes[0]?.url || null,
           }
         : null,
       audio: m.audio,
