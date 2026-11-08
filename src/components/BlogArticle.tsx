@@ -354,6 +354,7 @@ export async function ArticlePage({ params }: Props, home: ArticleHome) {
   const trackPlay = exclusiveRef ? `featured:${exclusiveRef.id}` : undefined
   const blogReel = {
     kind: 'blog' as const,
+    reelUrl: (post.reel_url || '').trim() || undefined,
     title,
     date: post.published_at ?? null,
     tags: ((post.tags ?? []) as string[]).slice(0, 6),

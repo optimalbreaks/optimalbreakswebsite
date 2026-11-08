@@ -76,6 +76,8 @@ export type PageReelInput =
        * de ese tema (`renderReel`, banner de tema entero y gratis), no el molde de álbum.
        */
       trackPlay?: string
+      /** MP4 vertical de la fábrica (`blog_posts.reel_url`): la R lo descarga en vez de pintarlo. */
+      reelUrl?: string
       /**
        * Regalo de Woter. El audio es el tema cedido y el vídeo es `animGift`,
        * no el molde de álbum ni el banner de exclusiva.

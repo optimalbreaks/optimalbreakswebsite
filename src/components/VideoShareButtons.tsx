@@ -49,9 +49,11 @@ export interface VideoShareButtonsProps {
   audioHint?: { es: string; en: string } | null
   /** `light` = sobre papel claro (borde de tinta). Por defecto, botón oscuro como el resto de compartir. */
   tone?: 'dark' | 'light'
+  /** La R baja un vídeo ya hecho (con su música): no abre el selector. La F sigue igual. */
+  reelReady?: boolean
 }
 
-export default function VideoShareButtons({ lang, title, fileBase, what, makeVideo, makeCaption, audio, clips, audioHint, tone = 'dark' }: VideoShareButtonsProps) {
+export default function VideoShareButtons({ lang, title, fileBase, what, makeVideo, makeCaption, audio, clips, audioHint, tone = 'dark', reelReady }: VideoShareButtonsProps) {
   const es = lang === 'es'
   const queue = clips && clips.length > 0 ? clips : null
   const [picker, setPicker] = useState<'reel' | 'fb' | null>(null)
@@ -131,7 +133,7 @@ export default function VideoShareButtons({ lang, title, fileBase, what, makeVid
       setClipAt(0)
       return setPicker('reel')
     }
-    if (audio) return setPicker('reel')
+    if (audio && !reelReady) return setPicker('reel')
     await renderReel(null)
   }
 

@@ -174,6 +174,15 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
 
   /** R/F: sesión (`storyPlay` mix:…) o artículo del blog (`pageReel`). */
   const makeVideo = async (format: ReelFormat, onProgress: (r: number) => void, audio: ShareAudioSegment | null) => {
+    if (format === 'vertical' && pageReel?.reelUrl) {
+      onProgress(0.3)
+      const res = await fetch(pageReel.reelUrl, { cache: 'no-store' })
+      if (res.ok) {
+        const blob = await res.blob()
+        onProgress(1)
+        return { blob, mime: 'video/mp4', ext: 'mp4' as const }
+      }
+    }
     if (pageReel?.trackPlay) {
       const data = await getSetData()
       const { renderReel } = await import('@/lib/reel-renderer')
@@ -509,6 +518,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           makeVideo={makeVideo}
           makeCaption={makeCaption}
           audio={pageReel?.day ? null : pageReel?.fortnight?.audio ?? pageReel?.albumAudio ?? null}
+          reelReady={!!pageReel?.reelUrl}
           clips={pageReel?.day ? dayShareClips(pageReel.day) : null}
         />
       )}

@@ -1374,6 +1374,9 @@ export interface BlogPost extends Record<string, unknown> {
   beatport_release_url?: string | null
   /** Quincena, trimestre o agenda: la ficha lo pinta en vez del cuerpo. */
   digest?: FortnightDigest | AgendaDigest | null
+  /** Reel vertical de la fábrica (MP4 en Storage). Lo descarga la R del admin. */
+  reel_url?: string | null
+  reel_status?: string | null
 }
 
 export interface AgendaDigestCopy {
