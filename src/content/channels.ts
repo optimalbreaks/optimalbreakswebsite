@@ -274,6 +274,45 @@ export const SCENE_VOICES: SceneVoice[] = [
     youtubeChannelId: 'UCP2RVBEcuY6ZL3ifKmOZ8Pw',
   },
   {
+    id: 'onda-canalla',
+    name: 'Onda Canalla',
+    role: { es: 'Entrevistas · Cádiz', en: 'Interviews · Cádiz' },
+    text: {
+      es: 'Programa de entrevistas a los artistas de la escena, desde la bahía de Cádiz. Morpheus Black pregunta y Daniel Moreno graba. Van a las fiestas (Oshun, Pandora, Dreambeach) y se sientan con DJs y productores, de las leyendas a los nombres nuevos.',
+      en: 'An interview show with the scene’s artists, from the Bay of Cádiz. Morpheus Black asks and Daniel Moreno films. They go to the parties (Oshun, Pandora, Dreambeach) and sit down with DJs and producers, from legends to new names.',
+    },
+    formats: [
+      {
+        name: 'ONDA CANALLA',
+        text: {
+          es: 'Entrevistas por temporadas, de media hora. Va por la cuarta.',
+          en: 'Half-hour interviews in seasons. Now on the fourth.',
+        },
+      },
+      {
+        name: 'Talent show con Sala Oshun',
+        text: {
+          es: 'Anunciado en octubre de 2026 como el primer talent show de breakbeat.',
+          en: 'Announced in October 2026 as the first breakbeat talent show.',
+        },
+      },
+    ],
+    links: [
+      { kind: 'youtube', label: '@Ondacanalla', href: 'https://www.youtube.com/@Ondacanalla' },
+      { kind: 'instagram', label: '@ondacanalla', href: 'https://www.instagram.com/ondacanalla/' },
+    ],
+    artists: [
+      { slug: 'yo-speed', name: 'Yo Speed', note: { es: 'entrevistado', en: 'interviewed' } },
+      { slug: 'rasco', name: 'Rasco', note: { es: 'entrevistado', en: 'interviewed' } },
+      { slug: 'hankook', name: 'Hankook', note: { es: 'entrevistado', en: 'interviewed' } },
+      { slug: 'dj-nitro', name: 'DJ Nitro', note: { es: 'entrevistado', en: 'interviewed' } },
+      { slug: 'mutant-breakz', name: 'Mutantbreakz', note: { es: 'entrevistados', en: 'interviewed' } },
+      { slug: 'four-motion', name: 'Four Motion', note: { es: 'charla sobre la IA', en: 'talk on AI' } },
+    ],
+    youtubeChannelId: 'UCYuPxgW4QwtQi9UtB1BaiXg',
+    youtubeKeywords: ['breakbeat', 'break', 'prodigy', 'oshun'],
+  },
+  {
     id: 'dirty-kitchen-rave',
     name: 'Dirty Kitchen Rave',
     role: { es: 'Twitch y podcast · sello DKR', en: 'Twitch and podcast · DKR label' },
