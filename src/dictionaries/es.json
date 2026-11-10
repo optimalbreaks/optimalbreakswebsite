@@ -11,6 +11,7 @@
     "comic": "Cómic",
     "mixes": "Mixes",
     "channels": "Canales",
+    "voices": "Voces",
     "parkineo": "Parkineo",
     "about": "Sobre",
     "charts": "Tracks",
@@ -47,6 +48,7 @@
     "quick_events": "Eventos",
     "quick_mixes": "Mixes",
     "quick_channels": "Canales",
+    "quick_voices": "Voces",
     "quick_parkineo": "Parkineo",
     "quick_scenes": "Escenas",
     "quick_charts": "Tracks",
@@ -130,6 +132,7 @@
         { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
         { "href": "/channels", "label": "Canales", "hint": "Spotify, listas y vídeos de YouTube" },
+        { "href": "/voices", "label": "Voces", "hint": "Los oyentes y los que cuentan el break" },
         { "href": "/charts", "label": "Tracks", "hint": "New Releases y archivo" },
         { "href": "/topreleases", "label": "Top novedades", "hint": "Lo más escuchado de cada quincena y temporada" },
         { "href": "/topalltimes", "label": "Top histórico", "hint": "Lo que más guarda la escena desde el día uno" },
@@ -628,6 +631,10 @@
     "channels": {
       "title": "Canales — Spotify, listas y YouTube de Optimal Breaks",
       "description": "La cuenta de Spotify, la lista Temazos 2026 y los canales de YouTube: vídeos de la escena y uno por cada sección de la web."
+    },
+    "voices": {
+      "title": "Voces — el breakbeat no es solo la música",
+      "description": "Los oyentes y los comunicadores del break: ONDE BASS de Cigui9 y JottaFrank, los directos de Dirty Kitchen Rave en Twitch y los PEPINARDOS de Jan-B."
     },
     "mixes": {
       "title": "Tu Página de Sesiones Breaks Favorita — mixes, sets y radio shows",

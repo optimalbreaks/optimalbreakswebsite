@@ -39,6 +39,7 @@ const SITE_KEYS = [
   'blog',
   'mixes',
   'channels',
+  'voices',
   'parkineo',
   'about',
 ] as const

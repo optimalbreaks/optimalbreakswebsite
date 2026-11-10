@@ -11,6 +11,7 @@
     "comic": "Comic",
     "mixes": "Mixes",
     "channels": "Channels",
+    "voices": "Voices",
     "parkineo": "Parkineo",
     "about": "About",
     "charts": "Tracks",
@@ -47,6 +48,7 @@
     "quick_events": "Events",
     "quick_mixes": "Mixes",
     "quick_channels": "Channels",
+    "quick_voices": "Voices",
     "quick_parkineo": "Parkineo",
     "quick_scenes": "Scenes",
     "quick_charts": "Tracks",
@@ -198,6 +200,11 @@
           "href": "/channels",
           "label": "Channels",
           "hint": "Spotify, playlists and YouTube videos"
+        },
+        {
+          "href": "/voices",
+          "label": "Voices",
+          "hint": "The listeners and the people who tell the break"
         },
         {
           "href": "/charts",
@@ -750,6 +757,10 @@
     "channels": {
       "title": "Channels — Spotify, playlists and YouTube from Optimal Breaks",
       "description": "The Spotify account, the Temazos 2026 playlist and the YouTube channels: scene videos and one walkthrough for each part of the site."
+    },
+    "voices": {
+      "title": "Voices — breakbeat is not just the music",
+      "description": "The listeners and the breaks communicators: ONDE BASS by Cigui9 and JottaFrank, Dirty Kitchen Rave live on Twitch and Jan-B's PEPINARDOS."
     },
     "mixes": {
       "title": "Your Favorite Breaks Sessions Page — mixes, sets & radio shows",

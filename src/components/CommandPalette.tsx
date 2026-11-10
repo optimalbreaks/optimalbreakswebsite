@@ -55,6 +55,7 @@ interface PaletteDict {
   quick_events: string
   quick_mixes: string
   quick_channels: string
+  quick_voices: string
   quick_parkineo: string
   quick_scenes: string
   quick_charts: string
@@ -310,6 +311,7 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
     { href: `/${lang}/events`, label: dict.quick_events },
     { href: `/${lang}/mixes`, label: dict.quick_mixes },
     { href: `/${lang}/channels`, label: dict.quick_channels },
+    { href: `/${lang}/voices`, label: dict.quick_voices },
     { href: `/${lang}/parkineo`, label: dict.quick_parkineo },
     { href: `/${lang}/scenes`, label: dict.quick_scenes },
     { href: `/${lang}/charts`, label: dict.quick_charts },

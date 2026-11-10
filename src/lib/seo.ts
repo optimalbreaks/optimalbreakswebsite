@@ -64,6 +64,7 @@ export type SeoStaticKey =
   | 'blog'
   | 'mixes'
   | 'channels'
+  | 'voices'
   | 'parkineo'
   | 'charts'
   | 'top100'
