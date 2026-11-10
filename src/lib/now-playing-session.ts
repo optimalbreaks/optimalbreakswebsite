@@ -64,7 +64,10 @@ function pageOrigin(): string {
 function expectedDocumentTitle(info: NowPlayingInfo): string {
   const title = formatNowPlayingTitle(info.title, info.mixName)
   const artist = (info.artist || '').trim() || FALLBACK_ARTIST
-  return `${title} · ${artist}`
+  // Mismo texto que devuelve `document.title` (junta los espacios). Si no, el
+  // observer reescribe el título sin fin y cuelga la página (títulos de YouTube
+  // con espacios dobles, 10 nov 2026).
+  return `${title} · ${artist}`.replace(/\s+/g, ' ').trim()
 }
 
 function absoluteArtwork(raw?: string | null): { src: string; type: string } {
