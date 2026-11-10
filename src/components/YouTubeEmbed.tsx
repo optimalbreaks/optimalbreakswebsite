@@ -296,13 +296,11 @@ export function YouTubeClipGrid({ clips, lang }: { clips: YouTubeClip[]; lang: '
   const [openId, setOpenId] = useState<string | null>(null)
   const open = clips.find((clip) => clip.id === openId) ?? null
   const es = lang === 'es'
-  const openedAt = useRef(0)
 
   const close = useCallback(() => setOpenId(null), [])
 
   const openClip = useCallback((id: string) => {
     requestYouTubePlay(`voice-clip-${id}`)
-    openedAt.current = Date.now()
     setOpenId(id)
   }, [])
 
@@ -341,109 +339,117 @@ export function YouTubeClipGrid({ clips, lang }: { clips: YouTubeClip[]; lang: '
               role="dialog"
               aria-modal="true"
               aria-label={open.title}
-              onClick={() => {
-                if (Date.now() - openedAt.current < 400) return
-                close()
-              }}
               style={{
                 position: 'fixed',
-                inset: 0,
                 zIndex: 4000,
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'min(92vw, 400px)',
+                maxHeight: 'calc(100vh - 24px)',
+                boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                boxSizing: 'border-box',
-                padding: '12px 12px 16px',
-                background: 'rgba(0,0,0,.92)',
+                gap: 8,
+                padding: 10,
+                background: 'var(--paper, #f4efe4)',
+                border: '3px solid #111',
+                boxShadow: '6px 6px 0 #111',
                 overflow: 'auto',
               }}
             >
-              <div
-                onClick={(event) => event.stopPropagation()}
-                style={{
-                  width: 'min(92vw, 440px)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'stretch',
-                  gap: 10,
-                  margin: 'auto',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                  <p
-                    style={{
-                      margin: 0,
-                      flex: 1,
-                      color: '#fff',
-                      fontFamily: "'Courier Prime', monospace",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      lineHeight: 1.35,
-                    }}
-                  >
-                    {open.title}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={close}
-                    aria-label={es ? 'Cerrar' : 'Close'}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      flexShrink: 0,
-                      cursor: 'pointer',
-                      border: '3px solid #fff',
-                      background: '#111',
-                      color: '#fff',
-                      fontSize: 28,
-                      fontWeight: 900,
-                      lineHeight: 1,
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-                <div
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, position: 'relative', zIndex: 2 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    flex: 1,
+                    color: '#111',
+                    fontFamily: "'Courier Prime', monospace",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {open.title}
+                </p>
+                <button
+                  type="button"
+                  aria-label={es ? 'Cerrar' : 'Close'}
+                  onMouseDown={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    close()
+                  }}
                   style={{
                     position: 'relative',
-                    width: 'min(92vw, 420px, calc((100vh - 160px) * 0.5625))',
-                    aspectRatio: '9 / 16',
-                    margin: '0 auto',
-                    background: '#000',
-                    boxShadow: '0 0 0 3px #fff',
-                  }}
-                >
-                  <LazyYouTubeEmbed
-                    videoId={open.id}
-                    title={open.title}
-                    playSlotId={`voice-clip-${open.id}`}
-                    autoplay
-                    fill
-                  />
-                </div>
-                <a
-                  href={`https://www.youtube.com/watch?v=${open.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    minHeight: 48,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: '#f00',
-                    color: '#fff',
+                    zIndex: 3,
+                    width: 44,
+                    height: 44,
+                    flexShrink: 0,
+                    cursor: 'pointer',
                     border: '3px solid #111',
-                    textDecoration: 'none',
-                    fontFamily: "'Unbounded', sans-serif",
+                    background: '#f7e733',
+                    color: '#111',
+                    fontSize: 28,
                     fontWeight: 900,
-                    fontSize: 13,
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
+                    lineHeight: 1,
+                    pointerEvents: 'auto',
                   }}
                 >
-                  {es ? 'Ver en YouTube' : 'Watch on YouTube'}
-                </a>
+                  ×
+                </button>
               </div>
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 0,
+                  isolation: 'isolate',
+                  overflow: 'hidden',
+                  width: 'min(100%, calc((100vh - 190px) * 0.5625))',
+                  aspectRatio: '9 / 16',
+                  margin: '0 auto',
+                  background: '#000',
+                  flexShrink: 0,
+                }}
+              >
+                <LazyYouTubeEmbed
+                  videoId={open.id}
+                  title={open.title}
+                  playSlotId={`voice-clip-${open.id}`}
+                  autoplay
+                  fill
+                />
+              </div>
+              <a
+                href={`https://www.youtube.com/watch?v=${open.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  window.open(`https://www.youtube.com/watch?v=${open.id}`, '_blank', 'noopener,noreferrer')
+                }}
+                style={{
+                  position: 'relative',
+                  zIndex: 3,
+                  pointerEvents: 'auto',
+                  display: 'flex',
+                  minHeight: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#f00',
+                  color: '#fff',
+                  border: '3px solid #111',
+                  textDecoration: 'none',
+                  fontFamily: "'Unbounded', sans-serif",
+                  fontWeight: 900,
+                  fontSize: 13,
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {es ? 'Ver en YouTube' : 'Watch on YouTube'}
+              </a>
             </div>,
             document.body,
           )
