@@ -24,6 +24,7 @@ export const SECTION_OG_KEYS = [
   'top100',
   'about',
   'install',
+  'voices',
 ] as const
 
 export type SectionOgKey = (typeof SECTION_OG_KEYS)[number]
@@ -44,6 +45,7 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   top100: 'top100.png',
   about: 'about-og-alternate.png',
   install: 'install.png',
+  voices: 'voices.png',
 }
 
 /**
@@ -73,6 +75,7 @@ export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: nu
   top100: { width: 1200, height: 630 },
   about: { width: 1764, height: 1264 },
   install: { width: 1200, height: 630 },
+  voices: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
 }
 
 const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
@@ -115,6 +118,10 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
   install: {
     es: 'Optimal Breaks — Instala la app en tu móvil: Android e iPhone',
     en: 'Optimal Breaks — Install the app on your phone: Android and iPhone',
+  },
+  voices: {
+    es: 'Optimal Breaks — Voces: el breakbeat no es solo la música',
+    en: 'Optimal Breaks — Voices: breakbeat is not just the music',
   },
 }
 

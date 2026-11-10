@@ -188,6 +188,14 @@ Motifs: bold waveform bar, headphone silhouette, cassette hubs as circles — ca
 
 ${MASTER_OG_BLOCK}`,
 
+  voices: `Section: VOICES index (the people who tell the breakbeat: radio shows, interviews, contests and live streams — not the music itself).
+
+Main headline: VOCES. Subtitle: radio · entrevistas · directos
+
+Motifs: a microphone, a radio dial and a speech bubble as bold zine graphics. No photograph of a real person. No YouTube, Twitch or Instagram logos.
+
+${MASTER_OG_BLOCK}`,
+
   about: `Section: ABOUT Optimal Breaks (encyclopedia + editorial project).
 
 Main headline: OPTIMAL BREAKS (may be two lines, same brutal style). Subtitle: encyclopedia · culture · breaks

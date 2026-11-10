@@ -11,13 +11,18 @@ import {
   type SceneVoiceVideo,
 } from '@/content/channels'
 import type { Locale } from '@/lib/i18n-config'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 
 export const revalidate = 300
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/voices', 'voices')
+  return staticPageMetadata(lang, '/voices', 'voices', {
+    ogImagePath: sectionOgImagePath('voices', lang),
+    ogImageAlt: sectionOgImageAlt('voices', lang),
+    extraKeywords: ['ONDE BASS', 'Kultura Breakz', 'Onda Canalla', 'Dirty Kitchen Rave', 'PEPINARDOS'],
+  })
 }
 
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
