@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import { LazyYouTubeEmbed, YouTubeClipGrid } from '@/components/YouTubeEmbed'
 import {
   SCENE_VOICES,
   loadPodcastEpisodes,
@@ -378,17 +378,28 @@ export default async function VoicesPage({ params }: { params: Promise<{ lang: L
                             ? '▶ LO ÚLTIMO EN SU CANAL'
                             : '▶ LATEST ON THE CHANNEL'}
                       </p>
-                      <div className={`grid gap-4 ${videos.length > 4 ? 'grid-cols-2 md:grid-cols-5' : 'md:grid-cols-3'}`}>
-                        {videos.map((video) => (
-                          <div key={video.id} className="border-[3px] border-[var(--paper)] bg-[var(--paper)]">
-                            <LazyYouTubeEmbed videoId={video.id} title={video.title} playSlotId={`voice-${video.id}`} />
-                            <p className="m-0 border-t-[3px] border-[var(--ink)] px-3 py-2 text-[12px] leading-snug" style={MONO}>
-                              <span className="line-clamp-2">{video.title}</span>
-                              {video.published ? <span className="mt-1 block font-bold opacity-60">{formatDay(video.published, lang)}</span> : null}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                      {voice.youtubePlaylistId ? (
+                        <YouTubeClipGrid
+                          lang={lang}
+                          clips={videos.map((video) => ({
+                            id: video.id,
+                            title: video.title,
+                            when: video.published ? formatDay(video.published, lang) : '',
+                          }))}
+                        />
+                      ) : (
+                        <div className="grid gap-4 md:grid-cols-3">
+                          {videos.map((video) => (
+                            <div key={video.id} className="border-[3px] border-[var(--paper)] bg-[var(--paper)]">
+                              <LazyYouTubeEmbed videoId={video.id} title={video.title} playSlotId={`voice-${video.id}`} />
+                              <p className="m-0 border-t-[3px] border-[var(--ink)] px-3 py-2 text-[12px] leading-snug" style={MONO}>
+                                <span className="line-clamp-2">{video.title}</span>
+                                {video.published ? <span className="mt-1 block font-bold opacity-60">{formatDay(video.published, lang)}</span> : null}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : null}
 

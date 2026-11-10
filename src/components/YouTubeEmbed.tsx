@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { loadYouTubeIframeAPI } from '@/lib/mix-play-session-log'
 import {
   registerYouTubeEmbed,
@@ -269,6 +270,7 @@ function YouTubePosterButton({
         </span>
       )}
       <span className="absolute inset-0 bg-black/15 transition-colors group-hover/yt:bg-black/30" aria-hidden />
+
       <span
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[58px] h-[40px] rounded-[10px] bg-[#f00] shadow-lg"
         aria-hidden
@@ -278,5 +280,110 @@ function YouTubePosterButton({
         </svg>
       </span>
     </button>
+  )
+}
+
+export type YouTubeClip = { id: string; title: string; when?: string }
+
+/**
+ * Rejilla de shorts (PEPINARDOS). La miniatura no monta el iframe: en una
+ * caja pequeña el vertical desaparece. El clic abre un emergente 9:16.
+ */
+export function YouTubeClipGrid({ clips, lang }: { clips: YouTubeClip[]; lang: 'es' | 'en' }) {
+  const [openId, setOpenId] = useState<string | null>(null)
+  const open = clips.find((clip) => clip.id === openId) ?? null
+  const es = lang === 'es'
+
+  const close = useCallback(() => setOpenId(null), [])
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
+    }
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open, close])
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+        {clips.map((clip) => (
+          <div key={clip.id} className="border-[3px] border-[var(--paper)] bg-[var(--paper)]">
+            <div className="relative aspect-video bg-black">
+              <YouTubePosterButton
+                videoId={clip.id}
+                title={clip.title}
+                onPlay={() => {
+                  requestYouTubePlay(`voice-clip-${clip.id}`)
+                  setOpenId(clip.id)
+                }}
+              />
+            </div>
+            <p className="m-0 border-t-[3px] border-[var(--ink)] px-3 py-2 text-[12px] leading-snug" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              <span className="line-clamp-2">{clip.title}</span>
+              {clip.when ? <span className="mt-1 block font-bold opacity-60">{clip.when}</span> : null}
+            </p>
+          </div>
+        ))}
+      </div>
+      {open && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[230] flex items-center justify-center bg-black/80 p-3 sm:p-6"
+              role="dialog"
+              aria-modal="true"
+              aria-label={open.title}
+              onClick={close}
+            >
+              <div
+                className="flex max-h-full w-[min(440px,calc(100vw-1.5rem))] flex-col items-stretch"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="mb-2 flex items-start justify-between gap-3">
+                  <p className="m-0 line-clamp-2 text-[13px] font-bold leading-snug text-white" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                    {open.title}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={close}
+                    aria-label={es ? 'Cerrar' : 'Close'}
+                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border-[3px] border-white bg-[var(--ink)] text-2xl font-black leading-none text-white"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div
+                  className="mx-auto w-full"
+                  style={{ width: 'min(420px, calc(100vw - 1.5rem), calc((100dvh - 190px) * 9 / 16))' }}
+                >
+                  <LazyYouTubeEmbed
+                    videoId={open.id}
+                    title={open.title}
+                    playSlotId={`voice-clip-${open.id}`}
+                    autoplay
+                    vertical
+                  />
+                </div>
+                <a
+                  href={`https://www.youtube.com/watch?v=${open.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex min-h-[44px] items-center justify-center gap-2 border-[3px] border-[var(--ink)] bg-[#f00] px-4 text-white no-underline"
+                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+                >
+                  {es ? 'Ver en YouTube' : 'Watch on YouTube'}
+                </a>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   )
 }
