@@ -372,9 +372,13 @@ export default async function VoicesPage({ params }: { params: Promise<{ lang: L
                   {videos.length > 0 ? (
                     <div className="border-t-4 border-[var(--ink)] bg-[var(--ink)] p-4 sm:p-6">
                       <p className="m-0 mb-3 text-[11px] font-black tracking-[2px] text-[var(--yellow)]" style={MONO}>
-                        {es ? '▶ LO ÚLTIMO EN SU CANAL' : '▶ LATEST ON THE CHANNEL'}
+                        {voice.videosKicker
+                          ? `▶ ${voice.videosKicker[lang]}`
+                          : es
+                            ? '▶ LO ÚLTIMO EN SU CANAL'
+                            : '▶ LATEST ON THE CHANNEL'}
                       </p>
-                      <div className="grid gap-4 md:grid-cols-3">
+                      <div className={`grid gap-4 ${videos.length > 4 ? 'grid-cols-2 md:grid-cols-5' : 'md:grid-cols-3'}`}>
                         {videos.map((video) => (
                           <div key={video.id} className="border-[3px] border-[var(--paper)] bg-[var(--paper)]">
                             <LazyYouTubeEmbed videoId={video.id} title={video.title} playSlotId={`voice-${video.id}`} />

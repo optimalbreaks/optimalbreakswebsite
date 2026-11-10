@@ -151,11 +151,11 @@ function decodeXml(value: string) {
 
 type FeedVideo = { id: string; title: string; description: string; published: string }
 
-/** Feed público de un canal (15 últimos). Vacío si YouTube no responde. */
-async function loadYouTubeFeed(channelId: string): Promise<FeedVideo[]> {
+/** Feed público de una lista (15 últimos). El canal es la lista `UU` + id sin `UC`. Vacío si YouTube no responde. */
+async function loadYouTubePlaylist(playlistId: string): Promise<FeedVideo[]> {
   try {
     const response = await fetch(
-      `https://www.youtube.com/feeds/videos.xml?playlist_id=UU${channelId.slice(2)}`,
+      `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`,
       FEED_CACHE,
     )
     if (!response.ok) return []
@@ -181,7 +181,7 @@ async function loadYouTubeFeed(channelId: string): Promise<FeedVideo[]> {
 
 /** Los 15 últimos del canal, vídeos y Shorts. Vacío si YouTube no responde. */
 export async function loadYouTubeChannelUploads(): Promise<ChannelUpload[]> {
-  const parsed = await loadYouTubeFeed(YOUTUBE_CHANNEL_ID)
+  const parsed = await loadYouTubePlaylist(`UU${YOUTUBE_CHANNEL_ID.slice(2)}`)
   const shorts = await Promise.all(parsed.map((video) => isYouTubeShort(video.id)))
   return parsed.map((video, index) => ({ id: video.id, title: video.title, short: shorts[index] === true }))
 }
@@ -215,6 +215,12 @@ export type SceneVoice = {
   imageUrl?: string
   /** Canal de YouTube: sus últimos vídeos entran solos. */
   youtubeChannelId?: string
+  /** Lista de YouTube, si lo que hay que enseñar no es el canal entero (PEPINARDOS de Jan-B). */
+  youtubePlaylistId?: string
+  /** Cuántos vídeos pinta la tarjeta. Por defecto 3. El feed público trae 15 como mucho. */
+  videoLimit?: number
+  /** Rótulo de la tira de vídeos. Si no hay, «Lo último en su canal». */
+  videosKicker?: Copy
   /** El canal mezcla temas: solo entran los vídeos cuyo título lleve alguna (o que nombren a Optimal Breaks). */
   youtubeKeywords?: string[]
   /** Feed RSS de podcast (Podbean…): se listan los últimos episodios como enlaces. */
@@ -411,10 +417,14 @@ export const SCENE_VOICES: SceneVoice[] = [
     ],
     links: [
       { kind: 'instagram', label: '@dj_jan_b', href: 'https://www.instagram.com/dj_jan_b/' },
+      { kind: 'youtube', label: 'PEPINARDOS', href: 'https://www.youtube.com/playlist?list=PL8Y_-ucbHkkodjJSerMUaiQxn9aXprL2q' },
       { kind: 'youtube', label: '@Jan-B_aka_Janbalik', href: 'https://www.youtube.com/@Jan-B_aka_Janbalik' },
     ],
     artists: [{ slug: 'jan-b', name: 'Jan-B', note: { es: 'su ficha', en: 'his profile' } }],
     imageUrl: '/images/artists/jan_b_artist.webp',
+    youtubePlaylistId: 'PL8Y_-ucbHkkodjJSerMUaiQxn9aXprL2q',
+    videoLimit: 10,
+    videosKicker: { es: 'Últimos pepinardos', en: 'Latest pepinardos' },
   },
 ]
 
@@ -426,16 +436,18 @@ function matchesAny(text: string, keys: string[]) {
   return keys.some((key) => folded.includes(fold(key)))
 }
 
-/** Últimos vídeos del comunicador (como mucho `limit`). `aboutUs` = el vídeo nombra a Optimal Breaks. */
-export async function loadSceneVoiceVideos(voice: SceneVoice, limit = 3): Promise<SceneVoiceVideo[]> {
-  if (!voice.youtubeChannelId) return []
-  const feed = await loadYouTubeFeed(voice.youtubeChannelId)
+/** Últimos vídeos del comunicador. `aboutUs` = el vídeo nombra a Optimal Breaks. */
+export async function loadSceneVoiceVideos(voice: SceneVoice, limit?: number): Promise<SceneVoiceVideo[]> {
+  const playlistId = voice.youtubePlaylistId ?? (voice.youtubeChannelId ? `UU${voice.youtubeChannelId.slice(2)}` : null)
+  if (!playlistId) return []
+  const cap = limit ?? voice.videoLimit ?? 3
+  const feed = await loadYouTubePlaylist(playlistId)
   const keys = voice.youtubeKeywords ?? []
   const aboutUs = (video: FeedVideo) =>
     matchesAny(`${video.title}\n${video.description}`, ['optimal breaks', 'optimalbreaks', 'optimal.breaks'])
   const picked = feed
     .filter((video) => keys.length === 0 || matchesAny(video.title, keys) || aboutUs(video))
-    .slice(0, limit)
+    .slice(0, cap)
   const shorts = await Promise.all(picked.map((video) => isYouTubeShort(video.id)))
   return picked.map((video, index) => ({
     id: video.id,
