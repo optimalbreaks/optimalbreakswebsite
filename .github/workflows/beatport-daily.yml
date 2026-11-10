@@ -1,13 +1,14 @@
-# Pase diario de Beatport — 12:05 hora de Madrid.
+# Pase diario de Beatport — 12:05 hora de Madrid. Listado de Breaks.
 #
-# Corre aquí y no en el cron de Vercel: el pase lee ~100 fichas del Top 100
-# en Beatport con un navegador y en Vercel la función muere a los 300 s
-# (9 oct 2026: arrancó a las 12:05 y Vercel la cortó sin terminar; cero temas).
-# Aquí hay Chrome de verdad, sin límite de 5 minutos.
+# Las fichas de los 140 van aparte, cada día a las 13:00
+# (beatport-artists.yml). Este workflow no las abre.
+#
+# Corre aquí y no en el cron de Vercel: con Chrome, Vercel mata la función
+# a los 300 s (9 oct 2026: arrancó a las 12:05 y la cortaron sin terminar).
 #
 # Mismo script que en local: `npx tsx scripts/beatport-daily-import.ts`.
-# Dos vías (README «Daily Beatport pass»): fichas del Top 100 → publicados;
-# listado de Breaks del día → pendientes en /administrator/imports.
+# Listado de Breaks del día → pendientes en /administrator/imports.
+# Un crédito de los 140 se publica directo.
 name: Pase diario de Beatport
 
 on:
@@ -26,7 +27,7 @@ on:
         type: boolean
         default: true
       artists:
-        description: 'Leer también las fichas del Top 100 (si no, solo los sábados)'
+        description: 'Leer también las fichas de los 140 (a mano; el cron de las 13:00 ya las lee cada día)'
         type: boolean
         default: false
 
@@ -49,7 +50,7 @@ jobs:
       - name: Dependencias
         run: npm ci --ignore-scripts
 
-      - name: Pase (Top 100 → publicados · Breaks → pendientes)
+      - name: Pase (Breaks → pendientes · crédito de los 140 → publicado)
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

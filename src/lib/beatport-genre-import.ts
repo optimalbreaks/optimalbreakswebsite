@@ -1,11 +1,9 @@
 /**
- * Pase diario a las 12:05 (Madrid), desde el 8 oct 2026.
- * El aviso lo da pg_cron (migración 090); este módulo es el trabajo, en GitHub Actions.
- * No recorre todos los artistas de la web.
- * 1. Enlaces que dejó el chat (`chart_import_links`) → se publican, cualquier fecha.
- * 2. Fichas de los 140 primeros del tablero en Beatport, cualquier género → se publican.
- * 3. Listado de Breaks → lo que no entró por 1 ni 2 ni estaba ya, a la cola pendiente
- *    (o publicado si en los créditos va uno de esos 140).
+ * Dos pases, cada día, en GitHub Actions. No recorre todos los artistas de la web.
+ * 12:05 (pg_cron, migración 090): enlaces del chat y listado de Breaks.
+ *   Lo que no es de los 140 queda pendiente; un crédito de esos 140 se publica.
+ * 13:00 (pg_cron, migración 108, `artistsOnly`): fichas de los 140, cualquier género.
+ *   Un tema que sale el mismo día, sin adelanto, entra ese día.
  * Un id de Beatport que ya está en el catálogo, en la cola o en el paso 2 no se vuelve a meter.
  * Tampoco la misma canción (título + versión + artistas) resubida con otro id.
  */
@@ -80,35 +78,48 @@ export function madridToday(): string {
   }).format(new Date())
 }
 
-/** Hay un pase terminado y correcto con fecha de Madrid de hoy. */
-export async function hasOkImportRunToday(): Promise<boolean> {
+function startedOnMadridToday(startedAt: string | null | undefined, today: string): boolean {
+  const started = startedAt ? new Date(startedAt) : null
+  if (!started || Number.isNaN(started.getTime())) return false
+  const day = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Madrid',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(started)
+  return day === today
+}
+
+/**
+ * Pase terminado y correcto, con fecha de Madrid de hoy, cuyo scope entra en la lista.
+ * Null es un pase de antes de la columna: cuenta como listado de Breaks, no como fichas.
+ */
+async function hasOkRunToday(scopes: Array<string | null>): Promise<boolean> {
   const sb = createServiceSupabase()
   const today = madridToday()
   const { data, error } = await sb
     .from('chart_import_runs')
-    .select('started_at')
+    .select('started_at, scope')
     .eq('ok', true)
     .not('finished_at', 'is', null)
     .order('started_at', { ascending: false })
-    .limit(8)
+    .limit(16)
   if (error) throw new Error(error.message)
   return (data ?? []).some((row) => {
-    const started = row.started_at ? new Date(row.started_at) : null
-    if (!started || Number.isNaN(started.getTime())) return false
-    const day = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Europe/Madrid',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(started)
-    return day === today
+    if (!startedOnMadridToday(row.started_at, today)) return false
+    const scope = row.scope ?? null
+    return scopes.includes(scope)
   })
 }
 
-/** Día de la semana en Madrid: 0 domingo … 5 viernes … 6 sábado. */
-export function madridWeekday(): number {
-  const name = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Madrid', weekday: 'short' }).format(new Date())
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(name)
+/** El listado de Breaks de hoy ya terminó bien. Un pase solo de fichas no cuenta. */
+export async function hasOkImportRunToday(): Promise<boolean> {
+  return hasOkRunToday([null, 'breaks', 'full'])
+}
+
+/** Las fichas de los 140 de hoy ya se leyeron. El listado de las 12:05 no cuenta. */
+export async function hasOkArtistsRunToday(): Promise<boolean> {
+  return hasOkRunToday(['artists', 'full'])
 }
 
 /**
@@ -123,7 +134,7 @@ const EXTRA_FOLLOW_NAMES = ['Dubaxface', 'AceNoise']
 
 /**
  * El mismo artista, escrito con espacio o sin él. El tablero guarda el crédito
- * «WelderB»; la ficha y Beatport dicen «Welder B». Sin esto el sábado no abre la página.
+ * «WelderB»; la ficha y Beatport dicen «Welder B». Sin esto el pase de las 13:00 no abre la página.
  */
 const FOLLOW_KEY_ALIASES: string[][] = [['welderb', 'welder b']]
 
@@ -143,9 +154,6 @@ async function loadFollowKeys(sb: ReturnType<typeof createServiceSupabase>): Pro
   expandFollowAliases(keys)
   return keys
 }
-
-/** Las fichas de esos artistas se leen los sábados: el viernes Cloudflare bloquea más y el sábado ya recoge los lanzamientos del viernes. */
-export const TOP100_ARTISTS_WEEKDAY = 6
 
 export function madridHour(): number {
   const h = new Intl.DateTimeFormat('en-GB', {
@@ -883,11 +891,15 @@ export async function runBeatportGenreImport(opts: {
    */
   budgetMs?: number
   /**
-   * Leer las fichas de los 140 primeros. Por defecto solo los sábados: cada ficha
-   * es una página más para Cloudflare y el 14 oct 2026 nos cerró la puerta.
-   * El listado de Breaks se lee todos los días.
+   * Leer las fichas de los 140 primeros además del listado de Breaks.
+   * El cron de las 12:05 no lo pone: esas fichas van en el pase de las 13:00.
    */
   artists?: boolean
+  /**
+   * Solo las fichas de los 140. Sin listado de Breaks y sin enlaces del chat.
+   * Es el pase de las 13:00 (10 nov 2026): un tema que sale el mismo día, sin adelanto, entra ese día.
+   */
+  artistsOnly?: boolean
   /** Cada paso del pase, para la ventana de «Traer ahora». */
   log?: (line: string) => void
 }): Promise<GenreImportResult> {
@@ -896,13 +908,15 @@ export async function runBeatportGenreImport(opts: {
     opts.log?.(line)
   }
   const startedAt = Date.now()
-  const readArtists = opts.artists ?? (Boolean(opts.artistSince) || madridWeekday() === TOP100_ARTISTS_WEEKDAY)
+  const artistsOnly = Boolean(opts.artistsOnly)
+  const readArtists = artistsOnly || Boolean(opts.artists) || Boolean(opts.artistSince)
   const outOfTime = () => opts.budgetMs != null && Date.now() - startedAt > opts.budgetMs
   const sb = createServiceSupabase()
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
   const genreFrom = opts.artistSince || BEATPORT_IMPORT_FROM
-  const doGenre = Boolean(opts.artistSince) || madridToday() >= BEATPORT_IMPORT_FROM
-  const artistFrom = opts.artistSince || (doGenre ? BEATPORT_IMPORT_FROM : '')
+  const doGenre = !artistsOnly && (Boolean(opts.artistSince) || madridToday() >= BEATPORT_IMPORT_FROM)
+  const artistFrom = readArtists ? (opts.artistSince || BEATPORT_IMPORT_FROM) : ''
+  const scope = artistsOnly ? 'artists' : readArtists ? 'full' : 'breaks'
 
   if (!doGenre && !artistFrom) {
     return { ok: true, skipped: 'before-start', ...empty }
@@ -922,7 +936,7 @@ export async function runBeatportGenreImport(opts: {
 
   const { data: run, error: runErr } = await sb
     .from('chart_import_runs')
-    .insert({ trigger: opts.trigger, ok: false })
+    .insert({ trigger: opts.trigger, ok: false, scope })
     .select('id')
     .single()
   if (runErr || !run?.id) {
@@ -939,7 +953,11 @@ export async function runBeatportGenreImport(opts: {
     return true
   }
   try {
-    say(readArtists ? `Pase con listado de Breaks y fichas de los ${FOLLOW_BOARD_LIMIT} primeros.` : `Pase con el listado de Breaks (las fichas de los ${FOLLOW_BOARD_LIMIT} primeros, los sábados).`)
+    say(artistsOnly
+      ? `Pase de fichas de los ${FOLLOW_BOARD_LIMIT} primeros (sin listado de Breaks).`
+      : readArtists
+        ? `Pase con listado de Breaks y fichas de los ${FOLLOW_BOARD_LIMIT} primeros.`
+        : `Pase con el listado de Breaks. Las fichas de los ${FOLLOW_BOARD_LIMIT} primeros van a las 13:00.`)
     if (BEATPORT_PAGE_PAUSE_MS > 0) {
       say(`Pausa de ${BEATPORT_PAGE_PAUSE_MS / 1000} s entre páginas de Beatport.`)
     }
@@ -1021,18 +1039,20 @@ export async function runBeatportGenreImport(opts: {
       await pauseBetweenBeatportPages()
     }
     try {
-      try {
-        published += await publishPendingChatLinks(sb, cache, known, async (url) => {
-          if (!browser) browser = await withTimeout(openBrowserReader(), 30_000, 'Chrome')
-          try {
-            return await withTimeout(browser.readTracks(url), 40_000, 'Beatport')
-          } catch (err) {
-            await dropBrowser()
-            throw err
-          }
-        }, say)
-      } catch (e) {
-        say(`Enlaces del chat: ${shortImportError(e instanceof Error ? e.message : String(e))}`)
+      if (!artistsOnly) {
+        try {
+          published += await publishPendingChatLinks(sb, cache, known, async (url) => {
+            if (!browser) browser = await withTimeout(openBrowserReader(), 30_000, 'Chrome')
+            try {
+              return await withTimeout(browser.readTracks(url), 40_000, 'Beatport')
+            } catch (err) {
+              await dropBrowser()
+              throw err
+            }
+          }, say)
+        } catch (e) {
+          say(`Enlaces del chat: ${shortImportError(e instanceof Error ? e.message : String(e))}`)
+        }
       }
       // El listado de Breaks es lo que llena «por aprobar». Se lee y se guarda
       // antes del Top 100: el 14 oct 2026 el pase se quedó en las fichas, GitHub
@@ -1077,7 +1097,7 @@ export async function runBeatportGenreImport(opts: {
         }
         await persistFresh('Breaks')
       }
-      if (artistFrom && !readArtists) say(`Fichas de los ${FOLLOW_BOARD_LIMIT} primeros: hoy no toca (solo los sábados).`)
+      if (!readArtists) say(`Fichas de los ${FOLLOW_BOARD_LIMIT} primeros: van en el pase de las 13:00.`)
       if (artistFrom && readArtists && !outOfTime() && partial !== STOPPED_BY_EDITOR) {
         const followed = await followedBeatportArtists(sb, rankKeys)
         say(`Los ${FOLLOW_BOARD_LIMIT} primeros con ficha Beatport: ${followed.length}`)

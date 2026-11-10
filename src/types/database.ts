@@ -116,6 +116,8 @@ export type ChartImportRunRow = {
   auto_approved: number
   skipped_known: number
   error: string | null
+  /** breaks = listado de las 12:05; artists = fichas de los 140 a las 13:00; full = las dos. Null = pase anterior a la columna. */
+  scope?: string | null
 }
 
 /** Columna en BD: `music_key` (antes `key`; la palabra `key` rompía los genéricos de @supabase/supabase-js). */

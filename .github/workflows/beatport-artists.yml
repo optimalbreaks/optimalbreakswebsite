@@ -1,0 +1,74 @@
+# Fichas de los 140 — 13:00 hora de Madrid, cada día.
+#
+# El pase de las 12:05 (beatport-daily.yml) es el listado de Breaks.
+# Este lee las páginas de artista de los 140 primeros, cualquier género,
+# y publica lo nuevo. Un tema que sale el mismo día, sin adelanto, entra hoy.
+# Chrome en GitHub, no en Vercel: ~15 min y la función de Vercel muere a los 300 s.
+#
+# El aviso lo da pg_cron (migración 108): workflow_dispatch, sin --force.
+# 13:00 Madrid = 11:00 UTC en verano, 12:00 UTC en invierno.
+# El otro horario ve las fichas del día ya leídas y no escribe fila.
+name: Fichas Beatport de los 140
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Lanzarlo aunque no sea la 1 en Madrid'
+        type: boolean
+        default: true
+
+concurrency:
+  group: beatport-daily
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dependencias
+        run: npm ci --ignore-scripts
+
+      - name: Fichas de los 140 (publicados, cualquier género)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          FORCE=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then FORCE="--force"; fi
+          npx tsx scripts/beatport-daily-import.ts --artists-only $FORCE
+
+      - name: Enlaces Spotify (temas publicados)
+        if: always()
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        run: |
+          FROM=$(date -u -d '14 days ago' +%F); UNTIL=$(date -u -d 'tomorrow' +%F)
+          node scripts/spotify-match-charts.mjs --service=spotify --table=featured --from=$FROM --until=$UNTIL
+
+      - name: Enlaces TIDAL (temas publicados)
+        if: always()
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TIDAL_CLIENT_ID: ${{ secrets.TIDAL_CLIENT_ID }}
+          TIDAL_CLIENT_SECRET: ${{ secrets.TIDAL_CLIENT_SECRET }}
+        run: |
+          FROM=$(date -u -d '14 days ago' +%F); UNTIL=$(date -u -d 'tomorrow' +%F)
+          node scripts/spotify-match-charts.mjs --service=tidal --table=featured --from=$FROM --until=$UNTIL
