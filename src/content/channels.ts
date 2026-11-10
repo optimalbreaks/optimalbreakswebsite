@@ -244,6 +244,36 @@ export const SCENE_VOICES: SceneVoice[] = [
     youtubeKeywords: ['onde bass', 'breakbeat', 'break', 'optimal', 'godino', 'olibass'],
   },
   {
+    id: 'kultura-breakz',
+    name: 'Kultura Breakz',
+    role: { es: 'Radio-show semanal · DJ Kultur', en: 'Weekly radio show · DJ Kultur' },
+    text: {
+      es: 'El radio-show de DJ Kultur, el primero en España dedicado solo al breakbeat y sus variantes. Sale cada miércoles en YouTube y también se emite en Twitch. Detrás hay además una web con tienda.',
+      en: 'DJ Kultur’s radio show, the first in Spain devoted only to breakbeat and its offshoots. A new episode every Wednesday on YouTube, also streamed on Twitch. There is a website with a shop behind it too.',
+    },
+    formats: [
+      {
+        name: 'KULTURA BREAKZ',
+        text: {
+          es: 'Un programa por semana, numerado: ya van más de 150.',
+          en: 'One numbered show a week: more than 150 so far.',
+        },
+      },
+    ],
+    links: [
+      { kind: 'youtube', label: '@kulturabreakz', href: 'https://www.youtube.com/@kulturabreakz' },
+      { kind: 'twitch', label: 'kulturabreakz', href: 'https://www.twitch.tv/kulturabreakz' },
+      { kind: 'instagram', label: '@kultura_breakz', href: 'https://www.instagram.com/kultura_breakz/' },
+      { kind: 'web', label: 'kulturabreakz.com', href: 'https://www.kulturabreakz.com' },
+    ],
+    artists: [
+      { slug: 'kultur', name: 'Kultur', note: { es: 'lo presenta', en: 'hosts it' } },
+      { slug: 'jan-b', name: 'Jan-B', note: { es: 'su pareja de producción desde 2003', en: 'his production partner since 2003' } },
+    ],
+    imageUrl: '/images/artists/dj_kultur.webp',
+    youtubeChannelId: 'UCP2RVBEcuY6ZL3ifKmOZ8Pw',
+  },
+  {
     id: 'dirty-kitchen-rave',
     name: 'Dirty Kitchen Rave',
     role: { es: 'Twitch y podcast · sello DKR', en: 'Twitch and podcast · DKR label' },
