@@ -230,11 +230,11 @@ export type SceneVoice = {
 export const SCENE_VOICES: SceneVoice[] = [
   {
     id: 'cigui9',
-    name: 'Cigui9',
-    role: { es: 'Creador de contenido · ONDE BASS', en: 'Content creator · ONDE BASS' },
+    name: 'Cigui9 & JottaFrank',
+    role: { es: 'ONDE BASS · proyecto de los dos', en: 'ONDE BASS · a joint project' },
     text: {
-      es: 'Creador de contenido de la escena breakbeat andaluza. Graba en las fiestas, entrevista al público y a los artistas, y con JottaFrank presenta ONDE BASS.',
-      en: 'Content creator from the Andalusian breakbeat scene. He films at the parties, interviews the crowd and the artists, and hosts ONDE BASS with JottaFrank.',
+      es: 'ONDE BASS es el proyecto de Cigui9 y JottaFrank, de la escena breakbeat andaluza. Cigui9 graba en las fiestas y entrevista al público y a los artistas; juntos crean y presentan el concurso.',
+      en: 'ONDE BASS is the project of Cigui9 and JottaFrank, from the Andalusian breakbeat scene. Cigui9 films at the parties and interviews the crowd and the artists; together they created and host the contest.',
     },
     accent: 'red',
     badge: { es: 'Concurso', en: 'Contest' },
@@ -257,7 +257,7 @@ export const SCENE_VOICES: SceneVoice[] = [
       { kind: 'instagram', label: '@cigui9', href: 'https://www.instagram.com/cigui9/' },
     ],
     artists: [
-      { slug: 'jottafrank', name: 'JottaFrank', note: { es: 'copresenta ONDE BASS', en: 'co-hosts ONDE BASS' } },
+      { slug: 'jottafrank', name: 'JottaFrank', note: { es: 'creador de ONDE BASS con Cigui9', en: 'created ONDE BASS with Cigui9' } },
       { slug: 'maxuka', name: 'Maxuka', note: { es: 'ganador de ONDE BASS 2025', en: 'ONDE BASS 2025 winner' } },
       { slug: 'basstyler', name: 'Basstyler', note: { es: 'jurado 2026', en: '2026 jury' } },
     ],
