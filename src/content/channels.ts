@@ -247,6 +247,7 @@ export const SCENE_VOICES: SceneVoice[] = [
     ],
     links: [
       { kind: 'youtube', label: '@cigui9', href: 'https://www.youtube.com/@cigui9' },
+      { kind: 'twitch', label: 'cigui9', href: 'https://www.twitch.tv/cigui9' },
       { kind: 'instagram', label: '@cigui9', href: 'https://www.instagram.com/cigui9/' },
     ],
     artists: [
@@ -386,21 +387,17 @@ export const SCENE_VOICES: SceneVoice[] = [
     name: 'Jan-B',
     role: { es: 'Reels en Instagram · PEPINARDOS', en: 'Instagram reels · PEPINARDOS' },
     text: {
-      es: 'Productor y DJ andaluz desde 2003. En Instagram cuenta las novedades del breakbeat a cámara, tema a tema, y las manda a Beatport y a Optimal Breaks.',
-      en: 'Andalusian producer and DJ since 2003. On Instagram he talks through the new breakbeat releases to camera, one by one, and points to Beatport and Optimal Breaks.',
+      es: 'Productor y DJ andaluz desde 2003. En Instagram cuenta las novedades del breakbeat a cámara, tema a tema.',
+      en: 'Andalusian producer and DJ since 2003. On Instagram he talks through the new breakbeat releases to camera, one by one.',
     },
     accent: 'acid',
     badge: { es: 'Pepinardos', en: 'Pepinardos' },
-    quote: {
-      text: 'Más novedades breakbeat! Otros 6 PEPINARDOS publicados estos últimos días que ya puedes encontrar en @beatport y en @optimal.breaks',
-      source: '@dj_jan_b en Instagram',
-    },
     formats: [
       {
         name: 'PEPINARDOS',
         text: {
-          es: 'Los lanzamientos de breakbeat de los últimos días, en un reel. Se publican con @optimal.breaks.',
-          en: 'The breakbeat releases of the last few days, in one reel. Posted with @optimal.breaks.',
+          es: 'Los lanzamientos de breakbeat de los últimos días, en un reel.',
+          en: 'The breakbeat releases of the last few days, in one reel.',
         },
       },
       {
