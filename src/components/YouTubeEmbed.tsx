@@ -55,6 +55,7 @@ export function LazyYouTubeEmbed({
   onPlayRecorded,
   nowPlaying,
   vertical = false,
+  fill = false,
 }: {
   videoId: string
   title: string
@@ -71,6 +72,8 @@ export function LazyYouTubeEmbed({
   playSlotId?: string
   /** Short: marco 9:16. Un vídeo apaisado se queda en 16:9. */
   vertical?: boolean
+  /** Rellena el padre (el padre pone el tamaño). El emergente de shorts lo usa. */
+  fill?: boolean
   /** Llamado una vez cuando el usuario inicia la reproducción (click o autoplay). */
   onPlayRecorded?: () => void
   /** Metadatos de lockscreen. Si faltan, se parsea `title` (`Tema — Artista`). */
@@ -199,7 +202,7 @@ export function LazyYouTubeEmbed({
   }
 
   return (
-    <div className={`relative w-full bg-black overflow-hidden ${vertical ? 'mx-auto aspect-[9/16] max-w-[420px]' : 'aspect-video'} ${className}`}>
+    <div className={fill ? `absolute inset-0 h-full w-full bg-black ${className}` : `relative w-full bg-black overflow-hidden ${vertical ? 'mx-auto aspect-[9/16] max-w-[420px]' : 'aspect-video'} ${className}`}>
       {mountIframe && embedSrc ? (
         <iframe
           id={iframeId}
@@ -207,7 +210,7 @@ export function LazyYouTubeEmbed({
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
-          loading="lazy"
+          loading={autoplay || fill ? 'eager' : 'lazy'}
           referrerPolicy="strict-origin-when-cross-origin"
           className="absolute inset-0 h-full w-full border-0"
         />
@@ -293,8 +296,15 @@ export function YouTubeClipGrid({ clips, lang }: { clips: YouTubeClip[]; lang: '
   const [openId, setOpenId] = useState<string | null>(null)
   const open = clips.find((clip) => clip.id === openId) ?? null
   const es = lang === 'es'
+  const openedAt = useRef(0)
 
   const close = useCallback(() => setOpenId(null), [])
+
+  const openClip = useCallback((id: string) => {
+    requestYouTubePlay(`voice-clip-${id}`)
+    openedAt.current = Date.now()
+    setOpenId(id)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -316,14 +326,7 @@ export function YouTubeClipGrid({ clips, lang }: { clips: YouTubeClip[]; lang: '
         {clips.map((clip) => (
           <div key={clip.id} className="border-[3px] border-[var(--paper)] bg-[var(--paper)]">
             <div className="relative aspect-video bg-black">
-              <YouTubePosterButton
-                videoId={clip.id}
-                title={clip.title}
-                onPlay={() => {
-                  requestYouTubePlay(`voice-clip-${clip.id}`)
-                  setOpenId(clip.id)
-                }}
-              />
+              <YouTubePosterButton videoId={clip.id} title={clip.title} onPlay={() => openClip(clip.id)} />
             </div>
             <p className="m-0 border-t-[3px] border-[var(--ink)] px-3 py-2 text-[12px] leading-snug" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <span className="line-clamp-2">{clip.title}</span>
@@ -335,47 +338,108 @@ export function YouTubeClipGrid({ clips, lang }: { clips: YouTubeClip[]; lang: '
       {open && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed inset-0 z-[230] flex items-center justify-center bg-black/80 p-3 sm:p-6"
               role="dialog"
               aria-modal="true"
               aria-label={open.title}
-              onClick={close}
+              onClick={() => {
+                if (Date.now() - openedAt.current < 400) return
+                close()
+              }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 4000,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                boxSizing: 'border-box',
+                padding: '12px 12px 16px',
+                background: 'rgba(0,0,0,.92)',
+                overflow: 'auto',
+              }}
             >
               <div
-                className="flex max-h-full w-[min(440px,calc(100vw-1.5rem))] flex-col items-stretch"
                 onClick={(event) => event.stopPropagation()}
+                style={{
+                  width: 'min(92vw, 440px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'stretch',
+                  gap: 10,
+                  margin: 'auto',
+                }}
               >
-                <div className="mb-2 flex items-start justify-between gap-3">
-                  <p className="m-0 line-clamp-2 text-[13px] font-bold leading-snug text-white" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      flex: 1,
+                      color: '#fff',
+                      fontFamily: "'Courier Prime', monospace",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      lineHeight: 1.35,
+                    }}
+                  >
                     {open.title}
                   </p>
                   <button
                     type="button"
                     onClick={close}
                     aria-label={es ? 'Cerrar' : 'Close'}
-                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border-[3px] border-white bg-[var(--ink)] text-2xl font-black leading-none text-white"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                      border: '3px solid #fff',
+                      background: '#111',
+                      color: '#fff',
+                      fontSize: 28,
+                      fontWeight: 900,
+                      lineHeight: 1,
+                    }}
                   >
                     ×
                   </button>
                 </div>
                 <div
-                  className="mx-auto w-full"
-                  style={{ width: 'min(420px, calc(100vw - 1.5rem), calc((100dvh - 190px) * 9 / 16))' }}
+                  style={{
+                    position: 'relative',
+                    width: 'min(92vw, 420px, calc((100vh - 160px) * 0.5625))',
+                    aspectRatio: '9 / 16',
+                    margin: '0 auto',
+                    background: '#000',
+                    boxShadow: '0 0 0 3px #fff',
+                  }}
                 >
                   <LazyYouTubeEmbed
                     videoId={open.id}
                     title={open.title}
                     playSlotId={`voice-clip-${open.id}`}
                     autoplay
-                    vertical
+                    fill
                   />
                 </div>
                 <a
                   href={`https://www.youtube.com/watch?v=${open.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex min-h-[44px] items-center justify-center gap-2 border-[3px] border-[var(--ink)] bg-[#f00] px-4 text-white no-underline"
-                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+                  style={{
+                    display: 'flex',
+                    minHeight: 48,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#f00',
+                    color: '#fff',
+                    border: '3px solid #111',
+                    textDecoration: 'none',
+                    fontFamily: "'Unbounded', sans-serif",
+                    fontWeight: 900,
+                    fontSize: 13,
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                  }}
                 >
                   {es ? 'Ver en YouTube' : 'Watch on YouTube'}
                 </a>
