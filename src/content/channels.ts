@@ -198,6 +198,14 @@ export type SceneVoice = {
   name: string
   role: Copy
   text: Copy
+  /** Color de la tarjeta (variable de globals.css). */
+  accent: 'red' | 'yellow' | 'orange' | 'uv' | 'acid' | 'cyan' | 'pink' | 'blue'
+  /** Pegatina de la cabecera: lo que los distingue en dos palabras. */
+  badge: Copy
+  /** Frase suya, literal (descripción del canal, de un vídeo o de un post). No se traduce. */
+  quote?: { text: string; source: string }
+  /** Ficha de sello, si el comunicador es también un sello. */
+  label?: { slug: string; name: string }
   /** Formatos con nombre propio (ONDE BASS, PEPINARDOS…). */
   formats: { name: string; text: Copy }[]
   links: SceneVoiceLink[]
@@ -221,6 +229,12 @@ export const SCENE_VOICES: SceneVoice[] = [
     text: {
       es: 'Creador de contenido de la escena breakbeat andaluza. Graba en las fiestas, entrevista al público y a los artistas, y con JottaFrank presenta ONDE BASS.',
       en: 'Content creator from the Andalusian breakbeat scene. He films at the parties, interviews the crowd and the artists, and hosts ONDE BASS with JottaFrank.',
+    },
+    accent: 'red',
+    badge: { es: 'Concurso', en: 'Contest' },
+    quote: {
+      text: 'ONDE BASS es mucho más que una competición. Es un proyecto creado para apoyar a los productores, descubrir nuevos talentos y dar protagonismo a quienes trabajan detrás de cada producción musical.',
+      source: 'ONDE BASS 2026 · presentación oficial',
     },
     formats: [
       {
@@ -251,6 +265,12 @@ export const SCENE_VOICES: SceneVoice[] = [
       es: 'El radio-show de DJ Kultur, el primero en España dedicado solo al breakbeat y sus variantes. Sale cada miércoles en YouTube y también se emite en Twitch. Detrás hay además una web con tienda.',
       en: 'DJ Kultur’s radio show, the first in Spain devoted only to breakbeat and its offshoots. A new episode every Wednesday on YouTube, also streamed on Twitch. There is a website with a shop behind it too.',
     },
+    accent: 'yellow',
+    badge: { es: 'Cada miércoles', en: 'Every Wednesday' },
+    quote: {
+      text: 'Principal portal y radio-show español dedicado al género electrónico estilo BREAKBEAT.',
+      source: 'Kultura Breakz',
+    },
     formats: [
       {
         name: 'KULTURA BREAKZ',
@@ -280,6 +300,12 @@ export const SCENE_VOICES: SceneVoice[] = [
     text: {
       es: 'Programa de entrevistas a los artistas de la escena, desde la bahía de Cádiz. Morpheus Black pregunta y Daniel Moreno graba. Van a las fiestas (Oshun, Pandora, Dreambeach) y se sientan con DJs y productores, de las leyendas a los nombres nuevos.',
       en: 'An interview show with the scene’s artists, from the Bay of Cádiz. Morpheus Black asks and Daniel Moreno films. They go to the parties (Oshun, Pandora, Dreambeach) and sit down with DJs and producers, from legends to new names.',
+    },
+    accent: 'orange',
+    badge: { es: 'Temporada 4', en: 'Season 4' },
+    quote: {
+      text: 'Programa de entrevistas a los artistas mas canallas de la escena!!',
+      source: 'Onda Canalla',
     },
     formats: [
       {
@@ -320,6 +346,14 @@ export const SCENE_VOICES: SceneVoice[] = [
       es: 'Directos en Twitch varias noches por semana con lo último del breakbeat, y conversación sin filtro entre tema y tema. Luego se cuelgan enteros en el podcast.',
       en: 'Live Twitch streams several nights a week with the latest breakbeat, and unfiltered talk between tracks. Then they go up in full on the podcast.',
     },
+    accent: 'uv',
+    badge: { es: 'En Twitch', en: 'On Twitch' },
+    quote: {
+      text: 'Playing the latest in breakbeat, don’t sleep on these shows if you wanna know what’s what in the most underground scene in the World!',
+      source: 'The DIRTY KITCHEN RAVE Podcast',
+    },
+    label: { slug: 'dirty-kitchen-rave', name: 'DIRTY KITCHEN RAVE' },
+    imageUrl: 'https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/labels/dirty-kitchen-rave/logo.jpg',
     formats: [
       {
         name: 'Upfront Breaks',
@@ -354,6 +388,12 @@ export const SCENE_VOICES: SceneVoice[] = [
     text: {
       es: 'Productor y DJ andaluz desde 2003. En Instagram cuenta las novedades del breakbeat a cámara, tema a tema, y las manda a Beatport y a Optimal Breaks.',
       en: 'Andalusian producer and DJ since 2003. On Instagram he talks through the new breakbeat releases to camera, one by one, and points to Beatport and Optimal Breaks.',
+    },
+    accent: 'acid',
+    badge: { es: 'Pepinardos', en: 'Pepinardos' },
+    quote: {
+      text: 'Más novedades breakbeat! Otros 6 PEPINARDOS publicados estos últimos días que ya puedes encontrar en @beatport y en @optimal.breaks',
+      source: '@dj_jan_b en Instagram',
     },
     formats: [
       {
