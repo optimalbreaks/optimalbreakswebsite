@@ -42,6 +42,30 @@ export async function fetchAllPages<T>(
 }
 
 /**
+ * Páginas por cursor (`id > último`), en serie. Con `range()` la página N
+ * recorre y descarta N × 500 filas: leer la tabla entera cuesta ~n²/2 y,
+ * lanzadas en paralelo, esas lecturas tumbaron la API (11 nov 2026).
+ * `run(after, limit)` debe ordenar por `id` y aplicar `.gt('id', after)` si
+ * `after` no es null.
+ */
+export async function fetchAllPagesByCursor<T extends { id: string }>(
+  run: (after: string | null, limit: number) => PageResult,
+  pageSize = SUPABASE_PAGE_SIZE,
+): Promise<T[]> {
+  const out: T[] = []
+  let after: string | null = null
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const { data, error } = await run(after, pageSize)
+    if (error) throw new Error(error.message)
+    const rows = (data as T[] | null) ?? []
+    out.push(...rows)
+    if (rows.length < pageSize) break
+    after = rows[rows.length - 1].id
+  }
+  return out
+}
+
+/**
  * Igual que `fetchAllPages` pero pide primero el total (`count: 'exact'`) y
  * descarga todas las páginas EN PARALELO: con tablas grandes pasa de N viajes
  * seguidos a ~2. `countRun()` debe devolver la misma consulta con

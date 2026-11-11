@@ -12,7 +12,7 @@ import {
   isArchiveFeaturedTrack,
 } from '@/lib/charts-archive'
 import { madridCalendarDate, vinylRowDisplayScore, vinylTrackDedupKey } from '@/lib/share-track'
-import { SUPABASE_PAGE_SIZE, fetchAllPagesParallel } from '@/lib/supabase-paginate'
+import { SUPABASE_PAGE_SIZE, fetchAllPagesByCursor } from '@/lib/supabase-paginate'
 
 // 500 (antes 1000): cada página es una entrada de la Data Cache y Next no
 // cachea respuestas de más de 2 MB. Con `select('*')` y 1000 filas las
@@ -105,38 +105,24 @@ export async function loadChartsOutline(supabase: Sb): Promise<{
       .eq('is_published', true)
       .gte('week_date', CHARTS_EDITORIAL_START)
       .order('week_date', { ascending: false }),
-    // Conteo + páginas en paralelo: antes eran N viajes SEGUIDOS a Supabase
-    // (uno por cada 1.000 temas) cada vez que caducaba la caché.
-    fetchAllPagesParallel<SlimFeatured>(
-      () =>
-        supabase
-          .from('chart_featured_tracks')
-          .select('id, chart_editions!inner(week_date)', { count: 'exact', head: true })
-          .eq('chart_editions.is_published', true),
-      (from, to) =>
-        supabase
-          .from('chart_featured_tracks')
-          .select('id, link_url, release_date, release_year, chart_edition_id, chart_editions!inner(week_date)')
-          .eq('chart_editions.is_published', true)
-          .order('id', { ascending: true })
-          .range(from, to),
-      PAGE,
-    ),
-    fetchAllPagesParallel<SlimVinyl>(
-      () =>
-        supabase
-          .from('chart_vinyl_tracks')
-          .select('id, chart_editions!inner(week_date)', { count: 'exact', head: true })
-          .eq('chart_editions.is_published', true),
-      (from, to) =>
-        supabase
-          .from('chart_vinyl_tracks')
-          .select('id, title, mix_name, artists, year, chart_editions!inner(week_date)')
-          .eq('chart_editions.is_published', true)
-          .order('id', { ascending: true })
-          .range(from, to),
-      PAGE,
-    ),
+    // Por cursor, no por `range()`: 45 páginas con OFFSET en paralelo
+    // recorrían la tabla ~22 veces en cada carga (11 nov 2026).
+    fetchAllPagesByCursor<SlimFeatured>((after, limit) => {
+      let q = supabase
+        .from('chart_featured_tracks')
+        .select('id, link_url, release_date, release_year, chart_edition_id, chart_editions!inner(week_date)')
+        .eq('chart_editions.is_published', true)
+      if (after) q = q.gt('id', after)
+      return q.order('id', { ascending: true }).limit(limit)
+    }, PAGE),
+    fetchAllPagesByCursor<SlimVinyl>((after, limit) => {
+      let q = supabase
+        .from('chart_vinyl_tracks')
+        .select('id, title, mix_name, artists, year, chart_editions!inner(week_date)')
+        .eq('chart_editions.is_published', true)
+      if (after) q = q.gt('id', after)
+      return q.order('id', { ascending: true }).limit(limit)
+    }, PAGE),
   ])
   if (editionsRes.error) throw new Error(editionsRes.error.message)
 
