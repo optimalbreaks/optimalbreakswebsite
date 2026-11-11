@@ -410,6 +410,8 @@ Los syncs semanales **no** pisan los matches: la RPC del 40 (`apply_chart_tracks
 
 **Lista «Temazos 2026».** La cuenta de Narciso sí. `npm run db:spotify:temazos` (`scripts/spotify-temazos.mjs`) añade a esa lista el mismo corte que `/topreleases`, en directo: los más votados si el periodo cierra antes del 6 oct 2026, los 20 más escuchados a partir de esa fecha. No repite ni borra. La primera vez, `npm run db:spotify:temazos -- --auth` (en la app de Spotify, Redirect URI `http://127.0.0.1:8888/callback`; el token queda en `.env.local`). Publicar una quincena o un trimestre lo lanza solo. La página pública es `/channels`, con el reproductor de [TEMAZOS 2026](https://open.spotify.com/playlist/1IeXy1JkoPIRpX9TPCuPYI).
 
+**`/voices` — «El breakbeat no es solo la música» (10 nov 2026).** Tres bloques: la música (enlace a Tracks), los oyentes y los comunicadores. Los datos viven en `SCENE_VOICES` (`src/content/channels.ts`), sin tabla: una voz nueva es una entrada. Lady Waks (11 nov 2026) entra con la lista In Da Mix (`PLdzvmaI0yB463AYQIS5qPFkT6Bh0O__zR`, canal @DjLadyWaks): las sesiones del Record Club en Radio Record, las que mantuvieron el break en circulación cuando el género dejó el centro. Una lista no es un reel: las sesiones apaisadas usan la misma tarjeta 16:9 que un canal. La tarjeta vertical es solo `verticalVideos` (los PEPINARDOS de Jan-B). El feed público trae 15 vídeos como mucho.
+
 ---
 
 ## Descubrir artistas y sellos desde los charts

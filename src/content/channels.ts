@@ -215,8 +215,10 @@ export type SceneVoice = {
   imageUrl?: string
   /** Canal de YouTube: sus últimos vídeos entran solos. */
   youtubeChannelId?: string
-  /** Lista de YouTube, si lo que hay que enseñar no es el canal entero (PEPINARDOS de Jan-B). */
+  /** Lista de YouTube, si lo que hay que enseñar no es el canal entero (PEPINARDOS de Jan-B, In Da Mix de Lady Waks). */
   youtubePlaylistId?: string
+  /** Esos vídeos son verticales (reels). Si no, se pintan apaisados aunque vengan de una lista. */
+  verticalVideos?: boolean
   /** Cuántos vídeos pinta la tarjeta. Por defecto 3. El feed público trae 15 como mucho. */
   videoLimit?: number
   /** Rótulo de la tira de vídeos. Si no hay, «Lo último en su canal». */
@@ -423,8 +425,50 @@ export const SCENE_VOICES: SceneVoice[] = [
     artists: [{ slug: 'jan-b', name: 'Jan-B', note: { es: 'su ficha', en: 'his profile' } }],
     imageUrl: '/images/artists/jan_b_artist.webp',
     youtubePlaylistId: 'PL8Y_-ucbHkkodjJSerMUaiQxn9aXprL2q',
+    verticalVideos: true,
     videoLimit: 10,
     videosKicker: { es: 'Últimos pepinardos', en: 'Latest pepinardos' },
+  },
+  {
+    id: 'lady-waks',
+    name: 'Lady Waks',
+    role: { es: 'Sesiones grabadas · Radio Record', en: 'Recorded sets · Radio Record' },
+    text: {
+      es: 'Cuando el breakbeat dejó de ocupar el centro, Lady Waks lo mantuvo vivo con sesiones grabadas. Lleva años: la lista In Da Mix, que en la industria se conoce, y el Record Club de Radio Record, que ya pasa del número 890.',
+      en: 'When breakbeat left the centre, Lady Waks kept it alive with recorded sets. She has been at it for years: the In Da Mix playlist, which the industry knows, and Radio Record’s Record Club, already past number 890.',
+    },
+    accent: 'pink',
+    badge: { es: 'In Da Mix', en: 'In Da Mix' },
+    quote: {
+      text: 'Full live mix from my weekly Record Club show on Radio Record.',
+      source: 'Record Club · Lady Waks',
+    },
+    formats: [
+      {
+        name: 'Lady Waks In Da Mix',
+        text: {
+          es: 'La lista con el archivo de las sesiones, de los In Da Mix numerados al Record Club.',
+          en: 'The playlist with the archive of the sets, from the numbered In Da Mix episodes to Record Club.',
+        },
+      },
+      {
+        name: 'Record Club',
+        text: {
+          es: 'El programa de Radio Record, grabado en el estudio. Breaks, UK garage, drum & bass y jungle.',
+          en: 'The Radio Record show, recorded in the studio. Breaks, UK garage, drum & bass and jungle.',
+        },
+      },
+    ],
+    links: [
+      { kind: 'youtube', label: 'In Da Mix', href: 'https://www.youtube.com/playlist?list=PLdzvmaI0yB463AYQIS5qPFkT6Bh0O__zR' },
+      { kind: 'youtube', label: '@DjLadyWaks', href: 'https://www.youtube.com/@DjLadyWaks' },
+      { kind: 'instagram', label: '@ladywaks', href: 'https://www.instagram.com/ladywaks/' },
+    ],
+    artists: [{ slug: 'lady-waks', name: 'Lady Waks', note: { es: 'su ficha', en: 'her profile' } }],
+    imageUrl: '/images/artists/lady_waks.webp',
+    youtubeChannelId: 'UChGZ3xWSZlkWz8iNpCHjGqQ',
+    youtubePlaylistId: 'PLdzvmaI0yB463AYQIS5qPFkT6Bh0O__zR',
+    videosKicker: { es: 'Últimas sesiones', en: 'Latest sets' },
   },
 ]
 

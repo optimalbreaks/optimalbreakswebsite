@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
   return staticPageMetadata(lang, '/voices', 'voices', {
     ogImagePath: sectionOgImagePath('voices', lang),
     ogImageAlt: sectionOgImageAlt('voices', lang),
-    extraKeywords: ['ONDE BASS', 'Kultura Breakz', 'Onda Canalla', 'Dirty Kitchen Rave', 'PEPINARDOS'],
+    extraKeywords: ['ONDE BASS', 'Kultura Breakz', 'Onda Canalla', 'Dirty Kitchen Rave', 'PEPINARDOS', 'Lady Waks', 'Record Club'],
   })
 }
 
@@ -129,8 +129,8 @@ export default async function VoicesPage({ params }: { params: Promise<{ lang: L
       n: '03',
       title: es ? 'Los que lo cuentan' : 'The people who tell it',
       text: es
-        ? 'Programas, concursos, directos y reels. Algunos son artistas; aquí salen por el otro papel: el de contarlo.'
-        : 'Shows, contests, live streams and reels. Some are artists; here they appear for that other role: telling it.',
+        ? 'Programas, concursos, sesiones, directos y reels. Algunos son artistas; aquí salen por el otro papel: el de contarlo.'
+        : 'Shows, contests, sets, live streams and reels. Some are artists; here they appear for that other role: telling it.',
       links: [{ href: '#comunicadores', label: es ? 'Ver las voces ↓' : 'See the voices ↓' }],
     },
   ]
@@ -378,7 +378,7 @@ export default async function VoicesPage({ params }: { params: Promise<{ lang: L
                             ? '▶ LO ÚLTIMO EN SU CANAL'
                             : '▶ LATEST ON THE CHANNEL'}
                       </p>
-                      {voice.youtubePlaylistId ? (
+                      {voice.verticalVideos ? (
                         <YouTubeClipGrid
                           lang={lang}
                           clips={videos.map((video) => ({
