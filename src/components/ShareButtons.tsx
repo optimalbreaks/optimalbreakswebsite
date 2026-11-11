@@ -20,14 +20,14 @@ import {
 import { aiShareCaption, appendInstagramMentions, buildGiftVideoCaption, buildPageVideoCaption, dayReelTense, type SharePlatform } from '@/lib/share-caption'
 import { GIFT_IG_ARTIST, GIFT_IG_SITE } from '@/lib/gift-download'
 import type { DayReelInput, PageReelInput } from '@/lib/page-reel'
-import { dayAudioSlots, dayCardSeconds, dayReelDuration } from '@/lib/page-reel-design'
+import { dayAudioSlots, dayCardSeconds, DAY_MAX_TRACKS, dayReelDuration } from '@/lib/page-reel-design'
 import type { ReelData, ReelFormat } from '@/lib/reel-renderer'
 import { SHARE_SEGMENT_SEC, type ShareAudioSegment } from '@/lib/share-audio'
 type BlogReelInput = Extract<PageReelInput, { kind: 'blog' }>
 
-/** Hasta 5 destacados con preview. El primero suena desde el segundo 0. */
+/** Hasta 8 destacados con preview. El primero suena desde el segundo 0. */
 function dayShareClips(day: DayReelInput) {
-  const picks = day.picks.slice(0, 5)
+  const picks = day.picks.slice(0, DAY_MAX_TRACKS)
   const cardSec = dayCardSeconds(picks.length)
   const total = dayReelDuration(picks.length)
   const audible = picks.flatMap((p, i) => (p.audio ? [i] : []))

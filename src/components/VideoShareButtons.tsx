@@ -38,7 +38,7 @@ export interface VideoShareButtonsProps {
   /** Tema que suena (URL del mismo origen) y segundos = duración del vídeo. Abre el selector. */
   audio?: { src: string; key: string; label: string; seconds: number } | null
   /**
-   * Varios temas, un selector detrás de otro (el día, hasta 5 destacados).
+   * Varios temas, un selector detrás de otro (el día, hasta 8 destacados).
    * Cada `seconds` es el trozo de esa card; `at` es el segundo en que entra en el vídeo.
    */
   clips?: { src: string; key: string; label: string; seconds: number; at: number; total: number }[] | null

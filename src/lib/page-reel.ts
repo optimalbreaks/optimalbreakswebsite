@@ -14,7 +14,7 @@
 // piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animAlbum, animBlog, animDay, animEvents, animFortnight, animGift, animTop, animWeek, blogHighlightFrom, dayAudioSlots, dayCardSeconds, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, GIFT_DUR, type EventsAnim, type GiftAnim, type Img } from './page-reel-design'
+import { animAlbum, animBlog, animDay, animEvents, animFortnight, animGift, animTop, animWeek, blogHighlightFrom, dayAudioSlots, dayCardSeconds, DAY_MAX_TRACKS, dayReelDuration, DUR, eventsReelDuration, FORTNIGHT_DUR, GIFT_DUR, type EventsAnim, type GiftAnim, type Img } from './page-reel-design'
 
 export type EventsReelEvent = {
   name: string
@@ -238,7 +238,7 @@ async function renderDayReel(
   const W = format === 'horizontal' ? 1920 : 1080
   const H = format === 'horizontal' ? 1080 : 1920
   await loadFonts()
-  const picks = day.picks.slice(0, 5)
+  const picks = day.picks.slice(0, DAY_MAX_TRACKS)
   const rest = day.rest.slice(0, 8)
   const cardSec = dayCardSeconds(picks.length)
   const total = dayReelDuration(picks.length)

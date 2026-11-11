@@ -30,6 +30,7 @@ import { publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import type { DayReelInput } from '@/lib/page-reel'
+import { DAY_MAX_TRACKS } from '@/lib/page-reel-design'
 import type { FortnightDigestTrack } from '@/types/database'
 
 const REEL_MONTHS = {
@@ -60,9 +61,17 @@ function dayReelOf(
   picks: FortnightDigestTrack[],
   rest: FortnightDigestTrack[],
 ) {
-  const sounding = (picks.length ? picks : rest).slice(0, 5)
+  const sounding = (picks.length ? picks : rest).slice(0, DAY_MAX_TRACKS)
   if (!sounding.length) return undefined
-  const shelf = (picks.length ? rest : rest.slice(sounding.length)).slice(0, 8)
+  // Un EP con varios temas del día tiene una sola carátula: no se repite en el cierre ni repite la de una ficha.
+  const usedArt = new Set(sounding.map((t) => t.artwork_url).filter(Boolean))
+  const shelf = (picks.length ? rest : rest.slice(sounding.length))
+    .filter((t) => {
+      if (!t.artwork_url || usedArt.has(t.artwork_url)) return false
+      usedArt.add(t.artwork_url)
+      return true
+    })
+    .slice(0, 8)
   const dayReel: DayReelInput = {
     es: lang !== 'en',
     date: reelDayLabel(day, lang),
@@ -298,15 +307,4 @@ export default async function DayReleaseArticlePage({
           <DigestTrackRows
             groupKey={`topreleases:day:${day}`}
             lang={lang}
-            artistSlugMap={artistSlugMap}
-            labelSlugMap={labelSlugMap}
-            groups={[
-              { title: copy.picksTitle, tracks: picks, spot: `picks-${day}`, tone: 'pick' },
-              { title: copy.restTitle, tracks: rest, spot: `rest-${day}`, tone: 'rest' },
-            ]}
-          />
-        </article>
-      </div>
-    </main>
-  )
-}
+            artistSlug

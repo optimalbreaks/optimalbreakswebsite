@@ -145,24 +145,29 @@ Piezas:
 
 ## Reel del día (`/topreleases/dia`, 6 nov 2026)
 
-R y F del artículo del día usan el mismo vídeo. Qué cinco suenan, en este orden (6 nov 2026):
+R y F del artículo del día usan el mismo vídeo. Suenan **hasta 8** (`DAY_MAX_TRACKS`; hasta el 11 nov 2026, 5), en este orden (6 nov 2026):
 
-1. **Guardado por la cuenta editorial** (`EDITOR_USER_ID` en `loadDayReleases`). Sin ese «+» el tema no entra, aunque sea del mismo día. El sexto guardado se queda en el artículo y en el texto.
+1. **Guardado por la cuenta editorial** (`EDITOR_USER_ID` en `loadDayReleases`). Sin ese «+» el tema no entra, aunque sea del mismo día. El noveno guardado se queda en el artículo y en el texto.
 2. **De esos, los de más votos y más escuchas del resto de la web.** Primero los «+» de otra gente; a igualdad, las escuchas de otra gente. El «+» de la casa no desempata, porque todos los candidatos lo tienen. Tampoco cuentan el auto-voto de un fichado, un familiar o un reclamado, ni una lista privada. Si nadie más ha guardado ni escuchado, el orden es por nombre. La lista del artículo no se reordena.
 
 La despedida puede enseñar hasta 8 carátulas de temas de ese día que la cuenta **no** ha guardado (`rest` en `dayReelOf`). Esas no suenan. El 6 nov 2026 había 19 temas en el catálogo y 13 guardados. Las cinco fueron AndrewFx — *Infinity (Breaks)* (6 votos de otros, 58 escuchas), Orebeat y Xwile — *Deja Vu* (4 y 31), FM-3 y Rhades — *Like It Hot* (3 y 35), Nosk — *Rider* (3 y 27) y Belforg — *We Are One* (3 y 15). PERCYBASS — *Egypt Mess* (Dirty Kitchen Rave) salió ese día y no estaba guardado: puede verse en el cierre y no entra en las cinco. Percibes no tenía tema ese día. Contar también el «+» de la casa no cambia esas cinco. Funciones: `loadDayReleases`, `rankDayReelTracks`.
 
-Hasta el 6 nov 2026 el archivo duraba **94 segundos** (portada 4, lista 5, cinco fichas de 15, estantería del resto 5,4 y despedida 4,6). Instagram, en su guía de Reels ([How to make Instagram Reels](https://about.instagram.com/blog/tips-and-tricks/how-to-make-instagram-reels)), pone el punto dulce para que un vídeo se vea entero y llegue a quien no sigue la cuenta en **15 a 60 segundos**. De 3 a 15 es un chiste o una tendencia. De 1 a 3 minutos lo reserva para un relato largo, y ahí se acaba menos. Narciso pidió cerrar como mucho en un minuto y seguir con las cinco canciones. La otra forma de no pasar del minuto, tres canciones a 15 segundos, se dejó.
+Hasta el 6 nov 2026 el archivo duraba **94 segundos** (portada 4, lista 5, cinco fichas de 15, estantería del resto 5,4 y despedida 4,6). Instagram, en su guía de Reels ([How to make Instagram Reels](https://about.instagram.com/blog/tips-and-tricks/how-to-make-instagram-reels)), pone el punto dulce para que un vídeo se vea entero y llegue a quien no sigue la cuenta en **15 a 60 segundos**. De 3 a 15 es un chiste o una tendencia. De 1 a 3 minutos lo reserva para un relato largo, y ahí se acaba menos. El 6 nov Narciso pidió cerrar como mucho en un minuto y seguir con las cinco canciones. El 11 nov pidió 8, a minuto y medio (abajo). La otra forma de no pasar del minuto, tres canciones a 15 segundos, se dejó.
 
 | Tramo | Tiempo |
 |---|---|
 | Portada negra | 3 s |
 | Lista de los que van a sonar | 3 s |
-| Cada ficha, si hay más de una | 9 s |
+| Primera ficha | 9 s |
+| Fichas del medio | 10 s |
+| Última ficha | 11 s |
 | Despedida | 4 s |
-| **Cinco temas** | **55 s** |
+| **Ocho temas** | **90 s** |
+| Cinco temas | 60 s |
 
-Lo que se oye, con cinco temas y preview: la primera **15 s** (portada, lista y su ficha), las tres del medio **9 s**, la última **13 s** (su ficha y la despedida). Un día de un solo tema usa fichas de 12 s y ese tema suena el vídeo entero (22 s). Las carátulas del cierre, hasta 8, son temas de ese día que la cuenta no ha guardado. Llevan «Y EL RESTO DEL DÍA» y no tienen escena propia. Un MP4 ya bajado sigue en 1:34 hasta que se genera otra vez.
+Lo que se oye, con preview (11 nov 2026, Narciso): la primera **15 s** (portada, lista y su ficha), las del medio **10 s**, la última **15 s** (su ficha y la despedida). Ocho temas = minuto y medio; un día con menos dura menos, no se rellena. Los rótulos llegan a «octavo / eighth» y la lista de entrada enseña hasta 8 filas. En iPhone la grabación es en tiempo real: 90 s de espera. Hasta el 11 nov las fichas eran todas de 9 s (55 s; se oía 15 / 9 / 9 / 9 / 13). Un día de un solo tema usa una ficha de 12 s y ese tema suena el vídeo entero (22 s).
+
+El 11 nov 2026 había 14 temas y 8 guardados. Con el tope de 5 sonaban 936 — *Your Face* y DataFunk — *Bounce* (4 «+» de otros), THE RETURN GOOD — *Change* y Zzeta — *Police* (2) y Aquah — *Loca* (1). Body Ctrl, Out Of Time y Trip To Mars se quedaron fuera por nombre, empatados a 1. Ninguno tenía escuchas de otros. El «1» de los 14 es la misma cuenta: **zarzote** (colaborador, 263 «+» desde el 27 sep), que guarda todo lo del día. No cambia el orden de arriba, pero hace que el último hueco se decida por el alfabeto. Con el tope de 8, ese día suenan los 8. Las carátulas del cierre, hasta 8, son temas de ese día que la cuenta no ha guardado. Llevan «Y EL RESTO DEL DÍA» y no tienen escena propia. Un MP4 ya bajado sigue en 1:34 hasta que se genera otra vez.
 
 Constantes: `DAY_TITLE`, `DAY_INTRO`, `DAY_OUTRO`, `dayCardSeconds`, `dayReelDuration` y `dayAudioSlots` en `src/lib/page-reel-design.ts`. El render es `renderDayReel` en `src/lib/page-reel.ts`. Se pinta en el navegador al pulsar: no hay MP4 previo.
 

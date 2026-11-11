@@ -2637,15 +2637,25 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 // ===================== DÍA (artículo /topreleases/dia) =====================
 // Primero una portada negra (3 s), ya con el tema más destacado sonando.
 // Luego el recuento del día, una card por tema, y el último hasta el final.
-// 5 fichas de 9 s + portada 3 + lista 3 + despedida 4 = 55 s.
-// 6 nov 2026: tope de 60 s (guía de Reels de Instagram, punto dulce 15–60). Antes, 94 s.
+// 11 nov 2026: el primer tema y el último suenan 15 s; los del medio, 10 s.
+// La primera ficha (9 s) + portada 3 + lista 3 = 15; la última (11 s) + despedida 4 = 15.
+// Con 8 temas: 6 + 9 + 6 × 10 + 11 + 4 = 90 s; con 5, 60 s. Antes, 5 fichas de 9 s (55 s).
+/** Temas que suenan como mucho en el vídeo del día. */
+export const DAY_MAX_TRACKS = 8
 export const DAY_TITLE = 3
 export const DAY_INTRO = 3
 export const DAY_OUTRO = 4
 
-export function dayCardSeconds(n: number): number {
-  if (n <= 1) return 12
-  return 9
+/** Segundos de cada ficha, en orden. */
+export function dayCardSeconds(n: number): number[] {
+  if (n <= 0) return []
+  if (n === 1) return [12]
+  return Array.from({ length: n }, (_, i) => (i === 0 ? 9 : i === n - 1 ? 11 : 10))
+}
+
+/** Segundo en que empieza la ficha `i` (con `i = n`, la despedida). */
+function dayCardStart(secs: number[], i: number): number {
+  return DAY_TITLE + DAY_INTRO + secs.slice(0, i).reduce((s, x) => s + x, 0)
 }
 
 /**
@@ -2656,22 +2666,21 @@ export function dayCardSeconds(n: number): number {
 export function dayAudioSlots(
   count: number,
   audible: number[],
-  cardSec: number,
+  cardSec: number[],
 ): { i: number; at: number; seconds: number }[] {
   if (!audible.length || count <= 0) return []
   const total = dayReelDuration(count)
-  const open = DAY_TITLE + DAY_INTRO
   return audible.map((i, k) => {
-    const at = k === 0 ? 0 : open + i * cardSec
+    const at = k === 0 ? 0 : dayCardStart(cardSec, i)
     const next = audible[k + 1]
-    const end = next == null ? total : open + next * cardSec
+    const end = next == null ? total : dayCardStart(cardSec, next)
     return { i, at, seconds: Math.max(0.2, end - at) }
   })
 }
 
 export function dayReelDuration(cards: number): number {
   const n = Math.max(0, cards)
-  return DAY_TITLE + DAY_INTRO + n * dayCardSeconds(n) + DAY_OUTRO
+  return dayCardStart(dayCardSeconds(n), n) + DAY_OUTRO
 }
 
 export type DayCardAnim = {
@@ -2698,17 +2707,16 @@ export type DayAnim = {
 
 type DayScene = { k: 'title' | 'intro' | 'card' | 'outro'; i: number; a: number; b: number }
 
-function dayScenes(n: number, cardSec: number): DayScene[] {
-  const open = DAY_TITLE + DAY_INTRO
+function dayScenes(n: number, cardSec: number[]): DayScene[] {
   const out: DayScene[] = [
     { k: 'title', i: -1, a: 0, b: DAY_TITLE },
-    { k: 'intro', i: -1, a: DAY_TITLE, b: open },
+    { k: 'intro', i: -1, a: DAY_TITLE, b: DAY_TITLE + DAY_INTRO },
   ]
   for (let i = 0; i < n; i++) {
-    const a = open + i * cardSec
-    out.push({ k: 'card', i, a, b: a + cardSec })
+    const a = dayCardStart(cardSec, i)
+    out.push({ k: 'card', i, a, b: a + cardSec[i] })
   }
-  const a = open + n * cardSec
+  const a = dayCardStart(cardSec, n)
   out.push({ k: 'outro', i: -1, a, b: a + DAY_OUTRO })
   return out
 }
@@ -2773,7 +2781,7 @@ function dayOpeningList(
     ctx.font = MONO(wide ? 16 : 20)
     ctx.fillText(fit(ctx, promise, (z) => MONO(z), maxW, wide ? 16 : 20, 12), x + pad, cy)
   }
-  const rows = cards.slice(0, 5)
+  const rows = cards.slice(0, DAY_MAX_TRACKS)
   const extra = Math.max(0, outCount - rows.length)
   const foot = extra > 0 ? (wide ? 28 : 36) : 8
   const top = cy + (wide ? 16 : 22)
@@ -2899,8 +2907,8 @@ function dayEndPoster(
   ctx.restore()
 }
 
-const ORD_ES = ['', 'PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO']
-const ORD_EN = ['', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH']
+const ORD_ES = ['', 'PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO', 'SEXTO', 'SÉPTIMO', 'OCTAVO']
+const ORD_EN = ['', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH']
 
 function dayOrdinal(i: number, es: boolean): string {
   const word = (es ? ORD_ES : ORD_EN)[i]
@@ -3121,9 +3129,11 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
     }
   } else if (sc.k === 'card') {
     const card = d.cards[sc.i]
+    // La cortinilla roja acaba justo en el corte: la ficha entra ya a medias, sin papel vacío.
+    const la = lt + 0.3
     if (card) {
       fnHeader(
-        ctx, L, lt,
+        ctx, L, la,
         n <= 1
           ? (d.selection ? (es ? 'SELECCIÓN' : 'THE PICK') : (tense.today ? (es ? 'HOY' : 'TODAY') : tense.when))
           : `${String(sc.i + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`,
@@ -3155,7 +3165,7 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       const cs = Math.min(V ? L.hW : Math.min(760, S.w - 16), bottom - top)
       const cx = V ? (W - cs) / 2 : S.x + (S.w - cs) / 2
       const cy = V ? top : S.y + Math.max(0, (Math.min(S.h, bottom - S.y) - cs) / 2)
-      pop(ctx, ph(lt, 0.15, 0.45), cx + cs / 2, cy + cs / 2, () => {
+      pop(ctx, ph(la, 0.15, 0.45), cx + cs / 2, cy + cs / 2, () => {
         const s = 1 + 0.035 * beatPulse(t)
         ctx.save()
         ctx.translate(cx + cs / 2, cy + cs / 2)
@@ -3193,7 +3203,7 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       ctx.font = MONO(V ? 18 : 16)
       ctx.textAlign = 'left'
       ctx.textBaseline = 'alphabetic'
-      spaced(ctx, es ? 'Y EL RESTO DEL DÍA' : 'AND THE REST OF THE DAY', x, sy + (V ? 16 : 14), 3)
+      spaced(ctx, es ? 'Y EL RESTO DEL DÍA' : 'AND THE REST OF THE DAY', x + w / 2, sy + (V ? 16 : 14), 3, 'center')
       dayOutroRow(ctx, covers, x, sy + (V ? 26 : 22), w, stripH - (V ? 30 : 26), lt)
     }
     dayEndPoster(ctx, 120, top, V ? 840 : 1680, posterH, es, tense)

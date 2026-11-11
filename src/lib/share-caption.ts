@@ -326,7 +326,7 @@ export function buildPageVideoCaption(
   if (kind === 'day') {
     const spoken = d.dayIso ? dayReelTense(d.dayIso, es) : null
     const when = spoken && !spoken.today ? spoken.spoken : ''
-    const tracks = (d.tracks ?? []).slice(0, 5).map((t) => `🎧 ${t.artists} — ${t.title}`)
+    const tracks = (d.tracks ?? []).slice(0, 8).map((t) => `🎧 ${t.artists} — ${t.title}`) // DAY_MAX_TRACKS; no importar page-reel-design (ciclo)
     const head = when
       ? (es ? `🆕 ${d.count ?? ''} lanzamientos de breakbeat salieron el ${when}` : `🆕 ${d.count ?? ''} breakbeat releases came out on ${when}`)
       : (es ? `🆕 ${d.count ?? ''} lanzamientos de breakbeat salen hoy` : `🆕 ${d.count ?? ''} breakbeat releases are out today`)
