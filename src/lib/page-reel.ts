@@ -110,8 +110,6 @@ export type DayReelInput = {
   outCount: number
   picks: DayReelTrack[]
   rest: { artwork: string | null }[]
-  /** @ de los temas del reel. Perfil real si la ficha lo tiene; si no, @ con el nombre. */
-  mentions?: string[]
 }
 
 type FortnightReelTrack = { title: string; artists: string; value: number; artwork: string | null }

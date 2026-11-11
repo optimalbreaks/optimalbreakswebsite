@@ -258,9 +258,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
           picks: d.picks.map((t) => ({ title: t.title, artists: t.artists, label: t.label })),
           alsoOut: d.rest.length,
         },
-      }).then((text) => (
-        platform === 'instagram' ? appendInstagramMentions(text, d.mentions ?? []) : text
-      ))
+      })
     }
     if (pageReel?.agenda) {
       const a = pageReel.agenda

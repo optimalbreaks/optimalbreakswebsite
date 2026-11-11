@@ -10,8 +10,9 @@
 // distinto para cada tipo de publicación, pensado para el algoritmo de
 // Instagram: gancho en la primera línea, datos concretos, llamada a comentar o
 // guardar y, como mucho, 5 hashtags genéricos de gran difusión. Nunca hashtags
-// de artistas, sellos o festivales: esos los etiqueta el admin a mano (se
-// filtran también aquí por si el modelo se los salta).
+// de artistas, sellos o festivales (se filtran aquí por si el modelo se los
+// salta). El @ de Instagram, si la ficha lo tiene, lo añade el servidor al
+// final: artistas por `socials.instagram`, sellos por su web o su organización.
 // Bilingüe (25 oct 2026): español arriba y un bloque más corto en inglés debajo
 // («🇬🇧 EN»); enlace y hashtags una sola vez, al final. El cliente manda siempre
 // `lang: 'es'`, también desde /en: el público y los artistas son sobre todo españoles.
@@ -21,6 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrClaimedArtist } from '@/lib/admin-auth'
 import { isGpt5Family, openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
+import { captionInstagramMentions } from '@/lib/caption-mentions'
 import { madridCalendarDate } from '@/lib/share-track'
 
 export const runtime = 'nodejs'
@@ -242,7 +244,7 @@ export async function POST(request: NextRequest) {
         platform === 'instagram'
           ? '- Enlace: una sola vez, al final, antes de los hashtags, exactamente «🔗 Enlace en la bio · Link in bio». Sin URL (en Instagram no es clicable).'
           : `- Enlace: una sola vez, al final, antes de los hashtags, esta URL tal cual en una línea propia: ${url}`,
-        '- Puedes nombrar artistas y sellos en el texto, sin @ (las menciones las pone el admin).',
+        '- Puedes nombrar artistas y sellos en el texto, sin @. La web añade al final el @ de Instagram de la ficha, si lo tiene. No inventes cuentas.',
         '- Última línea: como mucho 5 hashtags, en minúsculas, separados por espacios. PROHIBIDOS hashtags con nombres de artistas, sellos, festivales, eventos o de Optimal Breaks. Solo términos genéricos de gran difusión relacionados con el contenido (género, escena, formato): p. ej. #breakbeat #breaks #djset #newmusic #electronicmusic #ravemusic #vinyl… Elige los de más alcance que encajen.',
         day
           ? '- En total, con hashtags, nunca más de 2.000 caracteres. Iconos solo estos: 🆕 en el gancho, 🎧 en cada tema, ➕ en el total, 👉 en el cierre y 🔗 en el enlace. El mismo juego en inglés.'
@@ -273,7 +275,7 @@ export async function POST(request: NextRequest) {
         platform === 'instagram'
           ? '- Link: once, at the end, before the hashtags, exactly «🔗 Link in bio · Enlace en la bio». No URL (not clickable on Instagram).'
           : `- Link: once, at the end, before the hashtags, this URL as-is on its own line: ${url}`,
-        '- You may name artists and labels in the text, without @ (the admin adds the tags).',
+        '- You may name artists and labels in the text, without @. The site adds the Instagram @ from the profile at the end, when it has one. Do not invent accounts.',
         '- Last line: at most 5 lowercase hashtags separated by spaces. NEVER hashtags with artist, label, festival, event or Optimal Breaks names. Only generic high-reach terms related to the content (genre, scene, format): e.g. #breakbeat #breaks #djset #newmusic #electronicmusic #ravemusic #vinyl… Pick the highest-reach ones that fit.',
         day
           ? '- In total, with hashtags, never over 2,000 characters. Icons only: 🆕 on the hook, 🎧 on each track, ➕ on the total, 👉 on the close and 🔗 on the link. The same set in Spanish.'
@@ -284,6 +286,7 @@ export async function POST(request: NextRequest) {
       ].filter(Boolean).join('\n')
 
   const user = `${es ? 'Tipo de publicación' : 'Post type'}: ${(es ? KIND_ES : KIND_EN)[kind]}\n${es ? 'Fecha de hoy' : 'Today'}: ${today}\n${es ? 'Contexto (datos reales)' : 'Context (real data)'}:\n${ctxJson}`
+  const mentionsP = captionInstagramMentions(ctx).catch(() => [] as string[])
 
   const model = resolveOpenAiModel('OPENAI_SHARE_CAPTION_MODEL')
   const payload = openAiChatCompletionsBody({
@@ -308,7 +311,7 @@ export async function POST(request: NextRequest) {
     if (!res.ok) {
       const t = await res.text()
       console.error('[share-caption] OpenAI', res.status, t.slice(0, 400))
-      return NextResponse.json({ error: `OpenAI ${res.status}` }, { status: 502 })
+      return NextResponse.json({ error: `OpenAI ${res.status}`, mentions: await mentionsP }, { status: 502 })
     }
     const j = (await res.json()) as { choices?: { message?: { content?: string } }[] }
     const content = j.choices?.[0]?.message?.content || ''
@@ -319,10 +322,11 @@ export async function POST(request: NextRequest) {
       caption = content
     }
     caption = caption.trim()
-    if (!caption) return NextResponse.json({ error: 'Respuesta vacía' }, { status: 502 })
-    return NextResponse.json({ caption: cleanCaption(caption, kind, ctx, platform, url, es), model })
+    const mentions = await mentionsP
+    if (!caption) return NextResponse.json({ error: 'Respuesta vacía', mentions }, { status: 502 })
+    return NextResponse.json({ caption: cleanCaption(caption, kind, ctx, platform, url, es), mentions, model })
   } catch (err) {
     console.error('[share-caption]', err)
-    return NextResponse.json({ error: 'No se pudo generar el texto' }, { status: 502 })
+    return NextResponse.json({ error: 'No se pudo generar el texto', mentions: await mentionsP.catch(() => []) }, { status: 502 })
   }
 }

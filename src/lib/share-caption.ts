@@ -13,7 +13,7 @@ import type { Locale } from '@/lib/i18n-config'
 export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events' | 'digest' | 'day' | 'gift'
 export type SharePlatform = 'instagram' | 'facebook'
 
-/** `@usuario` a partir de `artists.socials.instagram`. Sin ficha o sin perfil, null. */
+/** `@usuario` a partir de una URL de Instagram guardada. Sin ficha o sin perfil, null. */
 export function instagramMention(socials: unknown): string | null {
   if (!socials || typeof socials !== 'object' || Array.isArray(socials)) return null
   const url = Object.entries(socials as Record<string, unknown>).find(
@@ -30,18 +30,6 @@ export function instagramMention(socials: unknown): string | null {
   }
   const handle = (path.split('/').filter(Boolean)[0] || '').replace(/^@/, '')
   if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null
-  if (/^(p|reel|reels|stories|explore|accounts)$/i.test(handle)) return null
-  return `@${handle}`
-}
-
-/** Si la ficha no tiene Instagram, un @ con el nombre para buscarlo a mano. */
-export function instagramNameGuess(name: string): string | null {
-  const handle = name
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .replace(/[^A-Za-z0-9._]/g, '')
-    .slice(0, 30)
-  if (handle.length < 2) return null
   if (/^(p|reel|reels|stories|explore|accounts)$/i.test(handle)) return null
   return `@${handle}`
 }
@@ -85,6 +73,18 @@ export function appendInstagramMentions(caption: string, mentions: string[]): st
   return `${body}\n\n${handles.join('\n')}`
 }
 
+/** Los @ van al final, mientras quepan en el tope de Instagram (2.200). */
+export function captionWithMentions(caption: string, mentions: string[], max = 2200): string {
+  const handles = [...new Set(mentions.map((m) => m.trim()).filter((m) => /^@[A-Za-z0-9._]{1,30}$/.test(m)))]
+  const kept: string[] = []
+  for (const handle of handles) {
+    const next = appendInstagramMentions(caption, [...kept, handle])
+    if (next.length > max) break
+    kept.push(handle)
+  }
+  return kept.length ? appendInstagramMentions(caption, kept) : caption.trim()
+}
+
 export async function aiShareCaption(opts: {
   kind: ShareCaptionKind
   platform: SharePlatform
@@ -114,9 +114,10 @@ export async function aiShareCaption(opts: {
       }),
       signal: AbortSignal.timeout(55_000),
     })
-    if (!res.ok) return withInstagramShareCta(fallback, opts.platform)
-    const j = (await res.json()) as { caption?: string }
-    return withInstagramShareCta(j.caption?.trim() || fallback, opts.platform)
+    const j = (await res.json().catch(() => ({}))) as { caption?: string; mentions?: unknown }
+    const mentions = Array.isArray(j.mentions) ? j.mentions.filter((m): m is string => typeof m === 'string') : []
+    const raw = res.ok ? j.caption?.trim() || fallback : fallback
+    return captionWithMentions(withInstagramShareCta(raw, opts.platform), mentions)
   } catch {
     return withInstagramShareCta(fallback, opts.platform)
   }

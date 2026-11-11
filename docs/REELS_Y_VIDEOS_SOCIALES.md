@@ -34,16 +34,11 @@ Si el tema está en la biblioteca de Instagram o Facebook, quien publica **baja 
 
 ## Texto del post (se copia solo)
 
-Instagram y Facebook **no aceptan texto precargado** al compartir un vídeo (ignoran el `text` de `navigator.share`). Por eso, al compartir el reel (R) o al descargar el vídeo de Facebook (F), la web **copia al portapapeles el texto del post** y el admin solo tiene que pegarlo en el pie. Lo arma `buildVideoCaption()` (`src/lib/share-track.ts`) en el idioma de la página:
+Instagram y Facebook **no aceptan texto precargado** al compartir un vídeo (ignoran el `text` de `navigator.share`). Por eso, al compartir el reel (R) o al descargar el vídeo de Facebook (F), la web **copia al portapapeles el texto del post** y quien publica solo tiene que pegarlo en el pie. Lo escribe GPT (`/api/admin/share-caption`); si falla o tarda más de 55 s, entra la plantilla (`buildVideoCaption` en un tema, `buildMixVideoCaption` en una sesión, `buildPageVideoCaption` en una página, `buildGiftVideoCaption` en el regalo). Español arriba y, tras «🇬🇧 EN», el bloque en inglés, también si se pulsa desde `/en`. Los rótulos del vídeo siguen en inglés.
 
-> 🔥 Compartimos este temazo: «Título» de Artista, del sello X, lanzado el 9 de octubre de 2026.
-> 🎛️ 135 BPM · C Major
->
-> 🎧 Busca el tema en Optimal Breaks: enlace en la bio.   *(F: la URL del tema)*
->
-> #breakbeat #breaks #artista #sello #optimalbreaks
+El cuerpo **nombra** al artista y al sello («de Devis Hard», «en DIRTY KITCHEN RAVE»). El modelo no escribe @. La web, al final del pie y en los dos botones, añade el @ de Instagram **si la ficha lo tiene**. Los hashtags son como mucho 5, genéricos (`#breakbeat #breaks #newmusic…`). Nunca el nombre de un artista, un sello, un festival ni Optimal Breaks. En el móvil se copia en el segundo toque (gesto del usuario, necesario en iOS); también va como `text` en el menú de compartir para apps que sí lo usan (WhatsApp, Telegram).
 
-Fecha futura → «sale el…». Sin fecha completa → año. Los datos (`label`, `musicKey`, `year`) vienen de `/api/og/story?format=json`. En el móvil se copia en el segundo toque (gesto del usuario, necesario en iOS); también va como `text` en el menú de compartir para apps que sí lo usan (WhatsApp, Telegram).
+El detalle del pie y de los @ está más abajo (*Texto del post con GPT* y *Menciones @*).
 
 ## Sesiones de festival (/mixes/<slug>)
 
@@ -55,7 +50,7 @@ Texto del post (`buildMixVideoCaption`, se copia solo):
 >
 > ⬇️ Descárgala gratis y completa en Optimal Breaks: enlace en la bio.   *(F: la URL de la sesión; sin descarga: «Busca la sesión…»)*
 >
-> #breakbeat #breaks #djset #godino #paket #dohiser #olibassmusicfestival #optimalbreaks
+> #breakbeat #djset #breaks #livemusic #electronicmusic
 
 ## Diseño (estética fanzine)
 
@@ -169,10 +164,41 @@ Hasta el 6 nov 2026 el archivo duraba **94 segundos** (portada 4, lista 5, cinco
 
 Lo que se oye, con cinco temas y preview: la primera **15 s** (portada, lista y su ficha), las tres del medio **9 s**, la última **13 s** (su ficha y la despedida). Un día de un solo tema usa fichas de 12 s y ese tema suena el vídeo entero (22 s). Las carátulas del cierre, hasta 8, son temas de ese día que la cuenta no ha guardado. Llevan «Y EL RESTO DEL DÍA» y no tienen escena propia. Un MP4 ya bajado sigue en 1:34 hasta que se genera otra vez.
 
-Constantes: `DAY_TITLE`, `DAY_INTRO`, `DAY_OUTRO`, `dayCardSeconds`, `dayReelDuration` y `dayAudioSlots` en `src/lib/page-reel-design.ts`. El render es `renderDayReel` en `src/lib/page-reel.ts`.
+Constantes: `DAY_TITLE`, `DAY_INTRO`, `DAY_OUTRO`, `dayCardSeconds`, `dayReelDuration` y `dayAudioSlots` en `src/lib/page-reel-design.ts`. El render es `renderDayReel` en `src/lib/page-reel.ts`. Se pinta en el navegador al pulsar: no hay MP4 previo.
+
+El @ del día sale igual que en el resto de R y F: al final del pie, solo si la ficha lo tiene (*Menciones @*). Ya no se fabrica un @ con el nombre.
 
 ## Texto del post con GPT‑5.6 (todos los R/F)
 
-`/api/admin/share-caption` escribe el pie con GPT‑5.6 (`OPENAI_SHARE_CAPTION_MODEL` u `OPENAI_MODEL`) con un tono por tipo (`track`, `set`, `top100`, `week`, `blog`, `events`, `digest`). **`digest` (24 oct 2026)** es el resumen de `/topreleases` (quincena, trimestre o adelantos de la semana): recibe las cifras del vídeo (temas, artistas, sellos, periodo anterior, top 5 de escuchas y de «+», artistas y sellos más activos, estrellas del Top 100, BPM, tonalidad, debutantes) y escribe un pie largo como el de un tema. Antes iba como `blog` con solo título y extracto, y el texto no decía nada de los datos. **Pie bilingüe (25 oct 2026):** español arriba y, tras «🇬🇧 EN», un bloque en inglés con su propio gancho, datos clave y pregunta. Siempre en ese orden, también si se genera desde `/en`: el público y los artistas son sobre todo españoles (decisión de Narciso). Los rótulos del vídeo de tema y de sesión siguen en inglés. Tema y resumen: 1.100–1.300 + 500–600 caracteres (≤ 2.050 con hashtags; Instagram corta en 2.200). El resto: 450–550 cada idioma. Enlace («🔗 Enlace en la bio · Link in bio») y hashtags una sola vez, al final. Se eligió frente a publicar dos veces (Instagram resta alcance al contenido repetido y reparte la interacción) y frente a 50/50 (señal de idioma difusa; el público es sobre todo español). La plantilla sin IA se monta igual (`bilingualCaption` en `share-caption.ts`). En todos: gancho en la primera línea, datos reales, llamada a comentar/guardar, «enlace en la bio» (IG) o la URL (FB) y **máx. 5 hashtags genéricos de gran difusión**. Nunca hashtags de artistas, sellos, festivales ni de Optimal Breaks (se filtran también en el servidor): esos los etiqueta quien publica, a mano. El admin puede pedir los cinco tipos. Un artista reclamado solo `track` y `set`.
+`/api/admin/share-caption` escribe el pie con GPT‑5.6 (`OPENAI_SHARE_CAPTION_MODEL` u `OPENAI_MODEL`) con un tono por tipo (`track`, `set`, `top100`, `week`, `blog`, `events`, `digest`, `day`, `gift`). **`digest` (24 oct 2026)** es el resumen de `/topreleases` (quincena, trimestre o adelantos de la semana): recibe las cifras del vídeo (temas, artistas, sellos, periodo anterior, top 5 de escuchas y de «+», artistas y sellos más activos, estrellas del Top 100, BPM, tonalidad, debutantes) y escribe un pie largo como el de un tema. Antes iba como `blog` con solo título y extracto, y el texto no decía nada de los datos. **Pie bilingüe (25 oct 2026):** español arriba y, tras «🇬🇧 EN», un bloque en inglés con su propio gancho, datos clave y pregunta. Siempre en ese orden, también si se genera desde `/en`: el público y los artistas son sobre todo españoles (decisión de Narciso). Los rótulos del vídeo de tema y de sesión siguen en inglés. Tema y resumen: 1.100–1.300 + 500–600 caracteres (≤ 2.050 con hashtags; Instagram corta en 2.200). El resto: 450–550 cada idioma. Enlace («🔗 Enlace en la bio · Link in bio») y hashtags una sola vez, al final. Se eligió frente a publicar dos veces (Instagram resta alcance al contenido repetido y reparte la interacción) y frente a 50/50 (señal de idioma difusa; el público es sobre todo español). La plantilla sin IA se monta igual (`bilingualCaption` en `share-caption.ts`). En todos: gancho en la primera línea, datos reales, llamada a comentar/guardar, «enlace en la bio» (IG) o la URL (FB) y **máx. 5 hashtags genéricos de gran difusión**. Nunca hashtags de artistas, sellos, festivales ni de Optimal Breaks (se filtran también en el servidor). El cuerpo nombra artistas y sellos sin @. El admin puede pedir todos los tipos. Un artista reclamado solo `track` y `set`.
 
-Se pide en paralelo al render; si falla o tarda más de 55 s se copia la plantilla (`share-track.ts` / `share-caption.ts`), que ya sigue la misma regla de hashtags.
+Se pide en paralelo al render; si falla o tarda más de 55 s se copia la plantilla (`share-track.ts` / `share-caption.ts`), que ya sigue la misma regla de hashtags. En Instagram, justo antes del enlace, la web añade sola la llamada al sobre de enviar (`withInstagramShareCta`).
+
+## Menciones @ de Instagram (10 nov 2026)
+
+El @ no lo escribe el modelo. Lo añade la web al final del pie, una cuenta por línea, en la **R** y en la **F**, mientras quepan en 2.200 caracteres (`captionInstagramMentions` + `captionWithMentions`). Solo entra una cuenta que ya está guardada. Sin ficha, o con ficha sin Instagram, el nombre se queda escrito y no hay @. No se fabrica un @ a partir del nombre: eso etiquetaría a otra cuenta.
+
+| Quién | De dónde sale el @ |
+|---|---|
+| **Artista** | `artists.socials.instagram`, si es una URL de Instagram. A 10 nov 2026 lo tienen 103 fichas. 19 se copiaron ese día desde los textos de los reels de Godino, donde el @ ya se había comprobado a mano y el nombre casaba con una sola ficha. |
+| **Sello** | La web de la ficha, si es un Instagram, o el Instagram de la organización vinculada (`labels.organization_id`). La ficha de sello no tiene un campo de redes propio. A 10 nov 2026 ninguna de las 166 guardaba un Instagram en la web. |
+| **Regalo de Woter** | Además, `@optimal.breaks` y `@woter_dj`, dentro del texto y al final: son el requisito de la descarga. `@optimalbreaks` sin punto es otra cuenta y no vale. |
+
+Vale para un tema, una sesión, el día, la semana, el Top histórico, un artículo, la agenda y el resumen. En el día y en la semana se citan los artistas y sellos de los temas del contexto; en la agenda, el cartel. Los `INSTAGRAM.txt` de los vídeos de Godino (factoría) no son este pie.
+
+## Quién pinta el vídeo (10 nov 2026)
+
+Casi todo se dibuja en el navegador de quien pulsa, en ese momento. No hay servidor de vídeo. R es 1080×1920; F es 1920×1080. El texto del post se pide a la vez, aunque el MP4 ya exista.
+
+**En código, al pulsar** (`reel-renderer` para un tema o una sesión; `page-reel` para una página):
+
+- Cada tema, en cualquier lista (charts, ficha, Top 10 de Beatport, Mis Tracks, Top histórico). El regalo de Woter en la fila usa `animGift`.
+- Cada sesión, en `/mixes/<slug>`.
+- La cabecera de cada semana de New Releases, en `/charts`.
+- El botón de la página del Top histórico.
+- El artículo del día, en `/topreleases/dia`.
+- Un artículo del blog que todavía no tiene `reel_url`: disco, quincena, mes, trimestre, agenda, regalo y exclusiva. La exclusiva, si el artículo no tiene archivo de la fábrica, es el mismo reel que la R de su fila.
+
+**Ya renderizado.** Solo la **R** de un artículo del blog cuando `blog_posts.reel_url` apunta al MP4 del bucket público `blog-reels`. Lo graba el PC (cola `fabrica.optimal_reel`, cada 10 min), no el botón: vertical de 60 s, sin voz, diseño A · Fanzine. Entra cada artículo publicado desde el 8 nov 2026. Uno anterior no lo tiene hasta `reel_status = pedir`. Al pulsar R se baja ese archivo (`cache: no-store`) y no se abre el selector de fragmento (`reelReady`). Si la descarga falla, la R lo pinta en el navegador como antes. La **F** de ese mismo artículo no está hecha: se sigue generando en horizontal. El pie se escribe igual, en el momento.
+
+`makeVideo` en `ShareButtons.tsx` mira primero el vertical con `reel_url`. Si no hay, y el artículo es una exclusiva (`trackPlay`), pinta el reel del tema. Si no, pinta el de la página. Una sesión no tiene `reel_url`: siempre el pase de festival.
