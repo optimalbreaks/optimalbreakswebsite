@@ -66,6 +66,17 @@ export async function fetchAllPagesByCursor<T extends { id: string }>(
 }
 
 /**
+ * El cursor llega en orden de `id`. Quien dependa del orden de alta (el
+ * primer nombre visto gana un empate) reordena con esto.
+ */
+export function sortByCreatedAt<T extends { id: string; created_at: string | null }>(rows: T[]): T[] {
+  const cmp = (x: string, y: string) => (x < y ? -1 : x > y ? 1 : 0)
+  return rows.sort(
+    (a, b) => cmp(a.created_at ?? '~', b.created_at ?? '~') || cmp(a.id, b.id),
+  )
+}
+
+/**
  * Igual que `fetchAllPages` pero pide primero el total (`count: 'exact'`) y
  * descarga todas las páginas EN PARALELO: con tablas grandes pasa de N viajes
  * seguidos a ~2. `countRun()` debe devolver la misma consulta con

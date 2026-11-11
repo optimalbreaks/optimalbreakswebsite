@@ -15,16 +15,19 @@ import {
   splitArtistCreditsForRanking,
 } from '@/lib/artist-self-credit'
 import { extractRemixerNames } from '@/lib/remixer-credits'
-import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
+import { fetchAllPagesByCursor, sortByCreatedAt } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import { frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
 
 type ServiceClient = ReturnType<typeof createServiceSupabase>
 
+const SAVE_PAGE = 1000
+
 const SAVE_SELECT =
-  'user_id, track_source, track_id, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title'
+  'id, user_id, track_source, track_id, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title'
 
 type SaveRow = {
+  id: string
   user_id: string
   track_source: string
   track_id: string
@@ -59,15 +62,11 @@ function asText(value: unknown): string | null {
 /** Claves normalizadas de los N primeros del tablero, por créditos de save. */
 export async function loadTopArtistKeys(sb: ServiceClient, limit = 100): Promise<Set<string>> {
   const [saves, privateProfiles, selfCreditSkip, labelCreditSkip] = await Promise.all([
-    fetchAllPagesParallel<SaveRow>(
-      () => sb.from('saved_chart_tracks').select('id', { count: 'exact', head: true }),
-      (from, to) =>
-        sb
-          .from('saved_chart_tracks')
-          .select(SAVE_SELECT)
-          .order('created_at', { ascending: true })
-          .range(from, to),
-    ),
+    fetchAllPagesByCursor<SaveRow>((after, limit) => {
+      let q = sb.from('saved_chart_tracks').select(SAVE_SELECT)
+      if (after) q = q.gt('id', after)
+      return q.order('id', { ascending: true }).limit(limit)
+    }, SAVE_PAGE).then(sortByCreatedAt),
     sb.from('profiles').select('id').eq('is_tracks_public', false),
     loadSelfCreditSkipMap(sb),
     loadLabelCreditSkipMap(sb),
@@ -173,7 +172,7 @@ export type CommunityArtistCounts = {
 }
 
 const BOARD_SAVE_SELECT =
-  'user_id, track_source, track_id, canonical_url, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title, snap_beatport:snapshot->beatport_url, snap_youtube:snapshot->youtube_url'
+  'id, user_id, track_source, track_id, canonical_url, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title, snap_beatport:snapshot->beatport_url, snap_youtube:snapshot->youtube_url'
 
 type BoardSaveRow = SaveRow & {
   canonical_url: string | null
@@ -207,15 +206,11 @@ function boardTrackKey(
  */
 export async function loadCommunityArtistBoard(sb: ServiceClient, asofMs?: number): Promise<Record<string, CommunityArtistCounts>> {
   const [saves, privateProfiles, selfCreditSkip, labelCreditSkip] = await Promise.all([
-    fetchAllPagesParallel<BoardSaveRow>(
-      () => sb.from('saved_chart_tracks').select('id', { count: 'exact', head: true }),
-      (from, to) =>
-        sb
-          .from('saved_chart_tracks')
-          .select(BOARD_SAVE_SELECT)
-          .order('created_at', { ascending: true })
-          .range(from, to),
-    ),
+    fetchAllPagesByCursor<BoardSaveRow>((after, limit) => {
+      let q = sb.from('saved_chart_tracks').select(BOARD_SAVE_SELECT)
+      if (after) q = q.gt('id', after)
+      return q.order('id', { ascending: true }).limit(limit)
+    }, SAVE_PAGE).then(sortByCreatedAt),
     sb.from('profiles').select('id').eq('is_tracks_public', false),
     loadSelfCreditSkipMap(sb),
     loadLabelCreditSkipMap(sb),

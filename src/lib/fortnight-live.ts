@@ -10,7 +10,7 @@ import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { isArtistSelfCreditSave, loadSelfCreditSkipMap, playCountsExcludingSelfCredit } from '@/lib/artist-self-credit'
-import { fetchAllPages, fetchAllPagesParallel } from '@/lib/supabase-paginate'
+import { fetchAllPages, fetchAllPagesByCursor } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import { articleFreeze, frozenSnapshot, getActivePageFreeze, getArticleHold } from '@/lib/public-freeze'
 import type { Locale } from '@/lib/i18n-config'
@@ -580,11 +580,11 @@ export async function loadPeriodStats(from: string, until: string, prevFrom: str
     fetchAllPages<{ chart_edition_id: string | null; bpm: number | null }>((a, b) =>
       sb.from('chart_featured_tracks').select('id, chart_edition_id, bpm').gte('release_date', prevFrom).lt('release_date', from).order('id').range(a, b),
     ),
-    fetchAllPagesParallel<{ chart_edition_id: string | null; artists: unknown }>(
-      () => sb.from('chart_featured_tracks').select('id', { count: 'exact', head: true }).lt('release_date', from),
-      (a, b) => sb.from('chart_featured_tracks').select('id, chart_edition_id, artists').lt('release_date', from).order('id').range(a, b),
-      1000,
-    ),
+    fetchAllPagesByCursor<{ id: string; chart_edition_id: string | null; artists: unknown }>((after, limit) => {
+      let q = sb.from('chart_featured_tracks').select('id, chart_edition_id, artists').lt('release_date', from)
+      if (after) q = q.gt('id', after)
+      return q.order('id').limit(limit)
+    }, 1000),
     fetchAllPages<{ id: string; week_date: string; is_published: boolean | null }>((a, b) =>
       sb.from('chart_editions').select('id, week_date, is_published').order('id').range(a, b),
     ),

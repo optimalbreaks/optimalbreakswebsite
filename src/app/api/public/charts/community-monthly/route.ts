@@ -48,7 +48,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { frozenSnapshot, getActivePageFreeze } from '@/lib/public-freeze'
-import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
+import { fetchAllPagesByCursor, sortByCreatedAt } from '@/lib/supabase-paginate'
 import {
   buildFullArtistSlugMap,
   normalizeArtistKey,
@@ -237,9 +237,10 @@ async function selectByIds<T>(
 
 /** La home solo necesita créditos (nombre, remix, sello, URL). El snapshot entero no. */
 const ARTISTS_SAVE_SELECT =
-  'user_id, track_source, track_id, canonical_url, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title, snap_beatport:snapshot->beatport_url, snap_youtube:snapshot->youtube_url'
+  'id, user_id, track_source, track_id, canonical_url, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title, snap_beatport:snapshot->beatport_url, snap_youtube:snapshot->youtube_url'
 
 type ArtistsViewRow = {
+  id: string
   user_id: string
   track_source: ChartTrackSource
   track_id: string
@@ -255,6 +256,7 @@ type ArtistsViewRow = {
 
 function savedFromArtistsView(row: ArtistsViewRow): SavedRow {
   return {
+    id: row.id,
     user_id: row.user_id,
     track_source: row.track_source,
     track_id: row.track_id,
@@ -278,6 +280,7 @@ type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 type BeatportShareOrigin = { kind: 'artist' | 'label'; slug: string }
 
 type SavedRow = {
+  id: string
   user_id: string
   track_source: ChartTrackSource
   track_id: string
@@ -528,41 +531,31 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
     .select('id')
     .eq('is_tracks_public', false)
 
-  // Saves de toda la historia. Paginamos a mano para no toparnos con el
-  // límite por defecto del cliente Supabase (1000) cuando la tabla crezca.
-  // La home pide las páginas a la vez y solo los campos del crédito.
+  // Saves de toda la historia, por cursor de `id` y luego en orden de alta.
+  // La home pide solo los campos del crédito.
   const PAGE = 1000
   let savedRaw: SavedRow[]
-  if (artistsOnly) {
-    try {
-      const rows = await fetchAllPagesParallel<ArtistsViewRow>(
-        () => sb.from('saved_chart_tracks').select('id', { count: 'exact', head: true }),
-        (from, to) =>
-          sb
-            .from('saved_chart_tracks')
-            .select(ARTISTS_SAVE_SELECT)
-            .order('created_at', { ascending: true })
-            .range(from, to),
-        PAGE,
-      )
-      savedRaw = rows.map(savedFromArtistsView)
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      return NextResponse.json({ error: message }, { status: 500 })
+  try {
+    if (artistsOnly) {
+      const rows = await fetchAllPagesByCursor<ArtistsViewRow>((after, limit) => {
+        let q = sb.from('saved_chart_tracks').select(ARTISTS_SAVE_SELECT)
+        if (after) q = q.gt('id', after)
+        return q.order('id', { ascending: true }).limit(limit)
+      }, PAGE)
+      savedRaw = sortByCreatedAt(rows).map(savedFromArtistsView)
+    } else {
+      const rows = await fetchAllPagesByCursor<SavedRow>((after, limit) => {
+        let q = sb
+          .from('saved_chart_tracks')
+          .select('id, user_id, track_source, track_id, canonical_url, snapshot, created_at')
+        if (after) q = q.gt('id', after)
+        return q.order('id', { ascending: true }).limit(limit)
+      }, PAGE)
+      savedRaw = sortByCreatedAt(rows)
     }
-  } else {
-    savedRaw = []
-    for (let offset = 0; ; offset += PAGE) {
-      const { data, error } = await sb
-        .from('saved_chart_tracks')
-        .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
-        .order('created_at', { ascending: true })
-        .range(offset, offset + PAGE - 1)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      const rows = ((data as unknown) as SavedRow[]) || []
-      savedRaw.push(...rows)
-      if (rows.length < PAGE) break
-    }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 
   const { data: privateProfiles } = await privatePromise
