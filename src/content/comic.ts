@@ -87,6 +87,16 @@ export const COMIC_EPISODES: ComicEpisode[] = [
       en: 'On her planet music is made by an algorithm and everything sounds the same. Until her ship picks up a strange signal: 135 BPM. She lands on Earth and follows it through the UK, Florida, Australia and Andalusia. She studies 22,000 tracks in one night and finds out her ship catches the tunes a month before they come out. Her planet tells her to come home. She says: “No. I’m hooked.”',
     },
   },
+  {
+    file: { es: 'el_primo_v2_ES', en: 'the_cousin_v2_EN' },
+    title: { es: 'El primo', en: 'The cousin' },
+    duration: '95 s',
+    music: 'Afghan Headspin & PercyBass – Let It Be (Original Mix)',
+    text: {
+      es: 'El lechón se lleva al Pepino al bar de siempre y, de regalo, a su primo de Londres: majo, pero no se entera de ná. Toda la tarde en el capó arreglando la escena: que si lo de antes molaba más, que si eso es un pepino. Cae la noche y el primo lo suelta en perfecto español: «Pepino… banger. Lo mismo, ¿no? En Inglaterra, si un tema es un banger, lo votamos». ¡¡ZAS!!',
+      en: 'The pig takes the Pickle to their usual bar and, as a bonus, his cousin from London: great guy, doesn’t understand a word. All afternoon on the bonnet fixing the scene: the old tunes were better, that one’s a pepino. Night falls and the cousin drops it in perfect Spanish: “Pepino… banger. Same thing, innit? Back home, if a tune’s a banger, we vote for it.” ZAP!!',
+    },
+  },
 ]
 
 export type ComicCharacter = {
@@ -200,10 +210,10 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
   {
     img: 'pm_banger.jpg', fit: 'cover',
     name: { es: 'The Banger', en: 'The Banger' },
-    role: { es: 'El colega inglés', en: 'The British mate' },
+    role: { es: 'El primo inglés del lechón', en: 'The Pig’s British cousin' },
     text: {
-      es: 'Una salchicha de cerdo del Reino Unido. En inglés, «banger» es salchicha… y también temazo: es el pepinazo británico. No siempre va con el lechón y el Pepino, pero se lo encuentran en todos los festivales y siempre acaban a su lado. Las manos, siempre en el aire haciendo pistolas. Y el acento, de Londres a muerte.',
-      en: 'A British pork sausage. In English a “banger” is a sausage… and a massive tune: he’s the UK cousin of the Pickle. He doesn’t always tag along with the pig and the Pickle, but they bump into him at every festival and always end up right next to him. Hands always in the air doing gun fingers. And the accent? Proper London.',
+      es: 'Una salchicha de cerdo del Reino Unido y primo del lechón. En inglés, «banger» es salchicha… y también temazo: es el pepinazo británico. Todos creen que no pilla una palabra de español, pero lo escucha todo. No siempre va con el lechón y el Pepino, pero se lo encuentran en todos los festivales y siempre acaban a su lado. Las manos, siempre en el aire haciendo pistolas. Y el acento, de Londres a muerte.',
+      en: 'A British pork sausage and the pig’s cousin. In English a “banger” is a sausage… and a massive tune: in Spain they call it a “pepino”. Everyone thinks he doesn’t understand a word of Spanish, but he hears everything. He doesn’t always tag along with the pig and the Pickle, but they bump into him at every festival and always end up right next to him. Hands always in the air doing gun fingers. And the accent? Proper London.',
     },
     alt: { es: 'The Banger partido en dos: de día con chaqueta verde y gorra verde, de noche con americana azul, gorra de cuadros y reloj de oro, haciendo pistolas con los dedos', en: 'The Banger split in two: by day in a green jacket and green cap, by night in a navy blazer, check cap and gold watch, doing gun fingers' },
     quote: { es: '¡Pull up, pull up!', en: 'Pull up, pull up!' },
@@ -343,10 +353,10 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
   {
     img: 'pm_dj_idolo.jpg', fit: 'cover',
     name: { es: 'El DJ ídolo', en: 'The idol DJ' },
-    role: { es: 'Cabeza de cartel', en: 'The headliner' },
+    role: { es: 'Cabeza de cartel · the SoCal LA breakbeat Chicano', en: 'Headliner · the SoCal LA breakbeat Chicano' },
     text: {
-      es: 'El ídolo absoluto del lechón, que llora de emoción en primera fila con un cartel de corazón. Showman de los de antes: altavoz a la espalda, plato al pecho y armónica, pinchando y tocando a la vez… y en mitad del set se marca un freeze de b-boy. El día que el lechón por fin le conozca, ya veremos quién se transforma.',
-      en: 'The pig’s absolute idol: he cries with emotion in the front row holding a heart sign. An old-school showman: speaker on his back, turntable on his chest and a harmonica, mixing and playing at once… and mid-set he throws a b-boy freeze. The day the pig finally meets him, we’ll see who transforms.',
+      es: 'Es el de SoCal, el de L.A.: el chicano del breakbeat. Habla algo de español… pero a los de España no les entiende ni una palabra. El ídolo absoluto del lechón, que llora de emoción en primera fila con un cartel de corazón. Showman de los de antes: altavoz a la espalda, plato al pecho y armónica, pinchando y tocando a la vez… y en mitad del set se marca un freeze de b-boy. El día que el lechón por fin le conozca, ya veremos quién se transforma.',
+      en: 'He’s the SoCal LA breakbeat Chicano. He speaks some Spanish, yet he can’t understand a word from anyone in Spain. The pig’s absolute idol: he cries with emotion in the front row holding a heart sign. An old-school showman: speaker on his back, turntable on his chest and a harmonica, mixing and playing at once… and mid-set he throws a b-boy freeze. The day the pig finally meets him, we’ll see who transforms.',
     },
     alt: { es: 'El DJ ídolo señalando al público con el plato al pecho y el altavoz a la espalda', en: 'The idol DJ pointing at the crowd, turntable on his chest and speaker on his back' },
   },
