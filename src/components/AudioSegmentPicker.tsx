@@ -4,8 +4,9 @@
 // Antes de generar un vídeo con audio, el admin elige qué 30 s del tema
 // suenan, como en Instagram: onda del preview, ventana arrastrable con el
 // dedo, escucha previa y arranque sugerido (tramo con más energía). El
-// arranque elegido se guarda por tema (`share-audio.ts`): la Story, el reel y
-// el vídeo de Facebook abren ya colocados en el mismo sitio.
+// arranque elegido se guarda por tema en la web (`share_segment_starts`): la
+// Story, el reel y el vídeo de Facebook abren ya colocados en el mismo sitio,
+// también en otro dispositivo.
 //
 // ▶ Escuchar NO usa Web Audio. En el iPhone eso se queda mudo (interruptor
 // de silencio, y un AudioContext distinto del reproductor de la web). Suena
@@ -27,6 +28,7 @@ import {
   computePeaks,
   formatClock,
   getSavedSegmentStart,
+  loadRemoteSegmentStarts,
   loadShareAudio,
   maxSegmentStart,
   saveSegmentStart,
@@ -83,8 +85,8 @@ export default function AudioSegmentPicker(props: Props) {
 
   useEffect(() => {
     let alive = true
-    loadShareAudio(audioUrl)
-      .then((buf) => {
+    Promise.all([loadShareAudio(audioUrl), loadRemoteSegmentStarts([segmentKey])])
+      .then(([buf]) => {
         if (!alive) return
         const sug = suggestSegmentStart(buf, segSec)
         const saved = getSavedSegmentStart(segmentKey)

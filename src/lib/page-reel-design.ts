@@ -2814,11 +2814,15 @@ function dayOpeningList(
   }
 }
 
-/** Cartel final. Logo y «mándaselo» solo aquí: el gancho no lleva marca. */
+/**
+ * Cartel final. Logo y «mándaselo» solo aquí: el gancho no lleva marca.
+ * Devuelve el alto dibujado; con `dry` solo lo mide.
+ */
 function dayEndPoster(
   ctx: C, x: number, y: number, w: number, h: number, es: boolean,
   tense: { today: boolean; when: string },
-) {
+  dry = false,
+): number {
   const tall = h > 900
   const cardW = Math.min(w - 8, tall ? 820 : 1040)
   const pad = tall ? 52 : 40
@@ -2851,6 +2855,7 @@ function dayEndPoster(
     + pad
   const avail = Math.max(40, h - 8)
   const posterFit = Math.min(1, avail / block)
+  if (dry) return block * posterFit
   const cardH = block
   const cardX = x + (w - cardW) / 2
   const cardY = y + (h - cardH) / 2
@@ -2905,6 +2910,7 @@ function dayEndPoster(
   ctx.textAlign = 'center'
   spaced(ctx, es ? 'LA BIBLIA DEL BREAKBEAT' : 'THE BREAKBEAT BIBLE', cx, cy + logo + 8, 3, 'center')
   ctx.restore()
+  return block * posterFit
 }
 
 const ORD_ES = ['', 'PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO', 'SEXTO', 'SÉPTIMO', 'OCTAVO']
@@ -2927,12 +2933,14 @@ function daySpoken(ctx: C, x: number, y: number, w: number, h: number, line1: st
   ctx.fillText(fit(ctx, line2, (z) => MONO(z), w - 40, h > 100 ? 20 : 16, 12), cx, y + h * 0.72)
 }
 
+// Vertical: el reproductor acaba en ~1590 px. Por debajo, Instagram pinta el pie,
+// la cuenta y los botones (los ~330 px de abajo); ahí no va nada que haya que leer.
 function dayLayout(V: boolean): FnLayout {
   return V
     ? {
         V, hx: 70, kY: 168, hY: 310, hW: 940,
-        S: { x: 70, y: 560, w: 940, h: 980 },
-        foot: { x: 70, y: 1560, w: 940, h: 16 },
+        S: { x: 70, y: 560, w: 940, h: 840 },
+        foot: { x: 70, y: 1420, w: 940, h: 16 },
       }
     : {
         V, hx: 80, kY: 150, hY: 270, hW: 820,
@@ -3193,12 +3201,18 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
     const w = V ? 940 : 1760
     const bottom = L.foot.y - 20
     const covers = d.rest.slice(0, 8)
-    let posterH = bottom - top
-    if (covers.length) {
+    const pw = V ? 840 : 1680
+    if (!covers.length) {
+      dayEndPoster(ctx, 120, top, pw, bottom - top, es, tense)
+    } else {
+      // Cartel y fila juntos, centrados en el hueco: sin franja vacía entre los dos.
       const stripH = V ? 150 : 108
-      const gap = 10
-      posterH = Math.max(160, bottom - top - stripH - gap)
-      const sy = top + posterH + gap
+      const gap = V ? 40 : 24
+      const room = Math.max(160, bottom - top - stripH - gap)
+      const ph0 = dayEndPoster(ctx, 120, top, pw, room, es, tense, true)
+      const gy = top + Math.max(0, (bottom - top - ph0 - gap - stripH) / 2)
+      dayEndPoster(ctx, 120, gy - 4, pw, ph0 + 8, es, tense)
+      const sy = gy + ph0 + gap
       ctx.fillStyle = RED
       ctx.font = MONO(V ? 18 : 16)
       ctx.textAlign = 'left'
@@ -3206,7 +3220,6 @@ export function animDay(ctx: C, W: number, H: number, d: DayAnim, t: number) {
       spaced(ctx, es ? 'Y EL RESTO DEL DÍA' : 'AND THE REST OF THE DAY', x + w / 2, sy + (V ? 16 : 14), 3, 'center')
       dayOutroRow(ctx, covers, x, sy + (V ? 26 : 22), w, stripH - (V ? 30 : 26), lt)
     }
-    dayEndPoster(ctx, 120, top, V ? 840 : 1680, posterH, es, tense)
   }
   ctx.restore()
 

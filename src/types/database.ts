@@ -479,6 +479,12 @@ export interface Database {
         Update: never
         Relationships: DbRelationship[]
       }
+      share_segment_starts: {
+        Row: ShareSegmentStartRow
+        Insert: Pick<ShareSegmentStartRow, 'key' | 'start_sec'> & Partial<Pick<ShareSegmentStartRow, 'updated_by' | 'updated_at'>>
+        Update: Partial<Pick<ShareSegmentStartRow, 'start_sec' | 'updated_by' | 'updated_at'>>
+        Relationships: DbRelationship[]
+      }
       top_freezes: {
         Row: TopFreezeRow
         Insert: Pick<TopFreezeRow, 'until'> & Partial<Pick<TopFreezeRow, 'frozen_at' | 'note'>>
@@ -726,6 +732,14 @@ export interface TrackPlayEventRow extends Record<string, unknown> {
 }
 
 /** Diagnóstico temporal del reproductor (migración 096). Anónimo. */
+/** Arranque (s) del fragmento de audio de IG/R/F (migración 109). */
+export interface ShareSegmentStartRow extends Record<string, unknown> {
+  key: string
+  start_sec: number
+  updated_by: string | null
+  updated_at: string
+}
+
 export interface PlayerDiagnosticRow extends Record<string, unknown> {
   id: number
   received_at: string

@@ -37,7 +37,7 @@ function dayShareClips(day: DayReelInput) {
     const p = picks[slot.i]
     return {
       src: p.audio as string,
-      key: `day:${day.date}:${slot.i}:${p.audio}`,
+      key: `day:${day.iso}:${p.audio}`,
       label: `${p.title} — ${p.artists}`,
       seconds: slot.seconds,
       at: slot.at,

@@ -284,14 +284,43 @@ export function getSavedSegmentStart(key: string): number | null {
   }
 }
 
-export function saveSegmentStart(key: string, start: number) {
-  const v = Math.round(start * 100) / 100
+function rememberLocal(key: string, v: number) {
   memory.set(key, v)
   try {
     window.localStorage.setItem(STORE_PREFIX + key, String(v))
   } catch {
     /* sin almacenamiento: queda en memoria mientras dure la página */
   }
+}
+
+/**
+ * Trae de la web los arranques guardados (`/api/admin/share-segment`) y
+ * pisan los del navegador: el iPhone y el PC usan el mismo trozo. Si falla
+ * (sin sesión de admin, sin red), se queda lo de este navegador.
+ */
+export async function loadRemoteSegmentStarts(keys: string[]): Promise<void> {
+  const list = [...new Set(keys.filter(Boolean))]
+  if (!list.length) return
+  try {
+    const res = await fetch(`/api/admin/share-segment?keys=${list.map(encodeURIComponent).join(',')}`, { cache: 'no-store' })
+    if (!res.ok) return
+    const { starts } = (await res.json()) as { starts?: Record<string, number> }
+    for (const [k, v] of Object.entries(starts ?? {})) {
+      if (Number.isFinite(v) && v >= 0) rememberLocal(k, v)
+    }
+  } catch {
+    /* sin red: vale lo de este navegador */
+  }
+}
+
+export function saveSegmentStart(key: string, start: number) {
+  const v = Math.round(start * 100) / 100
+  rememberLocal(key, v)
+  void fetch('/api/admin/share-segment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, start: v }),
+  }).catch(() => undefined)
 }
 
 export function formatClock(sec: number): string {
