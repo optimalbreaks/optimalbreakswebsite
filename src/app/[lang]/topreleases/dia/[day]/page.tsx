@@ -307,4 +307,15 @@ export default async function DayReleaseArticlePage({
           <DigestTrackRows
             groupKey={`topreleases:day:${day}`}
             lang={lang}
-            artistSlug
+            artistSlugMap={artistSlugMap}
+            labelSlugMap={labelSlugMap}
+            groups={[
+              { title: copy.picksTitle, tracks: picks, spot: `picks-${day}`, tone: 'pick' },
+              { title: copy.restTitle, tracks: rest, spot: `rest-${day}`, tone: 'rest' },
+            ]}
+          />
+        </article>
+      </div>
+    </main>
+  )
+}
