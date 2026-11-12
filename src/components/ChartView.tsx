@@ -22,7 +22,7 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BandcampLinkButton, BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { buildAbsoluteShareUrl, parsePlayParam, formatTrackReleaseDisplay, formatAdvanceReleaseDay, isAdvanceRelease, madridCalendarDate, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, SEARCH_NAV_EVENT } from '@/lib/share-track'
 import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
@@ -334,6 +334,7 @@ function buildFeaturedSnapshot(p: ChartFeaturedTrack) {
     label: p.label || null, year: p.release_year || null, release_date: p.release_date ?? null, bpm: p.bpm || null, music_key: p.music_key || null,
     artwork_url: p.artwork_url || null, sample_url: p.sample_url || null,
     full_audio_url: p.full_audio_url ?? null,
+    bandcamp_url: p.bandcamp_url ?? null,
     beatport_url: p.platform !== 'hosted' ? (p.link_url || null) : null,
   }
 }
@@ -464,6 +465,9 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
               {cta}
             </a>
           )}
+          {(pick.bandcamp_url || '').trim() && pick.platform !== 'bandcamp' ? (
+            <BandcampLinkButton url={pick.bandcamp_url} lang={lang} />
+          ) : null}
         </div>
       </div>
     </div>

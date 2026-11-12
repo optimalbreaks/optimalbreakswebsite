@@ -17,7 +17,7 @@ import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import LoadingBreaks from '@/components/LoadingBreaks'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BandcampLinkButton, BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
@@ -95,7 +95,7 @@ export type PublicTracksPayload = {
   }>
   tracks: {
     chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; week_date?: string | null }>
-    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; full_audio_url?: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
+    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; bandcamp_url?: string | null; sample_url: string | null; full_audio_url?: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
     vinyl: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }>
   }
 }
@@ -122,6 +122,8 @@ type UnifiedTrack = {
   spotify_url?: string | null
   /** Enlace verificado al track en TIDAL; el botón solo sale con match. */
   tidal_url?: string | null
+  /** Ficha de Bandcamp del mismo corte, además de la tienda principal. */
+  bandcamp_url?: string | null
   sample_url?: string | null
   /** Audio completo alojado (exclusivas). Mis Tracks lo usa para el play, igual que ChartView. */
   full_audio_url?: string | null
@@ -294,6 +296,7 @@ function assembleUnifiedTracks(
       external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
       spotify_url: f.spotify_url ?? null,
       tidal_url: f.tidal_url ?? null,
+      bandcamp_url: f.bandcamp_url ?? null,
       sample_url: f.sample_url, full_audio_url: f.full_audio_url ?? null, platform: f.platform,
       note: lang === 'es' ? f.note_es : f.note_en,
       week_date: f.week_date ?? null,
@@ -336,6 +339,7 @@ function assembleUnifiedTracks(
       sample_url: snap.sample_url || null,
       spotify_url: snap.spotify_url ?? null,
       tidal_url: snap.tidal_url ?? null,
+      bandcamp_url: snap.bandcamp_url ?? null,
     })
   }
 
@@ -370,6 +374,7 @@ function assembleUnifiedTracks(
         external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
         external_label: 'BEATPORT',
         platform: (snap.platform as string | undefined) || undefined,
+        bandcamp_url: (snap.bandcamp_url as string | undefined) || null,
       })
     } else if (s.track_source === 'chart') {
       byKey.set(mapKey, {
@@ -675,7 +680,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
           supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('id', chunk),
         ),
         selectByIds<any>(featuredIds, (chunk) =>
-          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, full_audio_url, note_en, note_es').in('id', chunk),
+          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, bandcamp_url, sample_url, full_audio_url, note_en, note_es').in('id', chunk),
         ),
         selectByIds<any>(vinylIds, (chunk) =>
           supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
@@ -1779,6 +1784,9 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                           {t.external_label || (es ? 'ABRIR' : 'OPEN')}
                         </a>
                       )
+                    ) : null}
+                    {(t.bandcamp_url || '').trim() && t.platform !== 'bandcamp' ? (
+                      <BandcampLinkButton url={t.bandcamp_url} lang={lang as Locale} />
                     ) : null}
                   </div>
                 </div>

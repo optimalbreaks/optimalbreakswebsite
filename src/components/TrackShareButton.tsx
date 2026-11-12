@@ -824,6 +824,26 @@ export function TidalLinkButton({ url, lang }: { url?: string | null; lang?: Loc
   )
 }
 
+/** Logo Bandcamp (simple-icons, viewBox 24). */
+const BANDCAMP_ICON_PATH = 'M0 18.75l7.437-13.5H24l-7.438 13.5H0z'
+
+/** Círculo de Bandcamp. Solo con URL de ese corte; no hay búsqueda. */
+export function BandcampLinkButton({ url, lang }: { url?: string | null; lang?: Locale }) {
+  const direct = (url || '').trim()
+  if (!direct) return null
+  const tooltip = lang === 'es' ? 'Abrir en Bandcamp' : 'Open on Bandcamp'
+  return (
+    <a
+      href={direct} target="_blank" rel="noopener noreferrer"
+      className={`${PLATFORM_BTN_BASE} bg-[#629aa9] text-white hover:bg-[#408294] active:bg-[#408294]`}
+      title={tooltip}
+      aria-label={tooltip}
+    >
+      <svg viewBox="0 0 24 24" className={PLATFORM_ICON_CLS} fill="currentColor" aria-hidden="true"><path d={BANDCAMP_ICON_PATH} /></svg>
+    </a>
+  )
+}
+
 export function BeatportLinkButton({ url, lang, dict }: {
   url: string
   lang?: Locale

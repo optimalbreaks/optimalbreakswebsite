@@ -854,13 +854,16 @@ async function main() {
       note_en: (p.note_en || '').trim(),
       note_es: (p.note_es || '').trim(),
     }
-    // spotify_url / tidal_url solo si vienen en el JSON: si falta la clave, el
-    // UPDATE no pisa el match ya guardado en BD por spotify-match-charts.mjs.
+    // spotify_url / tidal_url / bandcamp_url solo si vienen en el JSON: si falta
+    // la clave, el UPDATE no pisa el enlace ya guardado en BD.
     if (typeof p.spotify_url === 'string' && p.spotify_url.trim()) {
       row.spotify_url = p.spotify_url.trim()
     }
     if (typeof p.tidal_url === 'string' && p.tidal_url.trim()) {
       row.tidal_url = p.tidal_url.trim()
+    }
+    if (typeof p.bandcamp_url === 'string' && p.bandcamp_url.trim()) {
+      row.bandcamp_url = p.bandcamp_url.trim()
     }
     return row
   }

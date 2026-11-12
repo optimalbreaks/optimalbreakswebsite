@@ -57,6 +57,8 @@ export type ChartFeaturedTrack = {
   spotify_url: string | null
   /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
   tidal_url: string | null
+  /** Ficha de Bandcamp del mismo corte, cuando la tienda principal es otra (Beatport). */
+  bandcamp_url?: string | null
   /**
    * Audio completo alojado por Optimal Breaks (MP3/WebM).
    * Nulo / ausente = solo preview de Beatport/Bandcamp.
@@ -698,6 +700,8 @@ export interface SavedChartTrackSnapshot {
   /** Enlaces de streaming verificados capturados al guardar (beatport_top). */
   spotify_url?: string | null
   tidal_url?: string | null
+  /** Ficha de Bandcamp del mismo corte, si la tienda principal es otra. */
+  bandcamp_url?: string | null
   // Contexto opcional (desde dónde se guardó)
   origin?: {
     kind: 'artist' | 'label'
@@ -1154,6 +1158,8 @@ export interface BeatportTopTrack {
   spotify_url?: string | null
   /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
   tidal_url?: string | null
+  /** Ficha de Bandcamp del mismo corte. La ficha la cruza con New Releases; no vive en el JSONB. */
+  bandcamp_url?: string | null
   /** Exclusiva cedida (`chart_featured_tracks.full_audio_url`), la pone la ficha al pintar; no vive en el JSONB. */
   full_audio_url?: string | null
   /** `hosted` esconde la búsqueda de Spotify y el botón de tienda. */
@@ -1449,6 +1455,8 @@ export interface FortnightDigestTrack {
   music_key?: string | null
   spotify_url?: string | null
   tidal_url?: string | null
+  /** Ficha de Bandcamp del mismo corte, además de Beatport. */
+  bandcamp_url?: string | null
   /** `hosted`: exclusiva sin tienda. No abre la búsqueda de Spotify. */
   platform?: string | null
 }

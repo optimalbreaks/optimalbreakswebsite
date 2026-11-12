@@ -101,6 +101,7 @@ type FeatRow = {
   full_audio_url: string | null
   spotify_url: string | null
   tidal_url: string | null
+  bandcamp_url?: string | null
   note_en: string | null
   note_es: string | null
 }
@@ -184,6 +185,7 @@ interface CanonicalMeta {
   full_audio_url?: string | null
   spotify_url?: string | null
   tidal_url?: string | null
+  bandcamp_url?: string | null
   platform?: string | null
   link_label?: string | null
   beatport_url?: string | null
@@ -282,7 +284,7 @@ async function computeSoulmates() {
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
       ? selectByIds<FeatRow>(featIds, (chunk) =>
-          sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, link_label, platform, bpm, music_key, sample_url, full_audio_url, spotify_url, tidal_url, note_en, note_es').in('id', chunk),
+          sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, link_label, platform, bpm, music_key, sample_url, full_audio_url, spotify_url, tidal_url, bandcamp_url, note_en, note_es').in('id', chunk),
         )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
@@ -343,6 +345,7 @@ async function computeSoulmates() {
       full_audio_url: f.full_audio_url,
       spotify_url: f.spotify_url,
       tidal_url: f.tidal_url,
+      bandcamp_url: f.bandcamp_url ?? null,
       platform: f.platform,
       link_label: f.link_label,
       beatport_url: f.link_url,
@@ -396,6 +399,7 @@ async function computeSoulmates() {
       full_audio_url: (snap.full_audio_url as string | null) ?? null,
       spotify_url: (snap.spotify_url as string | null) ?? null,
       tidal_url: (snap.tidal_url as string | null) ?? null,
+      bandcamp_url: (snap.bandcamp_url as string | null) ?? null,
       platform: (snap.platform as string | null) ?? null,
       beatport_url: (snap.beatport_url as string | null) ?? null,
       youtube_url: snapYoutube || null,
@@ -428,6 +432,7 @@ async function computeSoulmates() {
       full_audio_url: (snap.full_audio_url as string | null) ?? null,
       spotify_url: (snap.spotify_url as string | null) ?? null,
       tidal_url: (snap.tidal_url as string | null) ?? null,
+      bandcamp_url: (snap.bandcamp_url as string | null) ?? null,
       beatport_url: (beatport_url as string | null) ?? null,
     })
   }
@@ -448,9 +453,15 @@ async function computeSoulmates() {
     }
     const prevRank = rank(prev)
     const nextRank = rank(next)
-    if (nextRank > prevRank) return { ...next, artwork_url: next.artwork_url || prev.artwork_url }
-    if (nextRank === prevRank && !prev.artwork_url && next.artwork_url) return next
-    return prev
+    const withBandcamp = (kept: CanonicalMeta, other: CanonicalMeta): CanonicalMeta =>
+      kept.bandcamp_url || !other.bandcamp_url ? kept : { ...kept, bandcamp_url: other.bandcamp_url }
+    if (nextRank > prevRank) {
+      return withBandcamp({ ...next, artwork_url: next.artwork_url || prev.artwork_url }, prev)
+    }
+    if (nextRank === prevRank && !prev.artwork_url && next.artwork_url) {
+      return withBandcamp(next, prev)
+    }
+    return withBandcamp(prev, next)
   }
 
   for (const s of saved) {
@@ -611,6 +622,7 @@ async function computeSoulmates() {
       full_audio_url: r.meta!.full_audio_url ?? null,
       spotify_url: r.meta!.spotify_url ?? null,
       tidal_url: r.meta!.tidal_url ?? null,
+      bandcamp_url: r.meta!.bandcamp_url ?? null,
       platform: r.meta!.platform ?? null,
       link_label: r.meta!.link_label ?? null,
       beatport_url: r.meta!.beatport_url ?? null,

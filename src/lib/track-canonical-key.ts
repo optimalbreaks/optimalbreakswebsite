@@ -256,20 +256,27 @@ export function collectSaveRefsFromOnSitePicks(
  * del Top 10 también debe sonar entero.
  */
 export function attachOnSiteFullAudio<
-  T extends { beatport_url?: string | null; title: string; mix_name?: string | null; artists?: unknown; full_audio_url?: string | null },
->(topTracks: T[], picks: Array<OnSitePickForTopSave & { full_audio_url?: string | null }>): T[] {
-  const withFull = picks.filter((p) => p.chartKind !== 'vinyl' && p.full_audio_url)
-  if (!withFull.length) return topTracks
+  T extends { beatport_url?: string | null; title: string; mix_name?: string | null; artists?: unknown; full_audio_url?: string | null; bandcamp_url?: string | null },
+>(topTracks: T[], picks: Array<OnSitePickForTopSave & { full_audio_url?: string | null; bandcamp_url?: string | null }>): T[] {
+  const useful = picks.filter((p) => p.chartKind !== 'vinyl' && (p.full_audio_url || (p.bandcamp_url || '').trim()))
+  if (!useful.length) return topTracks
   return topTracks.map((t) => {
-    if (t.full_audio_url) return t
+    const needFull = !t.full_audio_url
+    const needBandcamp = !(t.bandcamp_url || '').trim()
+    if (!needFull && !needBandcamp) return t
     const bpId = beatportNumericId(t.beatport_url)
     const strict = trackSaveIdentityKey(t.title, t.mix_name, t.artists)
-    const hit = withFull.find(
+    const hit = useful.find(
       (p) =>
         (!!bpId && beatportNumericId(p.link_url) === bpId) ||
         (!!strict && trackSaveIdentityKey(p.title, p.mix_name, p.artists) === strict),
     )
-    return hit ? { ...t, full_audio_url: hit.full_audio_url } : t
+    if (!hit) return t
+    return {
+      ...t,
+      ...(needFull && hit.full_audio_url ? { full_audio_url: hit.full_audio_url } : {}),
+      ...(needBandcamp && (hit.bandcamp_url || '').trim() ? { bandcamp_url: hit.bandcamp_url } : {}),
+    }
   })
 }
 

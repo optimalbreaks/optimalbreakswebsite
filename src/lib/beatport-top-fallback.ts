@@ -72,6 +72,7 @@ function fromFeaturedRow(row: ChartFeaturedTrack): BeatportTopTrack {
     release_date: row.release_date ?? null,
     spotify_url: row.spotify_url ?? null,
     tidal_url: row.tidal_url ?? null,
+    bandcamp_url: row.bandcamp_url ?? null,
   }
 }
 
@@ -98,6 +99,7 @@ function fromSnapshot(snap: SavedChartTrackSnapshot): BeatportTopTrack | null {
     release_date: snap.release_date ?? null,
     spotify_url: snap.spotify_url ?? null,
     tidal_url: snap.tidal_url ?? null,
+    bandcamp_url: snap.bandcamp_url ?? null,
   }
 }
 

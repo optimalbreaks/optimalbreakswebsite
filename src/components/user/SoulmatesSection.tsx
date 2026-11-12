@@ -85,6 +85,7 @@ interface RecommendedTrack {
   full_audio_url?: string | null
   spotify_url?: string | null
   tidal_url?: string | null
+  bandcamp_url?: string | null
   platform?: string | null
   link_label?: string | null
   beatport_url?: string | null
@@ -399,6 +400,7 @@ export default function SoulmatesSection({ lang }: Props) {
         full_audio_url: t.full_audio_url,
         spotify_url: t.spotify_url,
         tidal_url: t.tidal_url,
+        bandcamp_url: t.bandcamp_url,
         bpm: t.bpm,
         music_key: t.music_key,
         platform: t.platform,
@@ -426,7 +428,7 @@ export default function SoulmatesSection({ lang }: Props) {
           id, title: t.title, mix_name: t.mix_name, artists: t.artists, label: t.label,
           year: t.year, release_date: t.release_date, bpm: t.bpm ?? null, music_key: t.music_key ?? null,
           artwork_url: t.artwork_url, link_url: t.external_url, link_label: t.link_label ?? null,
-          platform: t.platform ?? null, spotify_url: t.spotify_url ?? null, tidal_url: t.tidal_url ?? null,
+          platform: t.platform ?? null, spotify_url: t.spotify_url ?? null, tidal_url: t.tidal_url ?? null, bandcamp_url: t.bandcamp_url ?? null,
           sample_url: t.sample_url ?? null, full_audio_url: t.full_audio_url ?? null,
           note_en: t.note_en ?? null, note_es: t.note_es ?? null, week_date: t.primary.week_date,
         })

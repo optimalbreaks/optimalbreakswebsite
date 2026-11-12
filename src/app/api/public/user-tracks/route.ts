@@ -28,7 +28,7 @@ type ProfileMini = {
 }
 
 type ChartRow = { id: string; chart_edition_id: string | null; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null }
-type FeatRow = { id: string; chart_edition_id: string | null; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; full_audio_url?: string | null; note_en: string | null; note_es: string | null }
+type FeatRow = { id: string; chart_edition_id: string | null; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; bandcamp_url?: string | null; sample_url: string | null; full_audio_url?: string | null; note_en: string | null; note_es: string | null }
 type VinylRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }
 type EditionRow = { id: string; week_date: string }
 
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('id', chunk),
     ),
     selectByIds<FeatRow>(featIds, (chunk) =>
-      sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, full_audio_url, note_en, note_es').in('id', chunk),
+      sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, bandcamp_url, sample_url, full_audio_url, note_en, note_es').in('id', chunk),
     ),
     selectByIds<VinylRow>(vinylIds, (chunk) =>
       sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
         ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('beatport_url', orphChart.map((o) => o.canonical_url as string))
         : Promise.resolve({ data: [] as ChartRow[], error: null }),
       orphFeat.length
-        ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, full_audio_url, note_en, note_es').in('link_url', orphFeat.map((o) => o.canonical_url as string))
+        ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, bandcamp_url, sample_url, full_audio_url, note_en, note_es').in('link_url', orphFeat.map((o) => o.canonical_url as string))
         : Promise.resolve({ data: [] as FeatRow[], error: null }),
       orphVinyl.length
         ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('discogs_url', orphVinyl.map((o) => o.canonical_url as string))
@@ -382,7 +382,7 @@ export async function GET(request: NextRequest) {
       artists: typeof f.artists === 'string' ? f.artists : artistsToString(f.artists),
       label: f.label, year: f.release_year, release_date: f.release_date ?? null, bpm: f.bpm, music_key: f.music_key,
       artwork_url: f.artwork_url, link_url: f.link_url, link_label: f.link_label,
-      platform: f.platform, spotify_url: f.spotify_url ?? null, tidal_url: f.tidal_url ?? null, sample_url: f.sample_url, full_audio_url: f.full_audio_url ?? null, note_en: f.note_en, note_es: f.note_es,
+      platform: f.platform, spotify_url: f.spotify_url ?? null, tidal_url: f.tidal_url ?? null, bandcamp_url: f.bandcamp_url ?? null, sample_url: f.sample_url, full_audio_url: f.full_audio_url ?? null, note_en: f.note_en, note_es: f.note_es,
       week_date: f.chart_edition_id ? weekByEdition.get(f.chart_edition_id) || null : null,
       from_snapshot: !!f.from_snapshot,
     })),

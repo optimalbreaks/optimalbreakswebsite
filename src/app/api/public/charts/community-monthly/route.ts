@@ -323,6 +323,7 @@ type FeatRow = {
   platform: string | null
   spotify_url: string | null
   tidal_url: string | null
+  bandcamp_url?: string | null
   sample_url: string | null
   full_audio_url?: string | null
 }
@@ -404,6 +405,7 @@ interface Aggregate {
   youtube_url: string | null
   spotify_url: string | null
   tidal_url: string | null
+  bandcamp_url: string | null
   playback_kind: PlaybackKind
   sample_url: string | null
   full_audio_url: string | null
@@ -588,7 +590,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
     : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url'
   const featCols = artistsOnly
     ? 'id, mix_name, artists, label, link_url'
-    : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, full_audio_url'
+    : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, bandcamp_url, sample_url, full_audio_url'
   const vinylCols = artistsOnly
     ? 'id, mix_name, artists, label, discogs_url, youtube_url'
     : 'id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url'
@@ -707,6 +709,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
     youtube_url: string | null
     spotify_url: string | null
     tidal_url: string | null
+    bandcamp_url: string | null
     sample_url: string | null
     full_audio_url: string | null
     playback_kind: PlaybackKind
@@ -734,6 +737,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
       youtube_url: null,
       spotify_url: c.spotify_url ?? null,
       tidal_url: c.tidal_url ?? null,
+      bandcamp_url: null,
       sample_url: c.sample_url,
       full_audio_url: null,
       playback_kind: 'beatport',
@@ -762,6 +766,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
       youtube_url: null,
       spotify_url: f.spotify_url ?? null,
       tidal_url: f.tidal_url ?? null,
+      bandcamp_url: f.bandcamp_url ?? null,
       sample_url: f.sample_url,
       full_audio_url: f.full_audio_url ?? null,
       playback_kind: kind,
@@ -787,6 +792,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
       youtube_url: (v.youtube_url || '').trim() || null,
       spotify_url: null,
       tidal_url: null,
+      bandcamp_url: null,
       sample_url: null,
       full_audio_url: null,
       playback_kind: 'youtube',
@@ -829,6 +835,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
       youtube_url: snapYoutube || youtubeUrlFromCanonicalKey(canonical_key),
       spotify_url: (snap.spotify_url as string | null) ?? null,
       tidal_url: (snap.tidal_url as string | null) ?? null,
+      bandcamp_url: (snap.bandcamp_url as string | null) ?? null,
       sample_url: (snap.sample_url as string | null) ?? null,
       full_audio_url: (snap.full_audio_url as string | null) ?? null,
       playback_kind: kind,
@@ -864,6 +871,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
       youtube_url: null,
       spotify_url: (snap.spotify_url as string | null) ?? null,
       tidal_url: (snap.tidal_url as string | null) ?? null,
+      bandcamp_url: (snap.bandcamp_url as string | null) ?? null,
       sample_url: (snap.sample_url as string | null) ?? null,
       full_audio_url: null,
       playback_kind: 'beatport',
@@ -918,6 +926,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
         youtube_url: meta.youtube_url || youtubeUrlFromCanonicalKey(key),
         spotify_url: meta.spotify_url,
         tidal_url: meta.tidal_url,
+        bandcamp_url: meta.bandcamp_url,
         sample_url: meta.sample_url,
         full_audio_url: meta.full_audio_url,
         platform: meta.platform ?? null,
@@ -954,6 +963,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
       if (!existing.youtube_url && meta.youtube_url) existing.youtube_url = meta.youtube_url
       if (!existing.spotify_url && meta.spotify_url) existing.spotify_url = meta.spotify_url
       if (!existing.tidal_url && meta.tidal_url) existing.tidal_url = meta.tidal_url
+      if (!existing.bandcamp_url && meta.bandcamp_url) existing.bandcamp_url = meta.bandcamp_url
       if (!existing.bpm && meta.bpm) existing.bpm = meta.bpm
       if (!existing.music_key && meta.music_key) existing.music_key = meta.music_key
       if (!existing.year && meta.year) existing.year = meta.year
@@ -1035,6 +1045,7 @@ export async function computeCommunityTop(url: URL): Promise<NextResponse> {
     youtube_url: a.youtube_url || youtubeUrlFromCanonicalKey(a.canonical_key),
     spotify_url: a.spotify_url,
     tidal_url: a.tidal_url,
+    bandcamp_url: a.bandcamp_url,
     sample_url: a.sample_url,
     full_audio_url: a.full_audio_url,
     platform: a.platform ?? null,

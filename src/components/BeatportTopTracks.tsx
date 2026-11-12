@@ -7,7 +7,7 @@ import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TapToPlayOverlay from '@/components/TapToPlayOverlay'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BandcampLinkButton, BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
   buildBeatportSharePath,
   parsePlayParam,
@@ -87,6 +87,7 @@ function buildSnapshot(
     beatport_url: t.beatport_url || null,
     spotify_url: t.spotify_url ?? null,
     tidal_url: t.tidal_url ?? null,
+    bandcamp_url: t.bandcamp_url ?? null,
     origin,
   }
 }
@@ -631,6 +632,9 @@ export default function BeatportTopTracks({
                       {t.beatport_url && /beatport\.com/i.test(t.beatport_url) && (
                         <BeatportLinkButton url={t.beatport_url} lang={lang} />
                       )}
+                      {(t.bandcamp_url || '').trim() ? (
+                        <BandcampLinkButton url={t.bandcamp_url} lang={lang} />
+                      ) : null}
                     </div>
                   </div>
                 </div>

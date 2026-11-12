@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BandcampLinkButton, BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { formatTrackReleaseDisplay, formatAdvanceReleaseDay, isAdvanceRelease, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
@@ -75,6 +75,7 @@ function buildSnapshot(
     artwork_url: pick.artwork_url || null,
     sample_url: pick.sample_url || null,
     full_audio_url: pick.full_audio_url || null,
+    bandcamp_url: pick.bandcamp_url || null,
     beatport_url: pick.platform === 'hosted' ? null : (pick.link_url || null),
     origin,
   }
@@ -672,6 +673,9 @@ export default function ArtistFeaturedTracks({
                             {pickCtaLabel(lang, pick)}
                           </a>
                         )
+                      ) : null}
+                      {(pick.bandcamp_url || '').trim() && pick.platform !== 'bandcamp' ? (
+                        <BandcampLinkButton url={pick.bandcamp_url} lang={lang} />
                       ) : null}
                     </div>
                   </div>

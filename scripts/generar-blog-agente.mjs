@@ -652,7 +652,7 @@ async function computeQuincena(untilArg, trimestre = null, semana = null, mes = 
     fetchAllRows(
       sb,
       'chart_featured_tracks',
-      'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, release_year, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url',
+      'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, release_year, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url, bandcamp_url',
       (q) => q.not('release_date', 'is', null),
     ),
     fetchAllRows(sb, 'artists', 'id, slug, name, name_display, country'),
@@ -825,6 +825,7 @@ async function computeQuincena(untilArg, trimestre = null, semana = null, mes = 
     release_date: f.release_date || null,
     spotify_url: f.spotify_url ?? null,
     tidal_url: f.tidal_url ?? null,
+    bandcamp_url: f.bandcamp_url ?? null,
   }))
 
   const L = []
@@ -934,6 +935,7 @@ Devuelve SOLO este JSON:
     music_key: f.music_key || null,
     spotify_url: f.spotify_url ?? null,
     tidal_url: f.tidal_url ?? null,
+    bandcamp_url: f.bandcamp_url ?? null,
   })
   const slugOf = (n) => artistBy.get(normName(n))?.slug || null
 
@@ -969,6 +971,7 @@ Devuelve SOLO este JSON:
     music_key: v.music_key || null,
     spotify_url: v.spotify_url ?? null,
     tidal_url: v.tidal_url ?? null,
+    bandcamp_url: v.bandcamp_url ?? null,
   }))
 
   const digest = {

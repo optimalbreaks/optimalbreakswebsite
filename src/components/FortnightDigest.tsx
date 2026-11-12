@@ -19,7 +19,7 @@ import { useAuth } from '@/components/AuthProvider'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
 import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BandcampLinkButton, BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 import { isHostedFullAudio } from '@/lib/gift-download'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
@@ -428,6 +428,7 @@ function RankedTracks({
                 {advance || (t.platform === 'hosted' && !(t.spotify_url || '').trim()) ? null : <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists)} lang={lang} />}
                 {advance ? null : <TidalLinkButton url={t.tidal_url} lang={lang} />}
                 {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
+                {(t.bandcamp_url || '').trim() && t.platform !== 'bandcamp' ? <BandcampLinkButton url={t.bandcamp_url} lang={lang} /> : null}
               </div>
             </div>
             {plain ? null : (

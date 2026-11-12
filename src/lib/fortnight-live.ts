@@ -36,6 +36,7 @@ type FeatRow = {
   full_audio_url: string | null
   spotify_url: string | null
   tidal_url: string | null
+  bandcamp_url?: string | null
 }
 
 type SaveRow = { id: string; user_id: string; track_source: string; track_id: string; canonical_url: string | null }
@@ -183,7 +184,7 @@ export async function loadDayReleases(sb: SupabaseClient<Database>, day: string)
       sb
         .from('chart_featured_tracks')
         .select(
-          'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url, chart_editions!inner(week_date, is_published)',
+          'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url, bandcamp_url, chart_editions!inner(week_date, is_published)',
         )
         .eq('release_date', day)
         .eq('chart_editions.is_published', true)
@@ -366,6 +367,7 @@ function digestTrack(f: FeatRow, value: number, weekBy: Map<string, string>): Fo
     music_key: f.music_key || null,
     spotify_url: f.spotify_url ?? null,
     tidal_url: f.tidal_url ?? null,
+    bandcamp_url: f.bandcamp_url ?? null,
     platform: f.platform ?? null,
   }
 }
@@ -377,7 +379,7 @@ export async function loadFortnightLive(from: string, until: string, topN: numbe
   const featAll = await fetchAllPages<FeatRow>((a, b) =>
     sb
       .from('chart_featured_tracks')
-      .select('id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url')
+      .select('id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url, bandcamp_url')
       .gte('release_date', from)
       .lte('release_date', until)
       .order('id')
@@ -572,7 +574,7 @@ async function loadBoardArtists(): Promise<BoardArtist[]> {
 
 export async function loadPeriodStats(from: string, until: string, prevFrom: string): Promise<PeriodStats> {
   const sb = createServiceSupabase()
-  const cols = 'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url'
+  const cols = 'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url, bandcamp_url'
   const [winAll, prevAll, beforeAll, editions, artistRows, labelRows, board] = await Promise.all([
     fetchAllPages<FeatRow>((a, b) =>
       sb.from('chart_featured_tracks').select(cols).gte('release_date', from).lte('release_date', until).order('id').range(a, b),

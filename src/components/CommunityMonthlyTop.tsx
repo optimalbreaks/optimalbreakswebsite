@@ -30,7 +30,7 @@ import VideoShareButtons from '@/components/VideoShareButtons'
 import { useAuth } from '@/components/AuthProvider'
 import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
 import type { ReelFormat } from '@/lib/reel-renderer'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BandcampLinkButton, BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ExclusiveFullBanner, GiftDownloadLink, exclusiveRowClass, fullPlayClass, fullPlayLabel } from '@/components/GiftDownloadBox'
 import {
   buildFullArtistSlugMap,
@@ -83,6 +83,7 @@ interface CommunityTopTrack {
   youtube_url: string | null
   spotify_url: string | null
   tidal_url: string | null
+  bandcamp_url?: string | null
   sample_url: string | null
   full_audio_url?: string | null
   platform?: string | null
@@ -1348,6 +1349,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           </a>
                         )
                       )}
+                      {(t.bandcamp_url || '').trim() && t.platform !== 'bandcamp' ? (
+                        <BandcampLinkButton url={t.bandcamp_url} lang={lang} />
+                      ) : null}
                     </div>
                   </div>
 
