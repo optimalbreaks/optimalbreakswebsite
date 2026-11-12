@@ -130,8 +130,17 @@ export async function hasOkArtistsRunToday(): Promise<boolean> {
  */
 export const FOLLOW_BOARD_LIMIT = 140
 
-/** Fuera del corte, pero el pase lee su ficha y publica sus créditos. 15 oct 2026: Dubaxface y AceNoise. */
-const EXTRA_FOLLOW_NAMES = ['Dubaxface', 'AceNoise']
+/**
+ * Fuera del corte de 140, pero el pase de las 13:00 lee su ficha y publica sus créditos.
+ * 15 oct 2026: Dubaxface y AceNoise. 12 nov 2026: Wiguez, Periko y Tedy Leon.
+ * El tablero público no cambia: sigue siendo el Top 100, y el corte de lectura sigue en 140.
+ */
+const EXTRA_FOLLOW_NAMES = ['Dubaxface', 'AceNoise', 'Wiguez', 'Periko', 'Tedy Leon']
+
+/** Tedy Leon no tiene ficha. Sin esta página el nombre no abre Beatport. */
+const EXTRA_FOLLOW_PAGES: { slug: string; id: string }[] = [
+  { slug: 'tedy-leon', id: '507057' },
+]
 
 /**
  * El mismo artista, escrito con espacio o sin él. El tablero guarda el crédito
@@ -810,6 +819,9 @@ async function followedBeatportArtists(
     out.set(id, { slug: row.slug, id })
   }
   if (topKeys.has('vazteria x')) out.set('227121', { slug: 'vazteria-x', id: '227121' })
+  for (const page of EXTRA_FOLLOW_PAGES) {
+    if (!out.has(page.id)) out.set(page.id, page)
+  }
   return [...out.values()]
 }
 
@@ -836,6 +848,7 @@ async function publishesWholeArtistPage(
     return false
   }
   if (SKIP_BEATPORT_IDS.has(id)) return false
+  if (EXTRA_FOLLOW_PAGES.some((page) => page.id === id)) return true
   if (id === '227121') return keys.has('vazteria x')
   const { data } = await sb
     .from('artists')
@@ -901,6 +914,8 @@ export async function runBeatportGenreImport(opts: {
    * Es el pase de las 13:00 (10 nov 2026): un tema que sale el mismo día, sin adelanto, entra ese día.
    */
   artistsOnly?: boolean
+  /** Solo estas fichas de Beatport (id numérico). No lee el listado de Breaks. */
+  artistIds?: string[]
   /** Cada paso del pase, para la ventana de «Traer ahora». */
   log?: (line: string) => void
 }): Promise<GenreImportResult> {
@@ -909,7 +924,8 @@ export async function runBeatportGenreImport(opts: {
     opts.log?.(line)
   }
   const startedAt = Date.now()
-  const artistsOnly = Boolean(opts.artistsOnly)
+  const onlyArtistIds = (opts.artistIds ?? []).map((id) => id.trim()).filter(Boolean)
+  const artistsOnly = Boolean(opts.artistsOnly) || onlyArtistIds.length > 0
   const readArtists = artistsOnly || Boolean(opts.artists) || Boolean(opts.artistSince)
   const outOfTime = () => opts.budgetMs != null && Date.now() - startedAt > opts.budgetMs
   const sb = createServiceSupabase()
@@ -1100,8 +1116,13 @@ export async function runBeatportGenreImport(opts: {
       }
       if (!readArtists) say(`Fichas de los ${FOLLOW_BOARD_LIMIT} primeros: van en el pase de las 13:00.`)
       if (artistFrom && readArtists && !outOfTime() && partial !== STOPPED_BY_EDITOR) {
-        const followed = await followedBeatportArtists(sb, rankKeys)
-        say(`Los ${FOLLOW_BOARD_LIMIT} primeros con ficha Beatport: ${followed.length}`)
+        const followedAll = await followedBeatportArtists(sb, rankKeys)
+        const followed = onlyArtistIds.length
+          ? followedAll.filter((artist) => onlyArtistIds.includes(artist.id))
+          : followedAll
+        say(onlyArtistIds.length
+          ? `Fichas pedidas: ${followed.map((artist) => artist.slug).join(', ') || 'ninguna'} (${followed.length} de ${onlyArtistIds.length})`
+          : `Los ${FOLLOW_BOARD_LIMIT} primeros con ficha Beatport, más los de fuera del corte: ${followed.length}`)
         let artistsRead = 0
         for (const artist of followed) {
           if (outOfTime()) {

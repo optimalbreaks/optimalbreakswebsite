@@ -35,11 +35,18 @@ for (const file of ['.env', '.env.local']) {
 async function main() {
   const { hasOkArtistsRunToday, hasOkImportRunToday, madridHour, runBeatportGenreImport } = await import('../src/lib/beatport-genre-import')
   const force = process.argv.includes('--force')
-  const artistsOnly = process.argv.includes('--artists-only')
+  const idsArgEarly = process.argv.some((a) => a.startsWith('--artist-ids='))
+  const artistsOnly = process.argv.includes('--artists-only') || idsArgEarly
   // `--artists` lee las dos vías ahora (listado y fichas). El cron de las 12:05 no lo pone.
   const artists = process.argv.includes('--artists') ? true : undefined
   const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
   const artistSince = sinceArg?.split('=')[1]
+  const idsArg = process.argv.find((a) => a.startsWith('--artist-ids='))
+  const artistIds = idsArg
+    ?.split('=')[1]
+    ?.split(/[,;]/)
+    .map((id) => id.replace(/\D/g, ''))
+    .filter(Boolean)
   const hour = madridHour()
 
   if (artistsOnly) {
@@ -65,6 +72,7 @@ async function main() {
       trigger: force ? 'manual' : 'cron',
       artistsOnly: true,
       ...(artistSince ? { artistSince } : {}),
+      ...(artistIds?.length ? { artistIds } : {}),
     })
     console.log(JSON.stringify(result, null, 2))
     if (!result.ok) process.exit(1)
