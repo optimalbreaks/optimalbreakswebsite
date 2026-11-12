@@ -28,18 +28,24 @@ export type BeatportPickInput = {
   note_es: string
 }
 
+/** Beatport deja `{w}` y `{h}` en la URL. Sin sustituirlos la imagen responde 400 y la funda sale en blanco. */
+export function resolveBeatportImageUrl(raw: string | null | undefined): string {
+  const s = String(raw || '').trim()
+  if (!s) return ''
+  return s
+    .replace(/\{width\}/gi, '250')
+    .replace(/\{height\}/gi, '250')
+    .replace(/\{w\}/gi, '250')
+    .replace(/\{h\}/gi, '250')
+}
+
 function artworkUrl(t: Record<string, unknown>): string {
   const pick = (img: { dynamic_uri?: string; uri?: string } | null | undefined) => {
     if (!img) return ''
-    if (img.dynamic_uri)
-      return String(img.dynamic_uri).replace(/\{w\}/g, '250').replace(/\{h\}/g, '250')
-    if (img.uri) return String(img.uri)
-    return ''
+    return resolveBeatportImageUrl(img.dynamic_uri || img.uri || '')
   }
   const release = t.release as { image?: { dynamic_uri?: string; uri?: string }; image_url?: string } | undefined
-  if (release?.image_url) {
-    return String(release.image_url).replace(/\{w\}/g, '250').replace(/\{h\}/g, '250')
-  }
+  if (release?.image_url) return resolveBeatportImageUrl(release.image_url)
   return pick(release?.image) || pick(t.image as { dynamic_uri?: string; uri?: string } | undefined) || ''
 }
 
