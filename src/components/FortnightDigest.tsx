@@ -384,7 +384,7 @@ function RankedTracks({
             key={`${t.title}-${i}`}
             id={spotId(spot, t)}
             onClick={cardPlay(t, spot)}
-            className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${hasFull ? exclusiveRowClass(on) : on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+            className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${hasFull ? exclusiveRowClass(on) : on ? 'bg-[var(--yellow)]' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
           >
             {hasFull ? <ExclusiveFullBanner lang={lang} /> : null}
             <div className="flex flex-col gap-3">

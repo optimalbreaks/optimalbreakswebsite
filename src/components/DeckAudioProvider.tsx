@@ -44,6 +44,7 @@ import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
+import CardThumbnail from '@/components/CardThumbnail'
 import { usePathname, useRouter } from 'next/navigation'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 import { canonicalKeyFromTrackPlaySave } from '@/lib/track-canonical-key'
@@ -617,6 +618,7 @@ function MiniPlayerShell({
   controls,
   title,
   subtitleBelow,
+  artworkUrl,
   onTitleClick,
   titleClickHint,
   counter,
@@ -631,6 +633,8 @@ function MiniPlayerShell({
   controls: ReactNode
   title: string
   subtitleBelow?: ReactNode
+  /** Carátula del tema que suena. Sin ella el cambio de pista solo mueve el texto. */
+  artworkUrl?: string | null
   onTitleClick?: () => void
   titleClickHint?: string
   counter?: string
@@ -744,14 +748,27 @@ function MiniPlayerShell({
   }, [stopDragging])
 
   const titleInner = (
-    <>
-      <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-        {title || '—'}
-      </p>
-      {subtitleBelow ? (
-        <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">{subtitleBelow}</p>
+    <div className="flex items-center gap-2 min-w-0">
+      {artworkUrl ? (
+        <span className="w-10 sm:w-11 shrink-0">
+          <CardThumbnail
+            src={artworkUrl}
+            alt=""
+            aspectClass="aspect-square"
+            frameClass="border-[2px] border-[var(--ink)]"
+            sizes="44px"
+          />
+        </span>
       ) : null}
-    </>
+      <span className="min-w-0 flex-1">
+        <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }} aria-live="polite">
+          {title || '—'}
+        </p>
+        {subtitleBelow ? (
+          <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">{subtitleBelow}</p>
+        ) : null}
+      </span>
+    </div>
   )
 
   return (
@@ -972,6 +989,24 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
   const es = lang === 'es'
   const cur = previewQueue[previewIndex]
 
+  // Al pasar de tema (también de la selección al resto del día) la fila nueva
+  // puede quedar fuera de la pantalla: el ▶ de la que se veía vuelve a ▶ y
+  // parece que el reproductor se ha quedado en el tema anterior. Si la fila
+  // está en esta página y no se ve, se trae al centro.
+  useEffect(() => {
+    if (typeof document === 'undefined' || document.hidden) return
+    const id = cur?.domId
+    if (!id) return
+    const el = document.getElementById(id)
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const barRaw = getComputedStyle(document.documentElement).getPropertyValue('--ob-bottom-bar-h')
+    const bar = Number.parseFloat(barRaw) || 96
+    const inView = rect.top >= 64 && rect.bottom <= window.innerHeight - bar - 12
+    if (inView) return
+    highlightPreviewRow(el)
+  }, [previewIndex, cur?.domId])
+
   // Reintentos de scroll tras navegar al origen: la lista destino puede
   // tardar en montarse (fetch en cliente del Top 100, acordeón de /charts
   // expandiéndose, paginación de Mis Tracks…). Un click nuevo cancela el
@@ -1053,6 +1088,7 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       fmt={fmt}
       title={cur.title || '—'}
       subtitleBelow={cur.artist || ''}
+      artworkUrl={cur.artworkUrl}
       onTitleClick={canGoToRow ? goToCurrentRow : undefined}
       titleClickHint={canGoToRow ? (es ? 'Ir a la canción en su lista' : 'Go to song in its list') : undefined}
       counter={`${previewIndex + 1} / ${previewQueue.length}`}
