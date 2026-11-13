@@ -69,9 +69,6 @@ import type { ChartTrackSource } from '@/hooks/useUserData'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { TrackStoryMeta } from '@/lib/share-track'
 
-/** Elementos <audio> compartidos a los que ya se engancharon listeners (una vez). */
-const wiredAudioEls = new WeakSet<HTMLAudioElement>()
-
 export interface DeckDict {
   play: string
   stop: string
@@ -991,21 +988,32 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
 
   // Al pasar de tema (también de la selección al resto del día) la fila nueva
   // puede quedar fuera de la pantalla: el ▶ de la que se veía vuelve a ▶ y
-  // parece que el reproductor se ha quedado en el tema anterior. Si la fila
-  // está en esta página y no se ve, se trae al centro.
+  // parece que el reproductor se ha quedado en el tema anterior. Solo se sigue
+  // si la fila que sonaba estaba a la vista, en la página de la lista: quien
+  // lee otra parte de la página, ha navegado o acaba de recargar no se mueve.
+  const followedDomIdRef = useRef<string | null>(null)
+  const curDomId = cur?.domId ?? null
+  const curOriginPath = cur?.originPath ?? null
   useEffect(() => {
+    const prevId = followedDomIdRef.current
+    followedDomIdRef.current = curDomId
+    if (!prevId || !curDomId || prevId === curDomId) return
     if (typeof document === 'undefined' || document.hidden) return
-    const id = cur?.domId
-    if (!id) return
-    const el = document.getElementById(id)
+    const originPathname = curOriginPath ? curOriginPath.split(/[?#]/)[0] : null
+    if (originPathname && window.location.pathname !== originPathname) return
+    const barH = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ob-bottom-bar-h')) || 96
+    const visible = (el: HTMLElement) => {
+      const r = el.getBoundingClientRect()
+      return r.bottom > 0 && r.top < window.innerHeight - barH
+    }
+    const prevEl = document.getElementById(prevId)
+    if (!prevEl || !visible(prevEl)) return
+    const el = document.getElementById(curDomId)
     if (!el) return
-    const rect = el.getBoundingClientRect()
-    const barRaw = getComputedStyle(document.documentElement).getPropertyValue('--ob-bottom-bar-h')
-    const bar = Number.parseFloat(barRaw) || 96
-    const inView = rect.top >= 64 && rect.bottom <= window.innerHeight - bar - 12
-    if (inView) return
+    const r = el.getBoundingClientRect()
+    if (r.top >= 0 && r.bottom <= window.innerHeight - barH) return
     highlightPreviewRow(el)
-  }, [previewIndex, cur?.domId])
+  }, [previewIndex, curDomId, curOriginPath])
 
   // Reintentos de scroll tras navegar al origen: la lista destino puede
   // tardar en montarse (fetch en cliente del Top 100, acordeón de /charts
@@ -1362,6 +1370,23 @@ export function DeckAudioProvider({
   // El overlay `PreviewAutoplayOverlay` lo lee para pedirle al usuario un tap.
   const [previewBlocked, setPreviewBlocked] = useState(false)
   const previewAudioRef = useRef<HTMLAudioElement | null>(null)
+  // Los <audio> compartidos (lib/audio-unlock) sobreviven a este componente;
+  // sus listeners no. Si el motor se vuelve a montar (cambio de idioma ES/EN
+  // remonta el layout de `[lang]`), los del motor viejo seguían avanzando su
+  // propia cola sobre el mismo audio y el nuevo no enganchaba ninguno: sonaba
+  // otro tema y la barra se quedaba con el anterior (13 nov 2026).
+  const wiredAudioElsRef = useRef(new WeakSet<HTMLAudioElement>())
+  const listenersAbortRef = useRef<AbortController | null>(null)
+  const listenerOpts = useCallback((): AddEventListenerOptions => {
+    if (!listenersAbortRef.current) listenersAbortRef.current = new AbortController()
+    return { signal: listenersAbortRef.current.signal }
+  }, [])
+  useEffect(() => () => {
+    listenersAbortRef.current?.abort()
+    listenersAbortRef.current = null
+    wiredAudioElsRef.current = new WeakSet()
+    setPrefetchReadyListener(null)
+  }, [])
   const previewRafRef = useRef(0)
   // Refs espejo de la cola y el índice para que los listeners del
   // <audio> (ended/error/timeupdate) tengan SIEMPRE el estado fresco
@@ -1462,17 +1487,17 @@ export function DeckAudioProvider({
     if (ref.current) return
     const audio = getSharedDeckAudio(side)
     if (!audio.getAttribute('src')) audio.src = file
-    if (!wiredAudioEls.has(audio)) {
-      wiredAudioEls.add(audio)
-      audio.addEventListener('loadedmetadata', () => onDuration(audio.duration))
-      audio.addEventListener('ended', onEnded)
+    if (!wiredAudioElsRef.current.has(audio)) {
+      wiredAudioElsRef.current.add(audio)
+      audio.addEventListener('loadedmetadata', () => onDuration(audio.duration), listenerOpts())
+      audio.addEventListener('ended', onEnded, listenerOpts())
     }
     if (Number.isFinite(audio.duration) && audio.duration > 0) onDuration(audio.duration)
     ref.current = audio
 
     audioCtxRef.current = getSharedAudioContext()
     gainRef.current = connectDeckAudio(side)
-  }, [])
+  }, [listenerOpts])
 
   const initAudio = useCallback(() => {
     const ctx = getSharedAudioContext()
@@ -1820,42 +1845,43 @@ export function DeckAudioProvider({
   // 403/404 dejaba la barra en 0:00 para siempre) ni `play`/`pause` (pausar
   // con auriculares o desde la pantalla de bloqueo desincronizaba el botón).
   const wireMixAudio = useCallback((audio: HTMLAudioElement) => {
-    if (wiredAudioEls.has(audio)) return
-    wiredAudioEls.add(audio)
+    if (wiredAudioElsRef.current.has(audio)) return
+    wiredAudioElsRef.current.add(audio)
+    const opts = listenerOpts()
     const hasSrc = () => !!audio.getAttribute('src')
     audio.addEventListener('loadedmetadata', () => {
       if (hasSrc()) setMixDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
-    })
+    }, opts)
     audio.addEventListener('timeupdate', () => {
       if (hasSrc()) setMixProgress(audio.currentTime)
-    })
+    }, opts)
     audio.addEventListener('play', () => {
       if (!hasSrc()) return
       setMixPlaying(true)
       setMixError(false)
-    })
+    }, opts)
     audio.addEventListener('playing', () => {
       if (!hasSrc()) return
       setMixPlaying(true)
       logMixPlayOnce()
       refreshNowPlaying()
-    })
+    }, opts)
     audio.addEventListener('pause', () => {
       if (hasSrc()) setMixPlaying(false)
-    })
+    }, opts)
     audio.addEventListener('ended', () => {
       if (!hasSrc()) return
       setMixPlaying(false)
       setMode((m) => (m === 'mix' ? 'idle' : m))
       setCurrentMix(null)
       clearNowPlaying()
-    })
+    }, opts)
     audio.addEventListener('error', () => {
       if (!hasSrc()) return
       setMixPlaying(false)
       setMixError(true)
-    })
-  }, [logMixPlayOnce])
+    }, opts)
+  }, [logMixPlayOnce, listenerOpts])
 
   // === Mix player: playMix ===
   const playMix = useCallback((mix: MixTrack) => {
@@ -2264,9 +2290,10 @@ export function DeckAudioProvider({
     // que lo adoptamos en vez de crear otro (el nuevo caería en autoplay
     // bloqueado en iOS). Los listeners se enganchan una sola vez.
     if (!previewAudioRef.current) previewAudioRef.current = getSharedPreviewAudio()
-    if (!wiredAudioEls.has(previewAudioRef.current)) {
+    if (!wiredAudioElsRef.current.has(previewAudioRef.current)) {
       const a = previewAudioRef.current
-      wiredAudioEls.add(a)
+      wiredAudioElsRef.current.add(a)
+      const opts = listenerOpts()
       a.addEventListener('loadedmetadata', () => {
         if (previewAudioRef.current === a) {
           setPreviewDuration(a.duration || 0)
@@ -2282,7 +2309,7 @@ export function DeckAudioProvider({
             } catch { /* setPositionState puede no estar soportado */ }
           }
         }
-      })
+      }, opts)
       // El listener se registra UNA sola vez (al crear el <audio>) y
       // delega en `advanceFromCurrentTrack` (idempotente) que lee la
       // cola/índice por refs. Antes había `setState` anidados con
@@ -2299,12 +2326,12 @@ export function DeckAudioProvider({
       a.addEventListener('ended', () => {
         playerDiag('ended', { idx: previewIndexRef.current, ...audioDiag(a) })
         if (hasRealSrc()) advanceFromCurrentTrack()
-      })
+      }, opts)
       for (const ev of ['waiting', 'stalled', 'suspend', 'emptied', 'abort'] as const) {
         a.addEventListener(ev, () => {
           if (!hasRealSrc()) return
           playerDiag(ev, { idx: previewIndexRef.current, ms: Date.now() - previewLoadAtRef.current, ...audioDiag(a) })
-        })
+        }, opts)
       }
       // Si la URL falla (proxy caído, stream cortado, formato no
       // soportado tras un sleep largo del SO), antes el reproductor se
@@ -2328,7 +2355,7 @@ export function DeckAudioProvider({
           }
         }
         advanceFromCurrentTrack()
-      })
+      }, opts)
       // Watchdog de fin de pista. En iOS PWA en background, a veces el
       // evento `ended` no se dispara aunque el flag `audio.ended` se
       // ponga a true (el SO suspende el JS justo en el último packet o
@@ -2373,7 +2400,7 @@ export function DeckAudioProvider({
             } catch { /* no-op */ }
           }
         }
-      })
+      }, opts)
       // Distinguir pausas del SO (pantalla bloqueada, pérdida de foco) de
       // las del usuario: si llega un `pause` con la página oculta y sin que
       // el usuario lo pidiera, lo marcamos para que el keeper/visibility
@@ -2435,7 +2462,7 @@ export function DeckAudioProvider({
             markInterrupted()
           })
         }, 1500)
-      })
+      }, opts)
       // El SO debe ver «playing» cuando el audio arranca de verdad. El
       // `pause` que dispara `pause()` justo antes de cambiar de src (⏭ en la
       // lockscreen, `error` → avance) llega DESPUÉS del `play()` síncrono y
@@ -2455,7 +2482,7 @@ export function DeckAudioProvider({
         markPlayingState()
         // iOS solo pinta MediaMetadata de forma fiable tras el evento play.
         refreshNowPlaying()
-      })
+      }, opts)
       a.addEventListener('playing', () => {
         playerDiag('playing', {
           idx: previewIndexRef.current,
@@ -2466,7 +2493,7 @@ export function DeckAudioProvider({
         stopTrackBridge('playing')
         markPlayingState()
         refreshNowPlaying()
-      })
+      }, opts)
       // La pista acabó antes de que la siguiente terminara de bajar (red
       // lenta): se cargó por URL y puede estar sin bytes con la pantalla
       // bloqueada. Cuando el blob de ESA pista llega, si aún no ha
@@ -2593,7 +2620,7 @@ export function DeckAudioProvider({
     if ('mediaSession' in navigator) {
       try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
     }
-  }, [advanceFromCurrentTrack, preloadNextPreview, armPreviewStartWatchdog])
+  }, [advanceFromCurrentTrack, preloadNextPreview, armPreviewStartWatchdog, listenerOpts])
 
   // Mantén `loadAndPlayRef` apuntando a la versión más reciente; los
   // listeners del <audio> la usan vía la ref para no quedarse colgados
@@ -2836,6 +2863,13 @@ export function DeckAudioProvider({
     if (a.paused) {
       stopAllYouTube()
       broadcastPlaybackClaim()
+      // Cola restaurada tras recargar (o heredada de otro montaje del motor):
+      // este motor aún no tiene listeners en el <audio>. Con el mismo src,
+      // `loadAndPlayPreviewAt` los engancha y reanuda donde estaba.
+      if (!wiredAudioElsRef.current.has(a)) {
+        loadAndPlayPreviewAt(previewQueueRef.current, previewIndexRef.current)
+        return
+      }
       previewUserPausedRef.current = false
       // Acción explícita del usuario: recupera el foco de audio, olvida la
       // interrupción previa (otra app) para que el keeper vuelva a operar.
@@ -2860,7 +2894,7 @@ export function DeckAudioProvider({
         try { navigator.mediaSession.playbackState = 'paused' } catch { /* no-op */ }
       }
     }
-  }, [previewQueue.length, previewPlaying])
+  }, [previewQueue.length, previewPlaying, loadAndPlayPreviewAt])
 
   useEffect(() => { togglePreviewRef.current = togglePreview }, [togglePreview])
 
