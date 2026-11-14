@@ -2245,6 +2245,8 @@ type ExistingEventRow = {
   date_start: string | null
   city: string | null
   venue: string | null
+  tickets_url: string | null
+  lineup: string[] | null
   image_url: string | null
   gallery_urls?: string[] | null
 }
@@ -2285,6 +2287,88 @@ function sameVenueName(a: string | null | undefined, b: string | null | undefine
   return na === nb || na.includes(nb) || nb.includes(na)
 }
 
+/** Igualdad, o una frase de al menos dos palabras dentro de la otra.
+ * «Dreambeach» a secas no se come «Dreambeach Costa del Sol» (Híbrida, 31 jul 2026). */
+function sameVenueStrict(a: string | null | undefined, b: string | null | undefined): boolean {
+  const ta = eventNameTokens(a || '')
+  const tb = eventNameTokens(b || '')
+  if (!ta.length || !tb.length) return false
+  if (ta.join(' ') === tb.join(' ')) return true
+  const short = ta.length <= tb.length ? ta : tb
+  const long = ta.length <= tb.length ? tb : ta
+  if (short.length < 2) return false
+  return ` ${long.join(' ')} `.includes(` ${short.join(' ')} `)
+}
+
+function sameCityName(a: string | null | undefined, b: string | null | undefined): boolean {
+  const na = normalizeEventName(a || '')
+  const nb = normalizeEventName(b || '')
+  return na.length >= 4 && na === nb
+}
+
+/** La portada de la tienda no identifica una noche. Hace falta la ficha del evento. */
+function specificTicketKey(url: string | null | undefined): string {
+  const raw = String(url || '').trim()
+  if (!raw) return ''
+  let parsed: URL
+  try {
+    parsed = new URL(raw)
+  } catch {
+    return ''
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return ''
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, '')
+  const path = parsed.pathname.replace(/\/+$/, '')
+  const segs = path.split('/').filter(Boolean)
+  const last = (segs[segs.length - 1] || '').toLowerCase()
+  if (last.length < 8) return ''
+  return host + path.toLowerCase()
+}
+
+function sameCalendarDay(
+  existingDate: string | null | undefined,
+  dateStart: string | null | undefined,
+  yearGuessed: boolean,
+): boolean {
+  const oldDay = (existingDate || '').slice(0, 10)
+  const newDay = (dateStart || '').slice(0, 10)
+  if (!oldDay || !newDay) return false
+  if (yearGuessed) return oldDay.slice(5, 10) === newDay.slice(5, 10)
+  return oldDay === newDay
+}
+
+/** El cartel corto cabe entero en el largo (Power Beat solo traía Autobots). */
+function smallerLineupIsInside(a: string[] | null | undefined, b: string[] | null | undefined): boolean {
+  const A = new Set((a || []).map((s) => normalizeEventName(s)).filter(Boolean))
+  const B = new Set((b || []).map((s) => normalizeEventName(s)).filter(Boolean))
+  if (!A.size || !B.size) return false
+  const small = A.size <= B.size ? A : B
+  const large = small === A ? B : A
+  for (const name of small) if (!large.has(name)) return false
+  return true
+}
+
+function lineupIntersectionSize(a: string[] | null | undefined, b: string[] | null | undefined): number {
+  const A = new Set((a || []).map((s) => normalizeEventName(s)).filter(Boolean))
+  const B = new Set((b || []).map((s) => normalizeEventName(s)).filter(Boolean))
+  let n = 0
+  for (const name of A) if (B.has(name)) n++
+  return n
+}
+
+function mergeLineupNames(existing: string[] | null | undefined, incoming: string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const raw of [...(existing || []), ...incoming]) {
+    const name = String(raw || '').trim()
+    const key = normalizeEventName(name)
+    if (!name || !key || seen.has(key)) continue
+    seen.add(key)
+    out.push(name)
+  }
+  return out
+}
+
 function findDuplicateEvent(
   all: ExistingEventRow[],
   slug: string,
@@ -2292,6 +2376,9 @@ function findDuplicateEvent(
   dateStart: string | null | undefined,
   yearGuessed = false,
   venue?: string | null,
+  city?: string | null,
+  ticketsUrl?: string | null,
+  lineup?: string[] | null,
 ): ExistingEventRow | null {
   const newYear = (dateStart || '').slice(0, 4)
   const bySlug = all.find((e) => e.slug === slug)
@@ -2320,12 +2407,23 @@ function findDuplicateEvent(
     if (sameEdition) return sameEdition
   }
 
+  const ticketKey = specificTicketKey(ticketsUrl)
+  if (ticketKey) {
+    const byTicket = all.find(
+      (e) =>
+        specificTicketKey(e.tickets_url) === ticketKey &&
+        sameCalendarDay(e.date_start, dateStart, yearGuessed),
+    )
+    if (byTicket) return byTicket
+  }
+
   const normNew = normalizeEventName(name)
   if (!normNew || normNew.length < 5) return null
 
   for (const e of all) {
     const normOld = normalizeEventName(e.name)
     if (!normOld) continue
+    if (!sameCalendarDay(e.date_start, dateStart, yearGuessed)) continue
     // Solo el nombre entero. Un título que contiene a otro («We Love Breaks» dentro de
     // «We Love Breaks presenta Lady Waks», 26 oct 2026) es otro evento: no se pisa.
     const sameName = normOld === normNew
@@ -2333,12 +2431,18 @@ function findDuplicateEvent(
     // (RITMIKA XXL y «RitMika x ARÁ», 23 oct 2026).
     const sameNight =
       sameVenueName(e.venue, venue) && sameLeadingBrand(e.name, name)
-    if (!sameName && !sameNight) continue
-    // Ediciones anuales: si ambos tienen año y difiere, NO es duplicado.
-    // Mismo año y otro día tampoco: el nombre corto de una serie cabe dentro del largo.
-    const oldYear = (e.date_start || '').slice(0, 4)
-    if (newYear && oldYear && newYear !== oldYear) continue
-    if (isDifferentCalendarDay(e.date_start, dateStart, yearGuessed)) continue
+    // Mismo día y mismo local, y el cartel corto cabe en el largo (14 nov 2026:
+    // «Karpin vs Norbak» y «Power Beat» eran el Halloween y el Power Breakbeat ya dados de alta).
+    const sameRoom =
+      sameVenueStrict(e.venue, venue) && smallerLineupIsInside(e.lineup, lineup)
+    // Misma ciudad y el cartel corto cabe entero, con al menos 4 nombres (Madrid Breaks:
+    // una lectura puso Nox y la otra Next). No basta compartir ciudad: Finger Lickin'
+    // tiene el barco y la ribera el mismo día, y sus carteles no son el uno dentro del otro.
+    const sameBill =
+      sameCityName(e.city, city) &&
+      lineupIntersectionSize(e.lineup, lineup) >= 4 &&
+      smallerLineupIsInside(e.lineup, lineup)
+    if (!sameName && !sameNight && !sameRoom && !sameBill) continue
     return e
   }
   return null
@@ -2413,7 +2517,7 @@ async function upsertEventAction(
   const { data: allEvents } = await fetchAllRows<ExistingEventRow>((from, to) =>
     sb
       .from('events')
-      .select('id, slug, name, date_start, city, venue, image_url, gallery_urls')
+      .select('id, slug, name, date_start, city, venue, tickets_url, lineup, image_url, gallery_urls')
       .order('id', { ascending: true })
       .range(from, to),
   )
@@ -2428,6 +2532,9 @@ async function upsertEventAction(
     dateStart,
     yearGuessed,
     action.venue,
+    city,
+    row.tickets_url as string | null,
+    row.lineup as string[],
   )
   if (existing && yearGuessed) {
     // El cartel no traía año: se conserva la fecha de la edición ya dada de alta
@@ -2446,6 +2553,9 @@ async function upsertEventAction(
   let writeErr: string | undefined
   if (existing?.id) {
     const patch: Record<string, unknown> = { country: row.country }
+    const venuesDisagree = Boolean(
+      existing.venue && action.venue && !sameVenueStrict(existing.venue, action.venue),
+    )
     for (const key of [
       'city',
       'venue',
@@ -2457,6 +2567,7 @@ async function upsertEventAction(
       'website',
       'tickets_url',
     ] as const) {
+      if (venuesDisagree && (key === 'venue' || key === 'location' || key === 'address')) continue
       const v = row[key]
       if (v != null && v !== '' && v !== 'TBA') patch[key] = v
     }
@@ -2478,7 +2589,9 @@ async function upsertEventAction(
         existing.image_url || '',
       ])
     }
-    if (Array.isArray(row.lineup) && (row.lineup as string[]).length) patch.lineup = row.lineup
+    if (Array.isArray(row.lineup) && (row.lineup as string[]).length) {
+      patch.lineup = mergeLineupNames(existing.lineup, row.lineup as string[])
+    }
     if (
       sameLeadingBrand(existing.name, name) &&
       eventNameTokens(name).length > eventNameTokens(existing.name).length
