@@ -11,7 +11,10 @@ Catálogo OB: Fire ya en chart_featured_tracks, 2026-11-06, InBeatWeTrust,
 132 BPM, fa menor, /track/fire/31020989.
 
 Fear: NOIX Records, preventa en Beatport (re mayor, 134 BPM). Fecha prevista
-20 nov 2026. No está en essential ni en key_releases hasta publicar.
+20 nov 2026. El 19 nov el artista cedió el tema entero para streaming en la web
+(como Kritycal): `private/music/noix-fear.mp3` (192 kbps, 5:21) y carátula
+oficial en el bucket `media/music/noix-fear.webp`. Sin descarga. El máster
+320 kbps queda en `private/music/masters/` (no se versiona).
 
 NOIX Records: no afirmar que es sello suyo. Brief cita Bassline de MALAFAMA
 (SP), sep 2025, en ese imprint.
