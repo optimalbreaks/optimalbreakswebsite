@@ -16,8 +16,17 @@ Fear: NOIX Records, preventa en Beatport (re mayor, 134 BPM). Fecha prevista
 NOIX Records: no afirmar que es sello suyo. Brief cita Bassline de MALAFAMA
 (SP), sep 2025, en ese imprint.
 
-Beatport artist/tracks (19 nov) lista también Drop (Original Mix) en DIRTY
-KITCHEN RAVE, preventa, 83 BPM. Crédito NOIX id 1349031 verificado en ficha
-del tema. Fuera del informe de Narciso: no entra en la bio pública.
+Beatport artist/tracks: Drop (DKR, preventa 17 dic 2026), Fear (NOIX Records,
+20 nov 2026) y Fire (InBeatWeTrust, 6 nov 2026). Los tres en chart_featured_tracks
+(19 nov). Fear y Drop en semanas NR con fecha de release; adelantos con banner
+en /charts. Se eliminó un Fire duplicado al importar.
 
-Fear se añadirá a essential cuando salga. Drop, cuando lo pidan o confirme.
+Top 10 de ficha: Beatport solo devuelve Fire en el widget; en BD van los tres
+ordenados por fecha de publicación (más cercano primero en UI Beatport → aquí
+Drop, Fear, Fire).
+
+Essential: Fire, Fear, Drop.
+
+Spotify/TIDAL: solo Fire con match fiable en Top 10. Fear y Drop (preventa)
+quedan sin enlace en chart y en Top 10: el matcher cayó en homónimos (NOIXES,
+Noixey). Reintentar el día del release.
