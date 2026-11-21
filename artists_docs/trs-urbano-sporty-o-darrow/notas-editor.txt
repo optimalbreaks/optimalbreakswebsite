@@ -1,23 +1,28 @@
 Altas — TRS, -Urbano-, Sporty-O, The Darrow Chem Syndicate (21 nov 2026)
 =======================================================================
 
-TRS. Beatport /artist/trs/132999. Sin bio pública ni ciudad.
-Doce filas en chart_featured_tracks, todas con Four Motion.
-No se importa más catálogo: ya estaban.
+TRS. Beatport /artist/trs/132999. La ficha de artista no trae biografía.
+No hay entrevista, Discogs ni ciudad. Doce filas, todas con Four Motion.
+No se importa más catálogo: ya estaban. La bio se queda en el catálogo.
 
--Urbano-. Beatport /artist/urbano/865875. El crédito Urbano de las
-remezclas Nipponeer es el mismo nombre, duplicado en la fila.
-Sin ciudad. Una búsqueda decía Cádiz: no está en la ficha ni en Bandcamp.
-No entra.
+-Urbano-. Beatport /artist/urbano/865875. La bio de esa ficha (21 nov 2026)
+sí dice Cádiz, Ibiza desde 2016, Straight Lines con Cesar Marquez, trap y
+dubstep desde 2010, breakbeat ahora. La primera búsqueda lo había descartado
+porque no salía en Bandcamp. Reescrita desde esa ficha, sin copiarla.
+El crédito Urbano de Nipponeer es el mismo nombre. País ES, andaluz.
 
-Sporty-O. Beatport /artist/sporty-o/82039. Atlanta, en sportyomusic.com
-y en la bio de Beatport. Tequila Rage Face Gang es su sello (grafía de
-los discos; su web a veces escribe Tequia). Guestlist con Keith, por
-una entrevista suya (A DJ's Journey, 2025): se queda el dato, no la anécdota.
-El catálogo tiene muchas más filas que los 14 temas votados. No se vuelcan.
+Sporty-O. Beatport /artist/sporty-o/82039. Entrevista A DJ's Journey,
+30 jul 2025 (adjsjourney.com/episodes/ep12-sporty-o): Atlanta, tienda
+SoundScan, Los Ángeles, MySpace, Aquasky en el estudio de DJ Lethal,
+Keith por MySpace, V2 en Utah, Tequila Rage Face Gang, Create Music.
+La web (sportyomusic.com/about) es texto promocional: no entran los
+50.000 oyentes ni la lista de sellos sin contraste. Tequia en la web,
+Tequila en los discos. Voces de Tequila Rage Face en Atlanta y música
+en el sur de España: thepunkhead.com, 2024.
 
 The Darrow Chem Syndicate. Beatport /artist/the-darrow-chem-syndicate/106178.
-Nipponeer es de Tokio (Hiroshi Fukuma): el sello, no el artista.
-Miembros sin nombre. Hype Of The One Sided, 11 ene 2021, NPR020, lo
-presenta el sello como primer recopilatorio. El catálogo de aquí es
-casi todo remezclas Nipponeer de temas suyos, desde Star Maidens (2017).
+nipponeer.com/hiroshi-fukuma y /official-links: el proyecto es de
+Hiroshi Fukuma (Tokio; de Shimane a Tokio). Nipponeer lo fundó él en
+2003 (nota de Lua Nua, 28 ago 2025, NPR249): el sello y el artista son
+la misma casa. La primera ficha lo había separado. Lua Nua lo reúne con
+Tobias Meggle (Sandboy). Hype Of The One Sided, 11 ene 2021, NPR020.
