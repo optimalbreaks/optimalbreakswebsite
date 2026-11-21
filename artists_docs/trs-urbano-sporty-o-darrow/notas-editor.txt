@@ -1,0 +1,23 @@
+Altas — TRS, -Urbano-, Sporty-O, The Darrow Chem Syndicate (21 nov 2026)
+=======================================================================
+
+TRS. Beatport /artist/trs/132999. Sin bio pública ni ciudad.
+Doce filas en chart_featured_tracks, todas con Four Motion.
+No se importa más catálogo: ya estaban.
+
+-Urbano-. Beatport /artist/urbano/865875. El crédito Urbano de las
+remezclas Nipponeer es el mismo nombre, duplicado en la fila.
+Sin ciudad. Una búsqueda decía Cádiz: no está en la ficha ni en Bandcamp.
+No entra.
+
+Sporty-O. Beatport /artist/sporty-o/82039. Atlanta, en sportyomusic.com
+y en la bio de Beatport. Tequila Rage Face Gang es su sello (grafía de
+los discos; su web a veces escribe Tequia). Guestlist con Keith, por
+una entrevista suya (A DJ's Journey, 2025): se queda el dato, no la anécdota.
+El catálogo tiene muchas más filas que los 14 temas votados. No se vuelcan.
+
+The Darrow Chem Syndicate. Beatport /artist/the-darrow-chem-syndicate/106178.
+Nipponeer es de Tokio (Hiroshi Fukuma): el sello, no el artista.
+Miembros sin nombre. Hype Of The One Sided, 11 ene 2021, NPR020, lo
+presenta el sello como primer recopilatorio. El catálogo de aquí es
+casi todo remezclas Nipponeer de temas suyos, desde Star Maidens (2017).
