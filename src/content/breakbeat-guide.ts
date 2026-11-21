@@ -27,15 +27,15 @@ export type BreakbeatGuide = {
 }
 
 /** Fecha de la última revisión editorial (ISO). Actualizar al cambiar el texto. */
-export const GUIDE_UPDATED = '2026-09-29'
+export const GUIDE_UPDATED = '2026-11-21'
 export const GUIDE_PUBLISHED = '2026-09-29'
 
 const es: BreakbeatGuide = {
   kicker: 'GUÍA · EL GÉNERO',
   title: '¿Qué es el breakbeat?',
-  metaTitle: 'Qué es el breakbeat: significado, origen, BPM y subgéneros',
+  metaTitle: 'Breakbeat: qué es, origen, cómo suena, BPM y subgéneros',
   metaDescription:
-    'El breakbeat es música electrónica construida sobre ritmos de batería rotos y sincopados, nacida de los «breaks» del funk. Origen, cómo suena, BPM, subgéneros y escena andaluza.',
+    '¿Qué es el breakbeat? Música electrónica de ritmos rotos (120–140 BPM) nacida del funk. Origen, cómo suena, artistas clave, subgéneros y breakbeat andaluz.',
   tocTitle: 'En esta guía',
   faqTitle: 'Preguntas frecuentes sobre el breakbeat',
   updatedLabel: 'Revisado',

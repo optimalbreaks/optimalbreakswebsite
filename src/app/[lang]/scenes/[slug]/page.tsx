@@ -73,6 +73,33 @@ function linkSceneDescriptionHtml(
     .join('')
 }
 
+function stripHtmlForMeta(raw: string | null | undefined): string {
+  if (!raw) return ''
+  return raw
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const SCENE_SEO_OVERRIDES: Record<string, { es: { title: string; description: string }; en: { title: string; description: string } }> = {
+  'andalusian-breakbeat': {
+    es: {
+      title: 'Breakbeat Andaluz: historia, DJs, salas y escena actual',
+      description:
+        'Todo sobre el breakbeat andaluz: origen en los 90, auge en Málaga, Sevilla y Granada, DJs y sellos clave, festivales y agenda actual del ritmo roto en Andalucía.',
+    },
+    en: {
+      title: 'Andalusian Breakbeat: History, DJs, Clubs & Scene Guide',
+      description:
+        'The complete guide to Andalusian breakbeat: 90s roots in southern Spain, key DJs, labels, iconic clubs, festivals and the current breakbeat agenda.',
+    },
+  },
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createCachedSupabase()
@@ -83,9 +110,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single()
   const data = raw as SceneSeoRow | null
   if (!data) return { title: lang === 'es' ? 'Escena no encontrada' : 'Scene not found', robots: { index: false, follow: true } }
-  const title = lang === 'es' ? data.name_es : data.name_en
+  const override = SCENE_SEO_OVERRIDES[slug]?.[lang]
+  const rawName = lang === 'es' ? data.name_es : data.name_en
+  const title =
+    override?.title ||
+    (rawName.length <= 28
+      ? lang === 'es'
+        ? `${rawName}: historia, DJs y sellos clave`
+        : `${rawName}: History, Key DJs & Labels`
+      : rawName)
   const siteName = await siteNameForLang(lang)
-  const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
+  const cleanDesc = stripHtmlForMeta(lang === 'es' ? data.description_es : data.description_en)
+  const description = override?.description || cleanDesc
   return detailPageMetadata(lang, `/scenes/${slug}`, siteName, title, description, 'website', data.og_image_url || data.image_url)
 }
 
@@ -178,7 +214,7 @@ export default async function SceneDetailPage({ params }: Props) {
         </div>
       )}
       {scene.key_labels?.length > 0 && (
-        <div className="p-4 sm:p-6 border-4 border-[var(--ink)]">
+        <div className="p-4 sm:p-6 border-4 border-[var(--ink)] mb-4">
           <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', marginBottom: '12px' }}>{lang === 'es' ? 'SELLOS CLAVE' : 'KEY LABELS'}</div>
           <div className="flex flex-wrap gap-2">{scene.key_labels.map((l: string, i: number) => {
             const lSlug = labelSlugs.get(l)
@@ -188,6 +224,23 @@ export default async function SceneDetailPage({ params }: Props) {
           })}</div>
         </div>
       )}
+      <nav
+        aria-label={lang === 'es' ? 'Explorar más en Optimal Breaks' : 'Explore more on Optimal Breaks'}
+        className="mt-6 p-4 sm:p-5 border-4 border-[var(--ink)] bg-[var(--paper)] flex flex-wrap items-center gap-3"
+      >
+        <span style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em' }} className="uppercase text-[var(--ink)]">
+          {lang === 'es' ? 'SEGUIR EXPLORANDO:' : 'KEEP EXPLORING:'}
+        </span>
+        <Link href={`/${lang}/breakbeat`} className="cutout red no-underline">
+          {lang === 'es' ? '¿Qué es el breakbeat?' : 'What is breakbeat?'}
+        </Link>
+        <Link href={`/${lang}/agenda`} className="cutout fill no-underline">
+          {lang === 'es' ? 'Agenda breakbeat' : 'Breakbeat agenda'}
+        </Link>
+        <Link href={`/${lang}/festivals`} className="cutout outline no-underline">
+          {lang === 'es' ? 'Festivales' : 'Festivals'}
+        </Link>
+      </nav>
     </div>
   )
 }

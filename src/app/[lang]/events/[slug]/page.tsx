@@ -1275,6 +1275,26 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           )}
         </section>
       )}
+      <nav
+        aria-label={lang === 'es' ? 'Guías de breakbeat' : 'Breakbeat guides'}
+        className="mb-10 p-4 sm:p-5 border-4 border-[var(--ink)] bg-[var(--paper)] flex flex-wrap items-center gap-3"
+      >
+        <span
+          style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em' }}
+          className="uppercase text-[var(--ink)]"
+        >
+          {lang === 'es' ? 'GUÍAS DEL GÉNERO:' : 'GENRE GUIDES:'}
+        </span>
+        <Link href={`/${lang}/breakbeat`} className="cutout red no-underline">
+          {lang === 'es' ? '¿Qué es el breakbeat?' : 'What is breakbeat?'}
+        </Link>
+        <Link href={`/${lang}/scenes/andalusian-breakbeat`} className="cutout fill no-underline">
+          {lang === 'es' ? 'Breakbeat andaluz' : 'Andalusian breakbeat'}
+        </Link>
+        <Link href={`/${lang}/agenda`} className="cutout outline no-underline">
+          {lang === 'es' ? 'Agenda breakbeat' : 'Breakbeat agenda'}
+        </Link>
+      </nav>
     </div>
     </>
   )
