@@ -2637,9 +2637,10 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 // ===================== DÍA (artículo /topreleases/dia) =====================
 // Primero una portada negra (3 s), ya con el tema más destacado sonando.
 // Luego el recuento del día, una card por tema, y el último hasta el final.
-// 23 nov 2026: cada tema suena lo mismo, como mucho 25 s, y el vídeo no pasa
-// de 2:30. Con 6 o menos son 25 s (3 temas = 75 s). Con 7 y con 8 se reparte
-// el 2:30 (~21,4 s y 18,75 s). El primero cubre portada y lista; el último, la despedida.
+// 23 nov 2026: cada tema suena lo mismo, como mucho 20 s, y el vídeo no pasa
+// de 2:30. Con 7 o menos son 20 s (3 temas = 60 s, 7 = 2:20). Solo con 8,
+// 20×8 pasa de 2:30 y se reparte a partes iguales (18,75 s). El primero
+// cubre portada y lista; el último, la despedida.
 // Hasta el 23 nov: primero y último 15 s, medio 10 s (8 temas = 90 s, 5 = 60 s).
 /** Temas que suenan como mucho en el vídeo del día. */
 export const DAY_MAX_TRACKS = 8
@@ -2647,7 +2648,7 @@ export const DAY_TITLE = 3
 export const DAY_INTRO = 3
 export const DAY_OUTRO = 4
 /** Tope de lo que suena un tema. */
-export const DAY_TRACK_SEC = 25
+export const DAY_TRACK_SEC = 20
 /** Tope del reel del artículo (2:30). */
 export const DAY_REEL_SEC = 150
 
@@ -2683,7 +2684,7 @@ function dayCardStart(secs: number[], i: number): number {
  * Dónde suena cada tema con preview. El primero arranca en el segundo 0
  * (cubre la entrada) y el último llega hasta el final (despedida).
  * Si todos tienen preview no queda un hueco: cada uno llega hasta el siguiente,
- * y ese tramo ya cabe en los 25 s. Si falta el preview de uno, el vecino no
+ * y ese tramo ya cabe en los 20 s. Si falta el preview de uno, el vecino no
  * se alarga por encima del tope.
  */
 export function dayAudioSlots(
