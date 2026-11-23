@@ -10,7 +10,7 @@ Cuando un artista cede un tema para que **en la web esté entero**, hay dos trat
 | | **Streaming** | **Descarga** |
 |---|---|---|
 | Qué cede | Que se oiga entero. El archivo no se baja: quien lo quiera, lo compra. | Que se oiga entero **y** que se pueda bajar el archivo. |
-| Quién | Kritycal System, Kaos Beat, BrainBass, Lady Waks y Orebeat. Toda la tabla de abajo salvo Woter. | Hoy solo Woter, *Gone Gone Gone*. Hace falta que el artista lo autorice. |
+| Quién | Kritycal System, Kaos Beat, BrainBass, Lady Waks, Orebeat, NOIX y The Pattern Sound. Toda la tabla de abajo salvo Woter. | Hoy solo Woter, *Gone Gone Gone*. Hace falta que el artista lo autorice. |
 | En la web | MP3 a 192 kbps por `/api/audio`. Fila amarilla, banner rojo, ▶ PLAY FULL. **Sin** botón de descarga. | El mismo MP3 a 192 kbps, la misma fila. Además, **DESCARGAR** justo después del play: abre el artículo, no el archivo. |
 | Qué se baja | Nada. | En el artículo, tras cuenta y dos capturas: **MP3** (el de la web) y **WAV** (el máster, tal cual nos lo pasaron). |
 | El máster | Se queda en `private/music/`, gitignorado. No se sube a ningún sitio. | El mismo sitio, gitignorado. Para poder bajarlo, además va al bucket privado `gift-masters`. |
@@ -43,6 +43,7 @@ Contexto (sep 2026): Kritycal System fue el primer streaming. La receta de abajo
 | **Gone Gone Gone (WoTeR Breaks Mix)** | `2026-11-02` | `private/music/woter-gone-gone-gone.mp3` | **Descarga**, no solo streaming. Woter (`/artists/woter`). Máster 5:02, FL Studio. En la web, MP3 192 kbps. El WAV original (54 MB) se baja desde el artículo. No está en Beatport: `platform: hosted`, release `2026-11-04`. Sin botón de tienda ni búsqueda de Spotify (abriría el tema oficial). |
 | **Dont Wake Up** | `2026-11-09` | `private/music/kritycal-system-dont-wake-up.mp3` | Kritycal System. Máster **4:23** (FL Studio), 192 kbps. Ya estaba en Beatport (`/track/dont-wake-up/29688516`, Creative Sound Records, 135 BPM, sol menor); se rellenó `full_audio_url` en la misma fila. Streaming, sin descarga. |
 | **Fear** | `2026-11-16` | `private/music/noix-fear.mp3` | NOIX. Streaming, sin descarga. Máster MP3 320 kbps → web **192 kbps**, **5:21**. Ya estaba en Beatport (`/track/fear/31029448`, NOIX Records, sale el 20 nov 2026); se rellenó `full_audio_url` y la carátula oficial en la misma fila. |
+| **Dance Now What You Wish** | `2026-11-23` | `private/music/the-pattern-sound-kritycal-system-dance-now-what-you-wish.mp3` | The Pattern Sound y Kritycal System. Streaming, sin descarga. Máster WAV de FL Studio **4:09** → web **192 kbps**. Ya estaba en Beatport (`/track/dance-now-what-you-wish/29803003`, Creative Sound Records, 135 BPM, sol mayor); se rellenó `full_audio_url` y la carátula oficial en la misma fila. |
 
 ## Arquitectura (no negociable)
 
