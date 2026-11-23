@@ -299,7 +299,25 @@ export default function AudioSegmentPicker(props: Props) {
       const place = () => {
         if (!alive() || phaseRef.current !== 'url') return
         if (el.readyState < 1 || !Number.isFinite(el.duration)) return
-        if (from > el.duration + 0.05) return fail('past-end')
+        // iPhone: Safari estima el MP3 por el bitrate (o por el primer Range)
+        // y esa duración llega más corta que el audio ya decodificado. El
+        // tramo elegido cae «después del final» y antes se cortaba con el
+        // aviso rojo, sin probar el WAV. Si el archivo sigue en camino, se
+        // espera a que la duración crezca. Si ya no va a crecer, suena el
+        // WAV de la ventana (sale del buffer, no de lo que dice <audio>).
+        if (from > el.duration + 0.05) {
+          const loading =
+            el.networkState === HTMLMediaElement.NETWORK_LOADING ||
+            el.readyState < HTMLMediaElement.HAVE_FUTURE_DATA
+          if (loading && el.duration + 0.4 < buf.duration) return
+          playerDiag('share_listen_err', {
+            via: 'url-short',
+            from: Math.round(from * 10) / 10,
+            dur: Math.round(el.duration * 10) / 10,
+            buf: Math.round(buf.duration * 10) / 10,
+          })
+          return nextAfterUrl()
+        }
         if (Math.abs(el.currentTime - from) > 0.35) {
           try { el.currentTime = from } catch { /* aún no se puede buscar */ }
           return
@@ -335,6 +353,7 @@ export default function AudioSegmentPicker(props: Props) {
       }
       bind({
         loadedmetadata: place,
+        durationchange: place,
         progress: place,
         canplay: place,
         seeked: onSeeked,
@@ -346,6 +365,13 @@ export default function AudioSegmentPicker(props: Props) {
           nextAfterUrl()
         },
       })
+      window.clearTimeout(watchRef.current)
+      watchRef.current = window.setTimeout(() => {
+        if (!alive() || phaseRef.current !== 'url') return
+        if (!el.muted && el.currentTime > 0.05) return
+        playerDiag('share_listen_err', { via: 'url-timeout', ...audioDiag(el) })
+        nextAfterUrl()
+      }, 2500)
       const pending = el.play()
       place()
       pending.then(() => { if (alive() && phaseRef.current === 'url') place() }).catch((err: unknown) => {
@@ -354,13 +380,6 @@ export default function AudioSegmentPicker(props: Props) {
         playerDiag('share_listen_err', { via: 'url', name })
         nextAfterUrl()
       })
-      window.clearTimeout(watchRef.current)
-      watchRef.current = window.setTimeout(() => {
-        if (!alive() || phaseRef.current !== 'url') return
-        if (!el.muted && el.currentTime > 0.05) return
-        playerDiag('share_listen_err', { via: 'url-timeout', ...audioDiag(el) })
-        nextAfterUrl()
-      }, 2500)
     }
 
     const startWav = () => {
