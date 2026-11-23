@@ -2637,20 +2637,41 @@ export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: numbe
 // ===================== DÍA (artículo /topreleases/dia) =====================
 // Primero una portada negra (3 s), ya con el tema más destacado sonando.
 // Luego el recuento del día, una card por tema, y el último hasta el final.
-// 11 nov 2026: el primer tema y el último suenan 15 s; los del medio, 10 s.
-// La primera ficha (9 s) + portada 3 + lista 3 = 15; la última (11 s) + despedida 4 = 15.
-// Con 8 temas: 6 + 9 + 6 × 10 + 11 + 4 = 90 s; con 5, 60 s. Antes, 5 fichas de 9 s (55 s).
+// 23 nov 2026: cada tema suena lo mismo, como mucho 25 s, y el vídeo no pasa
+// de 2:30. Con 6 o menos son 25 s (3 temas = 75 s). Con 7 y con 8 se reparte
+// el 2:30 (~21,4 s y 18,75 s). El primero cubre portada y lista; el último, la despedida.
+// Hasta el 23 nov: primero y último 15 s, medio 10 s (8 temas = 90 s, 5 = 60 s).
 /** Temas que suenan como mucho en el vídeo del día. */
 export const DAY_MAX_TRACKS = 8
 export const DAY_TITLE = 3
 export const DAY_INTRO = 3
 export const DAY_OUTRO = 4
+/** Tope de lo que suena un tema. */
+export const DAY_TRACK_SEC = 25
+/** Tope del reel del artículo (2:30). */
+export const DAY_REEL_SEC = 150
 
-/** Segundos de cada ficha, en orden. */
+/** Segundos que suena cada tema si todos tienen preview. El mismo para todos. */
+export function dayTrackSeconds(n: number): number {
+  if (n <= 0) return 0
+  return Math.min(DAY_TRACK_SEC, DAY_REEL_SEC / n)
+}
+
+/** Segundos de cada ficha, en orden. La suma con portada, lista y despedida es el reel. */
 export function dayCardSeconds(n: number): number[] {
   if (n <= 0) return []
-  if (n === 1) return [12]
-  return Array.from({ length: n }, (_, i) => (i === 0 ? 9 : i === n - 1 ? 11 : 10))
+  const total = dayReelDuration(n)
+  const body = total - DAY_TITLE - DAY_INTRO - DAY_OUTRO
+  if (n === 1) return [body]
+  const heard = dayTrackSeconds(n)
+  const cards = Array.from({ length: n }, (_, i) => {
+    if (i === 0) return heard - DAY_TITLE - DAY_INTRO
+    if (i === n - 1) return heard - DAY_OUTRO
+    return heard
+  })
+  const sum = cards.reduce((s, x) => s + x, 0)
+  cards[n - 1] += body - sum
+  return cards
 }
 
 /** Segundo en que empieza la ficha `i` (con `i = n`, la despedida). */
@@ -2661,7 +2682,9 @@ function dayCardStart(secs: number[], i: number): number {
 /**
  * Dónde suena cada tema con preview. El primero arranca en el segundo 0
  * (cubre la entrada) y el último llega hasta el final (despedida).
- * Entre medias no queda un hueco mudo: cada uno llega hasta el siguiente.
+ * Si todos tienen preview no queda un hueco: cada uno llega hasta el siguiente,
+ * y ese tramo ya cabe en los 25 s. Si falta el preview de uno, el vecino no
+ * se alarga por encima del tope.
  */
 export function dayAudioSlots(
   count: number,
@@ -2674,13 +2697,15 @@ export function dayAudioSlots(
     const at = k === 0 ? 0 : dayCardStart(cardSec, i)
     const next = audible[k + 1]
     const end = next == null ? total : dayCardStart(cardSec, next)
-    return { i, at, seconds: Math.max(0.2, end - at) }
+    // Un tema sin preview no alarga al vecino por encima del tope.
+    return { i, at, seconds: Math.min(DAY_TRACK_SEC, Math.max(0.2, end - at)) }
   })
 }
 
 export function dayReelDuration(cards: number): number {
   const n = Math.max(0, cards)
-  return dayCardStart(dayCardSeconds(n), n) + DAY_OUTRO
+  if (n === 0) return DAY_TITLE + DAY_INTRO + DAY_OUTRO
+  return Math.min(DAY_REEL_SEC, n * DAY_TRACK_SEC)
 }
 
 export type DayCardAnim = {

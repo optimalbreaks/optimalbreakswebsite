@@ -152,20 +152,18 @@ R y F del artículo del día usan el mismo vídeo. Suenan **hasta 8** (`DAY_MAX_
 
 La despedida puede enseñar hasta 8 carátulas de temas de ese día que la cuenta **no** ha guardado (`rest` en `dayReelOf`). Esas no suenan. El 6 nov 2026 había 19 temas en el catálogo y 13 guardados. Las cinco fueron AndrewFx — *Infinity (Breaks)* (6 votos de otros, 58 escuchas), Orebeat y Xwile — *Deja Vu* (4 y 31), FM-3 y Rhades — *Like It Hot* (3 y 35), Nosk — *Rider* (3 y 27) y Belforg — *We Are One* (3 y 15). PERCYBASS — *Egypt Mess* (Dirty Kitchen Rave) salió ese día y no estaba guardado: puede verse en el cierre y no entra en las cinco. Percibes no tenía tema ese día. Contar también el «+» de la casa no cambia esas cinco. Funciones: `loadDayReleases`, `rankDayReelTracks`.
 
-Hasta el 6 nov 2026 el archivo duraba **94 segundos** (portada 4, lista 5, cinco fichas de 15, estantería del resto 5,4 y despedida 4,6). Instagram, en su guía de Reels ([How to make Instagram Reels](https://about.instagram.com/blog/tips-and-tricks/how-to-make-instagram-reels)), pone el punto dulce para que un vídeo se vea entero y llegue a quien no sigue la cuenta en **15 a 60 segundos**. De 3 a 15 es un chiste o una tendencia. De 1 a 3 minutos lo reserva para un relato largo, y ahí se acaba menos. El 6 nov Narciso pidió cerrar como mucho en un minuto y seguir con las cinco canciones. El 11 nov pidió 8, a minuto y medio (abajo). La otra forma de no pasar del minuto, tres canciones a 15 segundos, se dejó.
+Hasta el 6 nov 2026 el archivo duraba **94 segundos** (portada 4, lista 5, cinco fichas de 15, estantería del resto 5,4 y despedida 4,6). Instagram, en su guía de Reels ([How to make Instagram Reels](https://about.instagram.com/blog/tips-and-tricks/how-to-make-instagram-reels)), pone el punto dulce para que un vídeo se vea entero y llegue a quien no sigue la cuenta en **15 a 60 segundos**. De 3 a 15 es un chiste o una tendencia. De 1 a 3 minutos lo reserva para un relato largo, y ahí se acaba menos. El 6 nov Narciso pidió cerrar como mucho en un minuto y seguir con las cinco canciones. El 11 nov pidió 8, a minuto y medio (primero y último 15 s, los del medio 10 s, 90 s). El 23 nov el tope pasa a 25 s por tema y 2:30 por artículo (tabla). La otra forma de no pasar del minuto, tres canciones a 15 segundos, se dejó.
 
-| Tramo | Tiempo |
-|---|---|
-| Portada negra | 3 s |
-| Lista de los que van a sonar | 3 s |
-| Primera ficha | 9 s |
-| Fichas del medio | 10 s |
-| Última ficha | 11 s |
-| Despedida | 4 s |
-| **Ocho temas** | **90 s** |
-| Cinco temas | 60 s |
+| Temas | Cada uno suena | El vídeo |
+|---|---|---|
+| 1 | 25 s | 25 s |
+| 3 | 25 s | 1:15 |
+| 5 | 25 s | 2:05 |
+| 6 | 25 s | 2:30 |
+| 7 | ~21,4 s | 2:30 |
+| 8 | 18,75 s | 2:30 |
 
-Lo que se oye, con preview (11 nov 2026, Narciso): la primera **15 s** (portada, lista y su ficha), las del medio **10 s**, la última **15 s** (su ficha y la despedida). Ocho temas = minuto y medio; un día con menos dura menos, no se rellena. Los rótulos llegan a «octavo / eighth» y la lista de entrada enseña hasta 8 filas. En iPhone la grabación es en tiempo real: 90 s de espera. Hasta el 11 nov las fichas eran todas de 9 s (55 s; se oía 15 / 9 / 9 / 9 / 13). Un día de un solo tema usa una ficha de 12 s y ese tema suena el vídeo entero (22 s).
+Lo que se oye, con preview (23 nov 2026, Narciso): todos el mismo tiempo, **como mucho 25 s**, y el artículo **no pasa de 2:30**. Con 6 o menos son 25 s por tema (tres temas = 75 s). Con 7 y con 8 se reparte el 2:30. El primero cubre portada (3 s), lista (3 s) y su ficha; el último, su ficha y la despedida (4 s). Un día con menos no se rellena hasta 2:30. Los rótulos llegan a «octavo / eighth» y la lista de entrada enseña hasta 8 filas. En iPhone la grabación es en tiempo real: con 6, 7 u 8 temas hay 2:30 de espera. Hasta el 23 nov el primero y el último eran 15 s y los del medio 10 s (90 s con 8, 60 s con 5; un solo tema, 22 s).
 
 El 11 nov 2026 había 14 temas y 8 guardados. Con el tope de 5 sonaban 936 — *Your Face* y DataFunk — *Bounce* (4 «+» de otros), THE RETURN GOOD — *Change* y Zzeta — *Police* (2) y Keith Mackenzie — *Body Ctrl* (1, gana el empate por escuchas; el MP4 de producción lo confirma). Loca, Out Of Time y Trip To Mars se quedaron fuera. El «1» de los 14 es la misma cuenta: **zarzote** (colaborador, 263 «+» desde el 27 sep), que guarda todo lo del día. No cambia el orden de arriba, pero hace que el último hueco se decida por el alfabeto. Con el tope de 8, ese día suenan los 8.
 
@@ -192,7 +190,7 @@ El @ no lo escribe el modelo. Lo añade la web al final del pie, una cuenta por 
 | Quién | De dónde sale el @ |
 |---|---|
 | **Artista** | `artists.socials.instagram`, si es una URL de Instagram. A 10 nov 2026 lo tienen 103 fichas. 19 se copiaron ese día desde los textos de los reels de Godino, donde el @ ya se había comprobado a mano y el nombre casaba con una sola ficha. |
-| **Sello** | La web de la ficha, si es un Instagram, o el Instagram de la organización vinculada (`labels.organization_id`). La ficha de sello no tiene un campo de redes propio. A 10 nov 2026 ninguna de las 166 guardaba un Instagram en la web. |
+| **Sello** | `labels.socials.instagram`; si falta, se usa una web que sea Instagram o el Instagram de la organización vinculada (`labels.organization_id`). Nunca se fabrica un @ desde el nombre. |
 | **Regalo de Woter** | Además, `@optimal.breaks` y `@woter_dj`, dentro del texto y al final: son el requisito de la descarga. `@optimalbreaks` sin punto es otra cuenta y no vale. |
 
 Vale para un tema, una sesión, el día, la semana, el Top histórico, un artículo, la agenda y el resumen. En el día y en la semana se citan los artistas y sellos de los temas del contexto; en la agenda, el cartel. Los `INSTAGRAM.txt` de los vídeos de Godino (factoría) no son este pie.
