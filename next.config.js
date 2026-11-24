@@ -103,6 +103,12 @@ const nextConfig = {
         destination: '/:lang/events/circus-by-funktasty-13-aniversario-2027',
         permanent: true,
       },
+      /** Madrid Breaks, 12 dic 2026: el mismo cartel se guardó dos veces. Invasion era Next; la otra decía Nox. */
+      {
+        source: '/:lang/events/madrid-breaks-invasion',
+        destination: '/:lang/events/madrid-breaks-madrid',
+        permanent: true,
+      },
       /** RitMika x ARÁ: el chat leyó el adhesivo AKA de Instagram. Es RITMIKA XXL, 21 nov 2026. */
       {
         source: '/:lang/events/ritmika-x-ara',
