@@ -713,7 +713,7 @@ The page does not add its own horizontal padding: `.admin-content` already pads 
 
 ## Admin Escuchas
 
-Admin-only twin of Awards. **A listen is a row in `track_play_events`** (logged since **6 Oct 2026** when a preview or inline YouTube actually starts). It is not a «+». There is no public listens chart.
+Admin-only twin of Awards. **A listen is a row in `track_play_events`** (logged since **6 Oct 2026** when a preview or inline YouTube actually starts). It is not a «+». There is no public listens chart. Pausing and pressing play again does not add a row (24 Nov 2026). The preview bar’s restart button (`↺`) does, and so does one seek gesture on that bar that lands 60 seconds or more earlier than where it began. The 4-second per-tab debounce still collapses a double tap. Short scrubs do not add up. Deck and mix bars have the same button and do not write a track listen.
 
 **Where:** `/[lang]/administrator/escuchas` (sidebar «Escuchas», card on the admin home). **API:** `GET /api/admin/escuchas?year=2026|all&axis=release|save&mode=public|raw`. Same engine as Awards (`loadListensBoard` → `loadAwardsBoard` with `metric: 'plays'`). `requireAdmin` only.
 

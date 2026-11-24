@@ -596,6 +596,34 @@ const MINI_BTN_PAUSE_RED = `${MINI_BTN_BASE} font-black bg-[var(--red)] text-whi
 const MINI_BTN_STOP_RED = `${MINI_BTN_BASE} font-black bg-[var(--red)] text-white hover:bg-[var(--ink)]`
 const MINI_BTN_CLOSE = `${MINI_BTN_BASE} font-black bg-transparent text-[var(--ink)] hover:bg-[var(--red)] hover:text-white`
 
+/** Un solo gesto de la barra que aterriza un minuto o más atrás es otra escucha. */
+const REPLAY_REWIND_SEC = 60
+
+function RestartGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12a7.5 7.5 0 1 0 1.8-4.9" />
+      <path d="M4 4.5V9.5H9" />
+    </svg>
+  )
+}
+
+function RestartButton({ disabled, onClick, es }: { disabled: boolean; onClick: () => void; es: boolean }) {
+  const label = es ? 'Empezar de nuevo' : 'Start over'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={MINI_BTN_GHOST}
+      title={label}
+      aria-label={label}
+    >
+      <RestartGlyph />
+    </button>
+  )
+}
+
 /**
  * Shell común para las tres mini-barras del reproductor global.
  *
@@ -611,6 +639,7 @@ function MiniPlayerShell({
   progress,
   duration,
   onSeekRatio,
+  onRewindReplay,
   fmt,
   controls,
   title,
@@ -626,6 +655,8 @@ function MiniPlayerShell({
   progress: number
   duration: number
   onSeekRatio: (ratio: number) => void
+  /** El gesto de seek terminó un minuto o más antes de donde empezó. */
+  onRewindReplay?: () => void
   fmt: (s: number) => string
   controls: ReactNode
   title: string
@@ -662,6 +693,10 @@ function MiniPlayerShell({
   const draggingPointerId = useRef<number | null>(null)
   const moveListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const upListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
+  const gestureStartSec = useRef(0)
+  const gestureLandedSec = useRef<number | null>(null)
+  const onRewindReplayRef = useRef(onRewindReplay)
+  onRewindReplayRef.current = onRewindReplay
 
   // iOS PWA standalone: tras lock/unlock, orientación, foco perdido (Web
   // Share / volver de Facebook…) o cambio de barra del sistema, el
@@ -679,7 +714,9 @@ function MiniPlayerShell({
     const bar = barRef.current
     if (!bar) return
     const rect = bar.getBoundingClientRect()
-    onSeekRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    gestureLandedSec.current = ratio * duration
+    onSeekRatio(ratio)
   }, [duration, onSeekRatio])
 
   // Drag con listeners a nivel de `document`. Importante: NO usamos
@@ -710,6 +747,8 @@ function MiniPlayerShell({
     // Si quedó algún listener de un gesto anterior (no debería), lo limpiamos.
     stopDragging()
     draggingPointerId.current = e.pointerId
+    gestureStartSec.current = progress
+    gestureLandedSec.current = null
     seek(e.clientX)
 
     const onMove = (ev: PointerEvent) => {
@@ -718,14 +757,19 @@ function MiniPlayerShell({
     }
     const onUp = (ev: PointerEvent) => {
       if (ev.pointerId !== draggingPointerId.current) return
+      const start = gestureStartSec.current
+      const end = gestureLandedSec.current
       stopDragging()
+      // Un arrastre largo hacia atrás, medido de un tirón: donde estaba el
+      // dedo al bajar y donde soltó. Varios toques cortos no se suman.
+      if (end != null && start - end >= REPLAY_REWIND_SEC) onRewindReplayRef.current?.()
     }
     moveListenerRef.current = onMove
     upListenerRef.current = onUp
     document.addEventListener('pointermove', onMove)
     document.addEventListener('pointerup', onUp)
     document.addEventListener('pointercancel', onUp)
-  }, [seek, stopDragging])
+  }, [seek, stopDragging, progress])
 
   // Red de seguridad: si la pestaña se oculta o el navegador anuncia
   // `pagehide` (p. ej. transición SPA agresiva en iOS), abortamos el drag.
@@ -1083,6 +1127,18 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
     if (id) retryScrollToRow(id)
   }, [cur, router, retryScrollToRow])
 
+  const replayCurrent = useCallback(() => {
+    const key = cur?.save ? canonicalKeyFromTrackPlaySave(cur.save) : null
+    if (key) logTrackPlay(key)
+  }, [cur])
+
+  const restartPreview = useCallback(() => {
+    if (previewProgress < 1) return
+    seekPreviewToRatio(0)
+    if (!previewPlaying) togglePreview()
+    replayCurrent()
+  }, [previewProgress, previewPlaying, seekPreviewToRatio, togglePreview, replayCurrent])
+
   if (!cur) return null
   const canGoToRow = !!(cur.domId || cur.originPath)
 
@@ -1093,6 +1149,7 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       progress={previewProgress}
       duration={previewDuration}
       onSeekRatio={seekPreviewToRatio}
+      onRewindReplay={replayCurrent}
       fmt={fmt}
       title={cur.title || '—'}
       subtitleBelow={cur.artist || ''}
@@ -1117,6 +1174,7 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
             title={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
             aria-label={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
           >{previewPlaying ? '❚❚' : '▶'}</button>
+          <RestartButton es={es} disabled={previewProgress < 1} onClick={restartPreview} />
           <button
             type="button"
             onClick={stopPreview}
@@ -1159,6 +1217,12 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
   const { isPlaying, togglePlay, initAudio, switchTrack, track, fmt, seekToRatio } = useDeckAudio()
   const { progress, duration } = useDeckAudioProgress()
   const es = lang === 'es'
+  const restartDeck = useCallback(() => {
+    if (progress < 1) return
+    initAudio()
+    seekToRatio(0)
+    if (!isPlaying) togglePlay()
+  }, [progress, initAudio, seekToRatio, isPlaying, togglePlay])
 
   return (
     <MiniPlayerShell
@@ -1194,6 +1258,7 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
             title={isPlaying ? 'Stop' : 'Play'}
             aria-label={isPlaying ? 'Stop' : 'Play'}
           >{isPlaying ? '■' : '▶'}</button>
+          <RestartButton es={es} disabled={progress < 1} onClick={restartDeck} />
           <button
             type="button"
             onClick={() => { initAudio(); switchTrack(1) }}
@@ -1213,6 +1278,11 @@ function MiniMixBar({ lang }: { lang: Locale }) {
   const { mixProgress, mixDuration } = useDeckAudioProgress()
   const router = useRouter()
   const es = lang === 'es'
+  const restartMix = useCallback(() => {
+    if (mixProgress < 1) return
+    seekMixToRatio(0)
+    if (!mixPlaying) toggleMixPlayback()
+  }, [mixProgress, seekMixToRatio, mixPlaying, toggleMixPlayback])
   const goToSession = useCallback(() => {
     const slug = currentMix?.slug
     if (!slug || typeof window === 'undefined') return
@@ -1258,6 +1328,7 @@ function MiniMixBar({ lang }: { lang: Locale }) {
             title={mixPlaying ? 'Pause' : 'Play'}
             aria-label={mixPlaying ? 'Pause' : 'Play'}
           >{mixPlaying ? '❚❚' : '▶'}</button>
+          <RestartButton es={es} disabled={mixProgress < 1} onClick={restartMix} />
           <button
             type="button"
             onClick={stopMix}
@@ -1401,6 +1472,8 @@ export function DeckAudioProvider({
   const pendingRestoreTimeRef = useRef(0)
   /** La reanudación tras refresco no es una escucha nueva. */
   const skipNextPlayLogRef = useRef(false)
+  /** Clave ya contada en esta carga. El PLAY de SoundCloud al soltar la pausa no suma otra. */
+  const previewScLoggedKeyRef = useRef<string | null>(null)
   // Garantiza que `ended` + `error` + watchdog de fin no encadenen DOS
   // avances para la misma pista (idempotente por track). Se resetea en
   // cada `loadAndPlayPreviewAt`.
@@ -2237,6 +2310,7 @@ export function DeckAudioProvider({
     previewInterruptedRef.current = false
     previewStartAttemptsRef.current = 0
     previewLoadAtRef.current = Date.now()
+    previewScLoggedKeyRef.current = null
     if (previewStartWatchdogRef.current) {
       clearTimeout(previewStartWatchdogRef.current)
       previewStartWatchdogRef.current = null
@@ -2878,9 +2952,7 @@ export function DeckAudioProvider({
       a.play().then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
-        const m = previewQueueRef.current[previewIndexRef.current]
-        const playKey = m?.save ? canonicalKeyFromTrackPlaySave(m.save) : null
-        if (playKey) logTrackPlay(playKey)
+        // Reanudar tras una pausa no es otra escucha: el tema ya se contó al arrancar.
         refreshNowPlaying()
         if ('mediaSession' in navigator) {
           try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
@@ -3184,7 +3256,13 @@ export function DeckAudioProvider({
       setPreviewBlocked(false)
       const m = previewQueueRef.current[previewIndexRef.current]
       const playKey = m?.save ? canonicalKeyFromTrackPlaySave(m.save) : null
-      if (playKey) logTrackPlay(playKey)
+      if (skipNextPlayLogRef.current) {
+        skipNextPlayLogRef.current = false
+        if (playKey) previewScLoggedKeyRef.current = playKey
+      } else if (playKey && previewScLoggedKeyRef.current !== playKey) {
+        previewScLoggedKeyRef.current = playKey
+        logTrackPlay(playKey)
+      }
       refreshNowPlaying()
       if ('mediaSession' in navigator) {
         try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }

@@ -2,6 +2,8 @@
  * Registra una reproducción de pista (preview Beatport/Bandcamp o YouTube inline)
  * en Supabase (`track_play_events`). Debounce corto por pestaña para no inflar
  * el contador con reintentos del reproductor o doble tap accidental.
+ * Pausar y volver a dar al play no llama aquí: no es otra escucha.
+ * Sí llama el botón de empezar de nuevo y un salto atrás de ≥ 1 min.
  */
 const DEBOUNCE_MS = 4000
 const lastLoggedAt = new Map<string, number>()
