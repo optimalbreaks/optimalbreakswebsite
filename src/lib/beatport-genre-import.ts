@@ -140,7 +140,82 @@ export const FOLLOW_BOARD_LIMIT = 140
  * 15 oct 2026: Dubaxface y AceNoise. 12 nov 2026: Wiguez, Periko y Tedy Leon.
  * El tablero público no cambia: sigue siendo el Top 100, y el corte de lectura sigue en 140.
  */
-const EXTRA_FOLLOW_NAMES = ['Dubaxface', 'AceNoise', 'Wiguez', 'Periko', 'Tedy Leon']
+const EXTRA_FOLLOW_NAMES = [
+  'Dubaxface',
+  'AceNoise',
+  'Wiguez',
+  'Periko',
+  'Tedy Leon',
+  // 25 nov 2026: 10 votos o más, fuera del corte de 140, con enlace de Beatport en la ficha.
+  'Sekret Chadow',
+  'The Pattern Sound',
+  'Tommy Who',
+  'Jem Haynes',
+  'Vkyng',
+  'CUDE',
+  'Godfader',
+  'Rennie Pilgrem',
+  'Menges',
+  'Queen of Breakbeat (Dirty D)',
+  'Timonk',
+  'Müme',
+  'Wutam',
+  'Bamer 29',
+  'The Crystal Method',
+  'BlidZer',
+  'Barklysh',
+  'DJ Genesis',
+  'DJ Zuko',
+  'DJ Nitro',
+  'Chevy One',
+  'DJ Magic Mike',
+  'Inner Realms',
+  'Rapela',
+  'Infiniti',
+  'Alrodant',
+  'Thierry D',
+  'JDOUBLE',
+  'Atomic Hooligan',
+  'Twook',
+  'Lee Coombs',
+  'Deejay Shaolin',
+  'Dub Pistols',
+  'Helicopter',
+  'Coofu',
+  'Zzeta',
+  'Amber Jane',
+  'Nokaut',
+  'Analog Hustlers',
+  'Blackdryft',
+  'DexterBeat',
+  'ILS',
+  'Andy Vibes',
+  'Digital Base',
+  'SulivanZ',
+  'Pyramid',
+  'Phrenetic',
+  'Kid Ellipsis',
+  'BLIM',
+  'Yinx',
+  'Afrika Bambaataa',
+  'TOMY',
+  'Drumattic Twins',
+  'Soul of Man',
+  'Aspect One',
+  'DJ Karpin',
+  'SKULL BREAKERZ',
+  'Xana',
+  'Beatloud',
+  'DJ Justin Johnson',
+  'DOPE-M',
+  'Dominic B UK',
+  'X Prod',
+  'Le Duke',
+  'Bodhi',
+  'Amnexiac',
+  'The Hotheadz',
+  'Bass Master',
+]
 
 /** Tedy Leon no tiene ficha. Sin esta página el nombre no abre Beatport. */
 const EXTRA_FOLLOW_PAGES: { slug: string; id: string }[] = [
@@ -921,6 +996,11 @@ export async function runBeatportGenreImport(opts: {
   artistsOnly?: boolean
   /** Solo estas fichas de Beatport (id numérico). No lee el listado de Breaks. */
   artistIds?: string[]
+  /**
+   * Recorre todas las páginas de la ficha desde el 8 oct, no solo las 3 del pase diario.
+   * El cron no lo pone: lo nuevo del día cabe en las primeras páginas.
+   */
+  artistAllPages?: boolean
   /** Cada paso del pase, para la ventana de «Traer ahora». */
   log?: (line: string) => void
 }): Promise<GenreImportResult> {
@@ -1143,7 +1223,8 @@ export async function runBeatportGenreImport(opts: {
           artistsRead += 1
           say(`Ficha ${artistsRead}/${followed.length} ${artist.slug}`)
           let total = Infinity
-          for (let page = 1; page <= 3 && (page - 1) * BEATPORT_PAGE_CAP < total; page++) {
+          const artistPageCap = opts.artistAllPages ? MAX_PAGES : 3
+          for (let page = 1; page <= artistPageCap && (page - 1) * BEATPORT_PAGE_CAP < total; page++) {
             const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
             let payload: { count: number; tracks: BeatportPickInput[] }
             await paceBeatport()

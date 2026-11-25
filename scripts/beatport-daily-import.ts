@@ -7,6 +7,7 @@
  *   npx tsx scripts/beatport-daily-import.ts
  *   npx tsx scripts/beatport-daily-import.ts --force
  *   npx tsx scripts/beatport-daily-import.ts --artists-only
+ *   npx tsx scripts/beatport-daily-import.ts --artists-only --force --artist-all-pages --artist-ids=1,2
  *   npx tsx scripts/beatport-daily-import.ts --artists
  */
 import { existsSync, readFileSync } from 'fs'
@@ -41,6 +42,7 @@ async function main() {
   const artists = process.argv.includes('--artists') ? true : undefined
   const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
   const artistSince = sinceArg?.split('=')[1]
+  const artistAllPages = process.argv.includes('--artist-all-pages')
   const idsArg = process.argv.find((a) => a.startsWith('--artist-ids='))
   const artistIds = idsArg
     ?.split('=')[1]
@@ -73,6 +75,7 @@ async function main() {
       artistsOnly: true,
       ...(artistSince ? { artistSince } : {}),
       ...(artistIds?.length ? { artistIds } : {}),
+      ...(artistAllPages ? { artistAllPages: true } : {}),
     })
     console.log(JSON.stringify(result, null, 2))
     if (!result.ok) process.exit(1)
