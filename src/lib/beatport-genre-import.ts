@@ -36,7 +36,7 @@ export const BEATPORT_IMPORT_FROM = '2026-10-08'
 const GENRE_TRACKS =
   'https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/tracks'
 const PER_PAGE = 150
-/** Tope de seguridad. El corte de verdad es la página corta: el filtro de fecha vacía la página. */
+/** Tope de seguridad. El corte de verdad es el día: la primera página que ya no es entera de hoy. */
 const MAX_PAGES = 100
 /** Beatport ignora `per_page=150` y manda 100. Con 100 el pase creía que era la última página. */
 const BEATPORT_PAGE_CAP = 100
@@ -65,8 +65,10 @@ export type GenreImportResult = {
   auto_approved: number
   skipped_known: number
   error?: string
-  /** La página no trae temas desde el 8 oct. No es un fallo: se sigue. */
+  /** La página no trae temas de hoy (listado) o desde el 8 oct (ficha). No es un fallo. */
   empty?: boolean
+  /** El listado de Breaks ya mezcló días anteriores. No se pide la página siguiente. */
+  day_done?: boolean
   /** Temas que tiene el listado entero (página que manda el favorito). */
   listing_total?: number
 }
@@ -933,8 +935,10 @@ export async function runBeatportGenreImport(opts: {
   const outOfTime = () => opts.budgetMs != null && Date.now() - startedAt > opts.budgetMs
   const sb = createServiceSupabase()
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
-  const genreFrom = opts.artistSince || BEATPORT_IMPORT_FROM
-  const doGenre = !artistsOnly && (Boolean(opts.artistSince) || madridToday() >= BEATPORT_IMPORT_FROM)
+  // El listado de las 12:05 trae el día en Madrid y los adelantos (fecha futura).
+  // artistSince no abre el pasado de ese listado: es de las fichas.
+  const genreFrom = madridToday()
+  const doGenre = !artistsOnly && madridToday() >= BEATPORT_IMPORT_FROM
   const artistFrom = readArtists ? (opts.artistSince || BEATPORT_IMPORT_FROM) : ''
   const scope = artistsOnly ? 'artists' : readArtists ? 'full' : 'breaks'
 
@@ -1107,12 +1111,16 @@ export async function runBeatportGenreImport(opts: {
               }
             }
           }
-          say(`Breaks página ${page}: ${payload.tracks.length} temas de ${payload.count}`)
+          say(`Breaks página ${page}: ${payload.tracks.length} de hoy`)
           total = payload.count
           result.seen += payload.tracks.length
           for (const pick of payload.tracks) take(pick, false)
-          if (!payload.tracks.length) break
-          if (payload.tracks.length < BEATPORT_PAGE_CAP) break
+          if (payload.tracks.length < BEATPORT_PAGE_CAP) {
+            say(payload.tracks.length
+              ? 'En esta página se acaban los de hoy. No sigo con el listado.'
+              : 'Esta página ya no trae temas de hoy. Paro.')
+            break
+          }
         }
         await persistFresh('Breaks')
       }
@@ -1200,30 +1208,9 @@ async function revalidateAfterPublish() {
   }
 }
 
-/**
- * Listado de Breaks que abre el editor en su Chrome, 150 por página. Empieza
- * dos días antes del último pase que sí leyó temas (margen para lo que Beatport
- * sube con fecha atrasada), nunca antes del 8 oct 2026: si pasan dos semanas
- * sin importar, no se pierde ningún día.
- */
+/** Listado de Breaks de hoy en Madrid (y adelantos). No abre el pasado. */
 export async function breaksListingUrlForEditor(): Promise<string> {
-  const sb = createServiceSupabase()
-  const { data } = await sb
-    .from('chart_import_runs')
-    .select('started_at')
-    .eq('ok', true)
-    .gt('seen', 0)
-    .order('started_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  let from = BEATPORT_IMPORT_FROM
-  if (data?.started_at) {
-    const day = new Date(Date.parse(data.started_at))
-    day.setUTCDate(day.getUTCDate() - 2)
-    const iso = day.toISOString().slice(0, 10)
-    if (iso > from) from = iso
-  }
-  return genreTracksUrl(1, from)
+  return genreTracksUrl(1, madridToday())
 }
 
 /**
@@ -1250,12 +1237,18 @@ export async function ingestBeatportPage(opts: {
   if (!/(^|\.)beatport\.com$/i.test(host)) {
     return { ok: false, error: 'Esa página no es de Beatport.', ...empty }
   }
-  const { tracks, count } = tracksFromNext(opts.nextData, opts.url, BEATPORT_IMPORT_FROM)
+  const isBreaksListing = /\/genre\/breaks-breakbeat-uk-bass\/9\/tracks/i.test(opts.url)
+  const fromDate = isBreaksListing ? madridToday() : BEATPORT_IMPORT_FROM
+  const { tracks, count } = tracksFromNext(opts.nextData, opts.url, fromDate)
+  const dayDone = isBreaksListing && tracks.length < BEATPORT_PAGE_CAP
   if (!tracks.length) {
     return {
       ok: true,
       empty: true,
-      error: 'En esa página no hay temas publicados desde el 8 oct 2026.',
+      day_done: dayDone,
+      error: isBreaksListing
+        ? 'En esa página no hay temas de hoy.'
+        : 'En esa página no hay temas publicados desde el 8 oct 2026.',
       listing_total: count,
       ...empty,
     }
@@ -1271,11 +1264,19 @@ export async function ingestBeatportPage(opts: {
     return { ok: false, error: runErr?.message || 'No se pudo abrir el pase', ...empty }
   }
 
-  const result: GenreImportResult = { ok: false, ...empty, seen: tracks.length, listing_total: count }
+  const result: GenreImportResult = {
+    ok: false,
+    ...empty,
+    seen: tracks.length,
+    listing_total: count,
+    day_done: dayDone,
+  }
   let published = 0
   let wasStopped = false
   try {
-    say(`Página de Beatport recibida: ${tracks.length} temas desde el 8 oct.`)
+    say(isBreaksListing
+      ? `Página de Beatport recibida: ${tracks.length} temas de hoy.`
+      : `Página de Beatport recibida: ${tracks.length} temas desde el 8 oct.`)
     const known = await loadKnownTracks(sb)
     const rankKeys = await loadFollowKeys(sb)
     const publishAll = await publishesWholeArtistPage(sb, opts.url, rankKeys)

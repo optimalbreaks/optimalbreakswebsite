@@ -130,6 +130,7 @@ type JobResult = {
   skipped_known?: number
   listing_total?: number
   empty?: boolean
+  day_done?: boolean
 }
 type Job = {
   resumeUrl?: string
@@ -451,16 +452,11 @@ export default function AdminImportsPage() {
       return
     }
     pushLine(`Página ${page}: ${fresh} nuevos, ${r.skipped_known ?? 0} ya estaban.`)
-    const total = r.listing_total ?? 0
-    if (!fresh || r.empty) {
+    const fullToday = !r.empty && !r.day_done && (r.seen ?? 0) >= 100
+    if (!fullToday) {
       pushLine(r.empty
-        ? 'Esta página no trae temas desde el 8 oct.'
-        : 'Página sin nada nuevo: lo que viene detrás ya estaba visto.')
-      await beginArtists(source)
-      return
-    }
-    if (!total || page * LISTING_PER_PAGE >= total) {
-      pushLine('Era la última página del listado.')
+        ? 'Esta página no trae temas de hoy.'
+        : 'En esta página se acaban los de hoy. No sigo con el listado.')
       await beginArtists(source)
       return
     }
@@ -470,7 +466,7 @@ export default function AdminImportsPage() {
       return
     }
     const next = page + 1
-    pushLine(`Pido la página ${next} de ${Math.ceil(total / LISTING_PER_PAGE)} a tu pestaña de Beatport…`)
+    pushLine(`Pido la página ${next} a tu pestaña de Beatport…`)
     source.postMessage({ type: 'ob-beatport-next', page: next }, source.origin)
     nextTimerRef.current = window.setTimeout(() => {
       nextTimerRef.current = null
@@ -710,8 +706,7 @@ export default function AdminImportsPage() {
     <div>
       <h1 className="admin-page-title">Imports</h1>
       <p className="text-sm text-[var(--ink)]/60 -mt-4 mb-6 max-w-2xl" style={mono}>
-        Cada día a las 12:05, desde el 8 de octubre de 2026: primero los temas nuevos de los 140 primeros del tablero, en cualquier género, que se publican directamente.
-        Luego el listado de Breaks del día, descartando lo que ya entró por la primera vía. El resto de Breaks se queda aquí: incluir o descartar.
+        Cada día a las 12:05 el listado de Breaks trae solo los temas de hoy, y los adelantos. Si la página viene llena, sigue con la siguiente; en cuanto ya mezcla días anteriores, entran solo los de hoy y para. Lo que no está en el catálogo ni en la cola se queda aquí: incluir o descartar. Los 140 primeros van a las 13:00.
       </p>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
