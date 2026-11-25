@@ -36,7 +36,10 @@ export const BEATPORT_IMPORT_FROM = '2026-10-08'
 const GENRE_TRACKS =
   'https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/tracks'
 const PER_PAGE = 150
-const MAX_PAGES = 6
+/** Tope de seguridad. El corte de verdad es la página corta: el filtro de fecha vacía la página. */
+const MAX_PAGES = 100
+/** Beatport ignora `per_page=150` y manda 100. Con 100 el pase creía que era la última página. */
+const BEATPORT_PAGE_CAP = 100
 /**
  * Misma pausa que al pegar enlaces (`BEATPORT_BATCH_PAUSE_MS` en
  * `scripts/_append-batch-nr-from-releases.mjs`). Sin ella el Chrome del pase
@@ -1077,7 +1080,7 @@ export async function runBeatportGenreImport(opts: {
       if (doGenre) {
         say('Listado de Breaks')
         let total = Infinity
-        for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
+        for (let page = 1; page <= MAX_PAGES && (page - 1) * BEATPORT_PAGE_CAP < total; page++) {
           if (outOfTime()) {
             partial = partial || `Tiempo agotado en la página ${page} del listado de Breaks. El pase de GitHub lo completa.`
             break
@@ -1104,13 +1107,12 @@ export async function runBeatportGenreImport(opts: {
               }
             }
           }
-          say(`Breaks página ${page}: ${payload.tracks.length} temas`)
+          say(`Breaks página ${page}: ${payload.tracks.length} temas de ${payload.count}`)
           total = payload.count
           result.seen += payload.tracks.length
-          const before = fresh.length
           for (const pick of payload.tracks) take(pick, false)
-          if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
-          if (fresh.length === before) break
+          if (!payload.tracks.length) break
+          if (payload.tracks.length < BEATPORT_PAGE_CAP) break
         }
         await persistFresh('Breaks')
       }
@@ -1133,7 +1135,7 @@ export async function runBeatportGenreImport(opts: {
           artistsRead += 1
           say(`Ficha ${artistsRead}/${followed.length} ${artist.slug}`)
           let total = Infinity
-          for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
+          for (let page = 1; page <= 3 && (page - 1) * BEATPORT_PAGE_CAP < total; page++) {
             const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
             let payload: { count: number; tracks: BeatportPickInput[] }
             await paceBeatport()
@@ -1145,10 +1147,9 @@ export async function runBeatportGenreImport(opts: {
             }
             total = payload.count
             result.seen += payload.tracks.length
-            const before = fresh.length
             for (const pick of payload.tracks) take(pick, true)
-            if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
-            if (fresh.length === before) break
+            if (!payload.tracks.length) break
+            if (payload.tracks.length < BEATPORT_PAGE_CAP) break
           }
           if (fresh.length) await persistFresh(artist.slug)
         }
