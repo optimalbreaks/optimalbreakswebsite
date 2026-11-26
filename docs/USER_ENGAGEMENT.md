@@ -413,12 +413,10 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 
 | Email | Display | Related credit | `artist_key` | `user_id` |
 | --- | --- | --- | --- | --- |
-| `modastrongwoman@gmail.com` | Paqui | Devis Hard | `devis hard` | `16732a6f-98ee-494f-9174-81b8d735bf66` |
-| `olesuprimodecai@gmail.com` | Suprime | Devis Hard | `devis hard` | `7971e1da-40c9-49d7-80e5-1a21d249c8ac` |
 | `perezpedrosasamuel@gmail.com` | Samuel | D-Fast Beats | `d fast beats` | `3692e77a-62ac-464a-b23e-c22ea4193217` |
 | `dannytenerife66@gmail.com` | Danitfc | Dj Guanxe | `dj guanxe` | `58ca7716-0ea2-47f7-a6d7-d5696c954d5b` |
 
-**Audit — Devis Hard circle (22 Sep 2026).** Paqui signed up 22:56 and Suprime at 23:01 (Europe/Madrid). Each saved the same 21 tracks in under 30 seconds. 20 credit Devis Hard; *Feel This* (DJ Brownie, Kaleidoscope) does not. After the family mark those 20 no longer bump Devis Hard. Collab names on those tracks (Bass Invaderz, PhoenixRising, Jormek, The Push, Paket, AndrewFx, DJ Brownie, K5, SluG (FL), Bzrnt, Jiro, Montylla) still count. *Feel This* still credits DJ Brownie. My Tracks keeps all 21. From 6 Oct 2026 the public song chart drops a save that credits the marked name (the 20); *Feel This* stays on the song chart.
+**Audit — Devis Hard circle (22 Sep 2026).** Paqui signed up 22:56 and Suprime at 23:01 (Europe/Madrid). Each saved the same 21 tracks in under 30 seconds. 20 credit Devis Hard; *Feel This* (DJ Brownie, Kaleidoscope) does not. After the family mark those 20 no longer bump Devis Hard. Collab names on those tracks (Bass Invaderz, PhoenixRising, Jormek, The Push, Paket, AndrewFx, DJ Brownie, K5, SluG (FL), Bzrnt, Jiro, Montylla) still count. *Feel This* still credits DJ Brownie. My Tracks keeps all 21. From 6 Oct 2026 the public song chart drops a save that credits the marked name (the 20); *Feel This* stays on the song chart. **26 Nov 2026:** Narciso quitó las dos marcas. Paqui (20 de Devis Hard, biblioteca quieta en 21) y Suprime (30 de Devis Hard dentro de 1.331) vuelven a contar. No había otra marca.
 
 **Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
 
